@@ -1,0 +1,33 @@
+name: Backtest predictions
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "直近何日分を検証するか(--start/--endを使わない場合)"
+        required: false
+        default: "3"
+
+permissions:
+  contents: read  # 検証のみで書き込みはしないため read で十分
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r data-collection/requirements.txt
+
+      - name: 的中率を検証
+        run: |
+          python data-collection/backtest.py \
+            --db data-collection/boatrace.db \
+            --days ${{ github.event.inputs.days }}
