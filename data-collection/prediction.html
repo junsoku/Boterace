@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>予想結果 | 競艇予想</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2436;
+    --navy-soft:#16324A;
+    --paper:#EEF1EF;
+    --card:#FFFFFF;
+    --line:#D8DEDC;
+    --ink:#16232B;
+    --ink-soft:#5B6B72;
+    --accent:#16786B;
+    --accent-soft:#E4F1EE;
+    --lane1:#FFFFFF; --lane1-line:#26313A;
+    --lane2:#1A1A1A;
+    --lane3:#D2352C;
+    --lane4:#1D63B4;
+    --lane5:#F2B705;
+    --lane6:#2E8B4E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:44px;
+  }
+
+  .appbar{
+    background:var(--navy);
+    color:#fff;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:sticky; top:0; z-index:10;
+  }
+  .back{
+    font-size:22px;
+    color:#CBD9DE;
+    line-height:1;
+  }
+  .appbar-title{
+    font-family:'Shippori Mincho', serif;
+    font-size:19px;
+    font-weight:700;
+  }
+  .appbar-sub{
+    font-size:12px;
+    color:#8FA6B2;
+    margin-top:2px;
+  }
+
+  .section{
+    padding:18px 16px 4px;
+  }
+  .section-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:10px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .section-label .note{
+    font-size:11px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+
+  /* ---- 予想ランキング ---- */
+  .rank-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .rank-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .rank-row.top{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent);
+    background:var(--accent-soft);
+  }
+  .mark{
+    font-family:'Shippori Mincho', serif;
+    font-size:24px;
+    font-weight:700;
+    color:var(--navy);
+    width:30px;
+    text-align:center;
+    flex:0 0 auto;
+  }
+  .rank-row.top .mark{ color:var(--accent); }
+
+  .lane-badge{
+    width:28px; height:28px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:700;
+    flex:0 0 auto;
+  }
+  .lane-badge.l1{ background:var(--lane1); color:#16232B; border:1.5px solid var(--lane1-line); }
+  .lane-badge.l2{ background:var(--lane2); color:#fff; }
+  .lane-badge.l3{ background:var(--lane3); color:#fff; }
+  .lane-badge.l4{ background:var(--lane4); color:#fff; }
+  .lane-badge.l5{ background:var(--lane5); color:#3A2E00; }
+  .lane-badge.l6{ background:var(--lane6); color:#fff; }
+
+  .rank-body{
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .rank-name{
+    font-size:14.5px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .rank-bar-track{
+    height:5px;
+    background:#E4E8E7;
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .rank-bar-fill{
+    height:100%;
+    background:var(--navy);
+    border-radius:3px;
+  }
+  .rank-row.top .rank-bar-fill{ background:var(--accent); }
+
+  .rank-pct{
+    font-size:17px;
+    font-weight:900;
+    color:var(--navy);
+    width:48px;
+    text-align:right;
+    flex:0 0 auto;
+  }
+  .rank-row.top .rank-pct{ color:var(--accent); }
+
+  /* ---- 買い目 ---- */
+  .bet-list{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .bet-row{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:11px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .bet-combo{
+    font-family:'Shippori Mincho', serif;
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:.03em;
+  }
+  .bet-meta{
+    text-align:right;
+  }
+  .bet-prob{
+    font-size:13px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .bet-odds{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:1px;
+  }
+
+  /* ---- 根拠データ ---- */
+  .data-table{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .data-row{
+    display:grid;
+    grid-template-columns:34px 1fr 56px 56px 56px;
+    align-items:center;
+    padding:10px 12px;
+    gap:6px;
+    border-bottom:1px solid var(--line);
+    font-size:12px;
+  }
+  .data-row:last-child{ border-bottom:none; }
+  .data-row.head{
+    background:#F5F7F6;
+    color:var(--ink-soft);
+    font-weight:700;
+    font-size:10.5px;
+  }
+  .data-row .lane-badge{
+    width:22px; height:22px;
+    font-size:11px;
+  }
+  .data-name{
+    font-weight:700;
+    font-size:12.5px;
+  }
+  .data-num{
+    text-align:right;
+    font-weight:500;
+    color:var(--ink);
+  }
+
+  .disclaimer{
+    margin:20px 16px 0;
+    padding:12px 14px;
+    background:#FFF6E0;
+    border:1px solid #F0DFA6;
+    border-radius:8px;
+    font-size:11.5px;
+    color:#6B5410;
+    line-height:1.7;
+  }
+</style>
+</head>
+<body>
+
+  <div class="appbar">
+    <div class="back" onclick="history.back()">‹</div>
+    <div>
+      <div class="appbar-title">桐生 3R 予想</div>
+      <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">推奨 3連単 <span class="note">的中確率順</span></div>
+    <div class="bet-list" id="betList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">予想根拠データ</div>
+    <div class="data-table" id="dataTable"></div>
+  </div>
+
+  <div class="disclaimer">
+    表示している確率・買い目はサンプルデータによる仮の予想です。実際のモデル・データに接続すると本物の予測に置き換わります。舟券の購入は自己責任で、当たりを保証するものではありません。
+  </div>
+
+<script>
+// ---- サンプルデータ(実データが取得できない場合のフォールバック) ----
+const MOCK_RANK = [
+  {mark:"◎", lane:1, name:"田中 一輝", pct:34, exh:"6.72", natWin:"6.21", localWin:"6.80"},
+  {mark:"○", lane:4, name:"佐藤 直人", pct:24, exh:"6.75", natWin:"5.44", localWin:"5.10"},
+  {mark:"▲", lane:2, name:"鈴木 亮太", pct:17, exh:"6.78", natWin:"5.02", localWin:"4.85"},
+  {mark:"△", lane:3, name:"高橋 誠",   pct:13, exh:"6.80", natWin:"4.71", localWin:"4.50"},
+  {mark:"×", lane:6, name:"伊藤 大輔", pct:7,  exh:"6.83", natWin:"4.30", localWin:"4.02"},
+  {mark:"注", lane:5, name:"渡辺 翔",  pct:5,  exh:"6.85", natWin:"3.95", localWin:"3.60"},
+];
+const MOCK_BETS = [
+  {combo:"1-4-2", prob:"9.8%"},
+  {combo:"1-2-4", prob:"7.1%"},
+  {combo:"1-4-3", prob:"5.9%"},
+  {combo:"4-1-2", prob:"4.2%"},
+];
+
+let RANK = MOCK_RANK;
+let BETS = MOCK_BETS;
+
+// URLの ?stadium=桐生&race=3 を読み取り、data/today.json から該当レースを探す
+async function loadRealData(){
+  const params = new URLSearchParams(location.search);
+  const stadiumParam = params.get("stadium");
+  const raceParam = params.get("race") ? Number(params.get("race")) : null;
+
+  let usingReal = false;
+  try{
+    const res = await fetch("./data/today.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("no data file");
+    const json = await res.json();
+    const st = json.stadiums.find(s => s.name === stadiumParam) || json.stadiums[0];
+    const race = st.races.find(r => r.number === raceParam) || st.races[0];
+    if(!race) throw new Error("race not found");
+
+    RANK = race.boats_ranked.map(b => ({
+      mark: b.mark, lane: b.lane, name: b.name, pct: b.pct,
+      exh: "-", natWin: b.natWin ?? "-", localWin: b.localWin ?? "-"
+    }));
+    BETS = race.bets;
+    document.querySelector(".appbar-title").textContent = `${st.name} ${race.number}R 予想`;
+    document.querySelector(".appbar-sub").textContent = `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}`;
+    usingReal = true;
+  }catch(e){
+    // stadium/raceパラメータがあればタイトルだけ反映してサンプルデータを使う
+    if(stadiumParam){
+      document.querySelector(".appbar-title").textContent =
+        `${stadiumParam} ${raceParam || ""}R 予想`;
+    }
+    RANK = MOCK_RANK;
+    BETS = MOCK_BETS;
+  }
+  document.querySelector(".disclaimer").textContent = usingReal
+    ? "実データに基づく予想です。舟券の購入は自己責任で、当たりを保証するものではありません。"
+    : "表示している確率・買い目はサンプルデータによる仮の予想です。実際のモデル・データに接続すると本物の予測に置き換わります。舟券の購入は自己責任で、当たりを保証するものではありません。";
+
+  renderRank();
+  renderBets();
+  renderData();
+}
+
+function renderRank(){
+  const wrap = document.getElementById("rankList");
+  wrap.innerHTML = RANK.map((r,i)=>`
+    <div class="rank-row ${i===0?'top':''}">
+      <div class="mark">${r.mark}</div>
+      <div class="lane-badge l${r.lane}">${r.lane}</div>
+      <div class="rank-body">
+        <div class="rank-name">${r.name}</div>
+        <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${r.pct}%"></div></div>
+      </div>
+      <div class="rank-pct">${r.pct}%</div>
+    </div>
+  `).join("");
+}
+
+function renderBets(){
+  const wrap = document.getElementById("betList");
+  wrap.innerHTML = BETS.map(b=>`
+    <div class="bet-row">
+      <div class="bet-combo">${b.combo}</div>
+      <div class="bet-meta">
+        <div class="bet-prob">的中確率 ${b.prob}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderData(){
+  const wrap = document.getElementById("dataTable");
+  const head = `
+    <div class="data-row head">
+      <div></div>
+      <div>選手</div>
+      <div class="data-num">展示</div>
+      <div class="data-num">全国勝率</div>
+      <div class="data-num">当地勝率</div>
+    </div>
+  `;
+  const rows = RANK.slice().sort((a,b)=>a.lane-b.lane).map(r=>`
+    <div class="data-row">
+      <div class="lane-badge l${r.lane}">${r.lane}</div>
+      <div class="data-name">${r.name}</div>
+      <div class="data-num">${r.exh}</div>
+      <div class="data-num">${r.natWin}</div>
+      <div class="data-num">${r.localWin}</div>
+    </div>
+  `).join("");
+  wrap.innerHTML = head + rows;
+}
+
+loadRealData();
+</script>
+
+</body>
+</html>

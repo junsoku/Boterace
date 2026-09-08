@@ -17,6 +17,7 @@ from datetime import date
 from pathlib import Path
 
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
+from build_features import FEATURE_COLS
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
 # ※ technique_stats.compute_course_technique_rates() が使えるならそちらを優先し、
@@ -35,7 +36,8 @@ STADIUM_NAMES = {
 
 
 def score_boat(entry: dict, course_stats: dict) -> float:
-    """予想スコアリング関数(暫定)。MLモデル完成後はここをモデル推論に置き換える。
+    """予想スコアリング関数(暫定・ヒューリスティック)。
+    MLモデル(model.txt)が用意されていれば predict_with_model() の方が優先して使われる。
     全国勝率・当地勝率に加え、場ごとのコース別決まり手統計(逃げ率・まくり率等)から
     導いた「コースの勝ちやすさ」を加味する。1号艇については個人の逃し率が分かれば
     さらに調整する。
@@ -53,13 +55,39 @@ def score_boat(entry: dict, course_stats: dict) -> float:
     return nat * 0.35 + local * 0.35 + course_adv * 0.30
 
 
-def scores_to_pct(scores: list) -> list:
-    """スコアをsoftmax風に正規化してパーセント表示用の整数配列にする"""
+def predict_with_model(entries: list, course_stats: dict, model) -> list:
+    """train_model.py で学習したLightGBMモデルで各艇の勝利確率を予測する。
+    build_features.py の FEATURE_COLS と同じ並び・同じ特徴量になるよう揃えている。
+    """
+    rows = []
+    for e in entries:
+        course_win_rate = course_stats.get(e["boat_number"], {}).get("win_rate") if course_stats else None
+        rows.append({
+            "boat_number": e["boat_number"],
+            "national_win_rate": e.get("national_win_rate") or 4.0,
+            "local_win_rate": e.get("local_win_rate") or 4.0,
+            "motor_2連率": e.get("motor_2連率") or 30.0,
+            "boat_hull_2連率": e.get("boat_hull_2連率") or 30.0,
+            "average_start_timing": e.get("average_start_timing") or 0.17,
+            "course_win_rate": course_win_rate if course_win_rate is not None else 0.2,
+        })
+    import pandas as pd
+    X = pd.DataFrame(rows)[FEATURE_COLS]
+    return list(model.predict(X))
+
+
+def normalize_to_pct(values: list, use_softmax: bool) -> list:
+    """スコア(またはモデルが出した確率)をパーセント表示用の整数配列(合計100)にする。
+    ヒューリスティックスコアは値のスケールがまちまちなのでsoftmaxで正規化し、
+    モデルの予測確率(0〜1)はすでに比較可能な値なので単純合計で正規化する。
+    """
     import math
-    exps = [math.exp(s) for s in scores]
-    total = sum(exps)
-    raw = [e / total * 100 for e in exps]
-    # 四捨五入しつつ合計100に丸め込む
+    if use_softmax:
+        weights = [math.exp(v) for v in values]
+    else:
+        weights = [max(v, 1e-6) for v in values]
+    total = sum(weights)
+    raw = [w / total * 100 for w in weights]
     rounded = [round(r) for r in raw]
     diff = 100 - sum(rounded)
     if rounded:
@@ -68,31 +96,42 @@ def scores_to_pct(scores: list) -> list:
 
 
 def estimate_bets(boats: list, top_n: int = 4) -> list:
-    """boats(pct付き)から3連単の期待値っぽい候補を確率の積で簡易生成"""
-    ranked = sorted(boats, key=lambda b: -b["pct"])
+    """
+    Plackett-Luceモデルで3連単(1着→2着→3着)の確率を推定する。
+    P(a→b→c) = P(aが1着) × P(bが2着|aを除いた中で) × P(cが3着|a,bを除いた中で)
+    強さには各艇の予想勝率(pct)をそのまま使う近似(完全に厳密ではないが実用上十分)。
+    ※ 掛け算の順序を無視していた旧実装のバグを修正(順序を入れ替えても同じ値になり、
+      本来上位に来るはずの組み合わせが漏れることがあった)。
+    """
+    strengths = {b["lane"]: max(b["pct"], 0.1) for b in boats}  # 0%だと計算できないので下駄を履かせる
+    lanes = list(strengths.keys())
+    total = sum(strengths.values())
+
     combos = []
-    top5 = ranked[:5] if len(ranked) >= 5 else ranked
-    for i, a in enumerate(top5):
-        for b in top5:
-            if b is a:
-                continue
-            for c in top5:
-                if c is a or c is b:
-                    continue
-                p = (a["pct"] / 100) * (b["pct"] / 100) * (c["pct"] / 100)
+    for a in lanes:
+        p_a = strengths[a] / total
+        remaining_after_a = {l: s for l, s in strengths.items() if l != a}
+        total_after_a = sum(remaining_after_a.values())
+        for b in remaining_after_a:
+            p_b = remaining_after_a[b] / total_after_a
+            remaining_after_ab = {l: s for l, s in remaining_after_a.items() if l != b}
+            total_after_ab = sum(remaining_after_ab.values())
+            for c in remaining_after_ab:
+                p_c = remaining_after_ab[c] / total_after_ab
                 combos.append({
-                    "combo": f'{a["lane"]}-{b["lane"]}-{c["lane"]}',
-                    "raw_prob": p,
+                    "combo": f"{a}-{b}-{c}",
+                    "raw_prob": p_a * p_b * p_c,
                 })
+
     combos.sort(key=lambda x: -x["raw_prob"])
     top = combos[:top_n]
     return [
-        {"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%', "odds": "予想オッズ 未算出"}
+        {"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'}
         for c in top
     ]
 
 
-def build_today_json(conn: sqlite3.Connection, target_date: date) -> dict:
+def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at
            FROM races WHERE race_date = ? ORDER BY stadium_number, race_number""",
@@ -105,7 +144,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date) -> dict:
     for race_id, stadium_number, race_number, race_grade, close_at in races:
         entries = conn.execute(
             """SELECT boat_number, racer_name, racer_registration_number,
-                      national_win_rate, local_win_rate
+                      national_win_rate, local_win_rate, motor_2連率, boat_hull_2連率,
+                      average_start_timing
                FROM entries WHERE race_id = ? ORDER BY boat_number""",
             (race_id,),
         ).fetchall()
@@ -117,12 +157,15 @@ def build_today_json(conn: sqlite3.Connection, target_date: date) -> dict:
         course_stats = course_stats_cache[stadium_number]
 
         boat_dicts = []
-        for bn, name, reg_no, nat, local in entries:
+        for bn, name, reg_no, nat, local, motor_2r, hull_2r, avg_st in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
                 "national_win_rate": nat,
                 "local_win_rate": local,
+                "motor_2連率": motor_2r,
+                "boat_hull_2連率": hull_2r,
+                "average_start_timing": avg_st,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -130,8 +173,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date) -> dict:
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append(d)
 
-        scores = [score_boat(b, course_stats) for b in boat_dicts]
-        pcts = scores_to_pct(scores)
+        if model is not None:
+            scores = predict_with_model(boat_dicts, course_stats, model)
+            pcts = normalize_to_pct(scores, use_softmax=False)
+        else:
+            scores = [score_boat(b, course_stats) for b in boat_dicts]
+            pcts = normalize_to_pct(scores, use_softmax=True)
 
         boats_out = []
         for b, pct in zip(boat_dicts, pcts):
@@ -163,6 +210,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date) -> dict:
     return {
         "date": target_date.isoformat(),
         "generated_at": date.today().isoformat(),
+        "using_ml_model": model is not None,
         "stadiums": list(stadium_map.values()),
         "course_stats_by_stadium": {
             str(sn): {
@@ -179,11 +227,20 @@ def main():
     ap.add_argument("--db", default="boatrace.db")
     ap.add_argument("--date", default=None, help="YYYY-MM-DD (省略時は本日)")
     ap.add_argument("--out", default="data/today.json")
+    ap.add_argument("--model", default=None, help="train_model.py で作ったmodel.txtのパス(省略時はヒューリスティックで予想)")
     args = ap.parse_args()
+
+    model = None
+    if args.model and Path(args.model).exists():
+        import lightgbm as lgb
+        model = lgb.Booster(model_file=args.model)
+        print(f"MLモデルを読み込みました: {args.model}")
+    elif args.model:
+        print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで続行します)")
 
     target_date = date.fromisoformat(args.date) if args.date else date.today()
     conn = sqlite3.connect(args.db)
-    result = build_today_json(conn, target_date)
+    result = build_today_json(conn, target_date, model=model)
     conn.close()
 
     out_path = Path(args.out)
