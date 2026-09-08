@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>出走表 | 競艇予想</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2436;
+    --navy-soft:#16324A;
+    --paper:#EEF1EF;
+    --card:#FFFFFF;
+    --line:#D8DEDC;
+    --ink:#16232B;
+    --ink-soft:#5B6B72;
+    --accent:#16786B;
+    --accent-soft:#E4F1EE;
+    --lane1:#FFFFFF; --lane1-line:#26313A;
+    --lane2:#1A1A1A;
+    --lane3:#D2352C;
+    --lane4:#1D63B4;
+    --lane5:#F2B705;
+    --lane6:#2E8B4E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:40px;
+  }
+  .appbar{
+    background:var(--navy);
+    color:#fff;
+    padding:18px 18px 14px;
+    position:sticky; top:0; z-index:10;
+  }
+  .appbar-top{
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .appbar-date{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:.02em;
+  }
+  .appbar-date span{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:13px;
+    color:#9FB3BE;
+    margin-left:8px;
+    font-weight:500;
+  }
+  .appbar-sub{
+    font-size:12px;
+    color:#8FA6B2;
+    margin-top:2px;
+  }
+
+  .stadium-scroll{
+    display:flex; gap:8px;
+    overflow-x:auto;
+    padding:14px 16px 4px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .stadium-scroll::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    background:var(--navy-soft);
+    color:#CBD9DE;
+    border:1px solid #274459;
+    border-radius:20px;
+    padding:8px 16px;
+    font-size:14px;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .chip.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:700;
+  }
+  .chip .grade{
+    font-size:10px;
+    background:rgba(255,255,255,.18);
+    padding:1px 5px;
+    border-radius:4px;
+    margin-left:5px;
+  }
+
+  .venue-header{
+    padding:20px 18px 6px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+  }
+  .venue-title{
+    font-family:'Shippori Mincho', serif;
+    font-size:26px;
+    font-weight:700;
+  }
+  .venue-meta{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+    line-height:1.5;
+  }
+
+  .race-list{
+    padding:8px 14px 0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .race-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    position:relative;
+  }
+  .race-card.upcoming{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent);
+  }
+  .race-num{
+    font-family:'Shippori Mincho', serif;
+    font-size:28px;
+    font-weight:700;
+    color:var(--navy);
+    width:44px;
+    flex:0 0 auto;
+    text-align:center;
+  }
+  .race-num sub-r{
+    font-size:14px;
+  }
+  .race-body{
+    flex:1 1 auto;
+    min-width:0;
+  }
+  .race-toprow{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .close-time{
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .close-time b{
+    color:var(--ink);
+    font-weight:700;
+  }
+  .grade-tag{
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    background:var(--navy);
+    color:#fff;
+    letter-spacing:.03em;
+  }
+  .grade-tag.sg{ background:#8A1F2D; }
+  .grade-tag.g1{ background:#1D63B4; }
+
+  .lanes{
+    display:flex;
+    gap:9px;
+  }
+  .lane{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    width:32px;
+  }
+  .lane-badge{
+    width:22px; height:22px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    flex:0 0 auto;
+  }
+  .lane-badge.l1{ background:var(--lane1); color:#16232B; border:1.5px solid var(--lane1-line); }
+  .lane-badge.l2{ background:var(--lane2); color:#fff; }
+  .lane-badge.l3{ background:var(--lane3); color:#fff; }
+  .lane-badge.l4{ background:var(--lane4); color:#fff; }
+  .lane-badge.l5{ background:var(--lane5); color:#3A2E00; }
+  .lane-badge.l6{ background:var(--lane6); color:#fff; }
+  .lane-name{
+    font-size:9.5px;
+    color:var(--ink-soft);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    width:100%;
+    text-align:center;
+  }
+
+  .race-arrow{
+    flex:0 0 auto;
+    color:var(--ink-soft);
+    font-size:20px;
+  }
+
+  .empty-note{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:14px;
+    display:none;
+  }
+
+  .data-note{
+    margin:22px 16px 0;
+    padding:12px 14px;
+    background:#FFF6E0;
+    border:1px solid #F0DFA6;
+    border-radius:8px;
+    font-size:12px;
+    color:#6B5410;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+  <div class="appbar">
+    <div class="appbar-top">
+      <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
+    </div>
+    <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
+  </div>
+
+  <div class="stadium-scroll" id="stadiumScroll"></div>
+
+  <div class="venue-header">
+    <div class="venue-title" id="venueTitle">桐生</div>
+    <div class="venue-meta" id="venueMeta">全12レース<br>1R 締切 10:32</div>
+  </div>
+
+  <div class="race-list" id="raceList"></div>
+
+  <div class="data-note">
+    現在はサンプルデータを表示しています。データ収集モジュールと接続すると、ここに実際の本日の出走表が表示されます。
+  </div>
+
+<script>
+// ---- サンプルデータ(実データ接続前のモック) ----
+// 号艇カラーは競艇の公式カラー(1白 2黒 3赤 4青 5黄 6緑)に準拠
+const SURNAMES = ["田中","佐藤","鈴木","高橋","伊藤","渡辺","山本","中村","小林","加藤","吉田","山田","佐々木","松本","井上"];
+
+function makeLanes(seed){
+  return [1,2,3,4,5,6].map((lane,i)=>({
+    lane,
+    name: SURNAMES[(seed + i*3) % SURNAMES.length]
+  }));
+}
+
+const MOCK_STADIUMS = [
+  {
+    name:"桐生",
+    grade:null,
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.45)}:${String((i*37)%60).padStart(2,"0")}`,
+      grade: i===10 ? "優勝戦" : null,
+      lanes: makeLanes(i+1)
+    }))
+  },
+  {
+    name:"戸田",
+    grade:"G1",
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.4)}:${String((i*19)%60).padStart(2,"0")}`,
+      grade: i===11 ? "G1" : null,
+      lanes: makeLanes(i+4)
+    }))
+  },
+  {
+    name:"江戸川",
+    grade:null,
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.42)}:${String((i*23)%60).padStart(2,"0")}`,
+      grade:null,
+      lanes: makeLanes(i+7)
+    }))
+  },
+  {
+    name:"びわこ",
+    grade:"SG",
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.48)}:${String((i*11)%60).padStart(2,"0")}`,
+      grade: i===11 ? "SG" : null,
+      lanes: makeLanes(i+2)
+    }))
+  },
+  {
+    name:"尼崎",
+    grade:null,
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.44)}:${String((i*29)%60).padStart(2,"0")}`,
+      grade:null,
+      lanes: makeLanes(i+9)
+    }))
+  },
+  {
+    name:"福岡",
+    grade:null,
+    races: Array.from({length:12}, (_,i)=>({
+      number:i+1,
+      close: `${9+Math.floor(i*0.5)}:${String((i*13)%60).padStart(2,"0")}`,
+      grade:null,
+      lanes: makeLanes(i+5)
+    }))
+  }
+];
+
+let STADIUMS = MOCK_STADIUMS;
+let usingRealData = false;
+let activeIndex = 0;
+
+// export_today.py が出力した data/today.json を読み込む。
+// 取得できない(まだ生成していない/オフライン)場合はサンプルデータのまま表示を続ける。
+async function loadRealData(){
+  try{
+    const res = await fetch("./data/today.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("no data file");
+    const json = await res.json();
+    if(!json.stadiums || json.stadiums.length === 0) throw new Error("empty");
+
+    STADIUMS = json.stadiums.map(st => ({
+      name: st.name,
+      grade: st.grade || null,
+      races: st.races.map(r => ({
+        number: r.number,
+        close: r.close || "--:--",
+        grade: r.grade || null,
+        lanes: r.boats.map(b => ({ lane: b.lane, name: b.name }))
+      }))
+    }));
+    usingRealData = true;
+  }catch(e){
+    STADIUMS = MOCK_STADIUMS;
+    usingRealData = false;
+  }
+  const note = document.querySelector(".data-note");
+  if(note){
+    note.textContent = usingRealData
+      ? "実データを表示しています(export_today.pyの出力より)。"
+      : "現在はサンプルデータを表示しています。data/today.json を生成すると実データに切り替わります。";
+  }
+  document.getElementById("openCountLabel").textContent = `本日 ${STADIUMS.length}場開催中`;
+  activeIndex = 0;
+  renderAll();
+}
+
+function renderStadiumChips(){
+  const wrap = document.getElementById("stadiumScroll");
+  wrap.innerHTML = "";
+  STADIUMS.forEach((st, idx)=>{
+    const chip = document.createElement("div");
+    chip.className = "chip" + (idx===activeIndex ? " active" : "");
+    chip.innerHTML = st.name + (st.grade ? `<span class="grade">${st.grade}</span>` : "");
+    chip.onclick = ()=>{ activeIndex = idx; renderAll(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function renderVenue(){
+  const st = STADIUMS[activeIndex];
+  document.getElementById("venueTitle").textContent = st.name;
+  document.getElementById("venueMeta").innerHTML =
+    `全${st.races.length}レース<br>1R 締切 ${st.races[0].close}`;
+}
+
+function renderRaces(){
+  const list = document.getElementById("raceList");
+  const st = STADIUMS[activeIndex];
+  list.innerHTML = "";
+  st.races.forEach((race, i)=>{
+    const card = document.createElement("div");
+    card.className = "race-card" + (i===0 ? " upcoming" : "");
+    card.onclick = ()=>{
+      const params = new URLSearchParams({ stadium: st.name, race: race.number });
+      location.href = `prediction.html?${params.toString()}`;
+    };
+
+    const gradeClass = race.grade === "SG" ? "sg" : race.grade === "G1" ? "g1" : "";
+
+    card.innerHTML = `
+      <div class="race-num">${race.number}<sub-r>R</sub-r></div>
+      <div class="race-body">
+        <div class="race-toprow">
+          <div class="close-time">締切 <b>${race.close}</b></div>
+          ${race.grade ? `<div class="grade-tag ${gradeClass}">${race.grade}</div>` : ""}
+        </div>
+        <div class="lanes">
+          ${race.lanes.map(b=>`
+            <div class="lane">
+              <div class="lane-badge l${b.lane}">${b.lane}</div>
+              <div class="lane-name">${b.name}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div class="race-arrow">›</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function renderAll(){
+  renderStadiumChips();
+  renderVenue();
+  renderRaces();
+}
+
+// 今日の日付表示
+const today = new Date();
+const days = ["日","月","火","水","木","金","土"];
+document.getElementById("todayLabel").innerHTML =
+  `${today.getMonth()+1}月${today.getDate()}日(${days[today.getDay()]})<span>本日の開催</span>`;
+loadRealData();
+</script>
+
+</body>
+</html>
