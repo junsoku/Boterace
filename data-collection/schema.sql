@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS entries (
     boat_hull_number                       INTEGER,
     boat_hull_2連率                         REAL,
     average_start_timing                     REAL,
+    flying_count                               INTEGER,  -- フライング(F)回数(直近期別)
+    late_count                                  INTEGER,  -- 出遅れ(L)回数(直近期別)
     UNIQUE(race_id, boat_number)
 );
 

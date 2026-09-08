@@ -36,7 +36,26 @@ def init_db(db_path: str) -> sqlite3.Connection:
     schema = Path(__file__).parent / "schema.sql"
     conn.executescript(schema.read_text(encoding="utf-8"))
     conn.commit()
+    _migrate_add_missing_columns(conn)
     return conn
+
+
+def _migrate_add_missing_columns(conn: sqlite3.Connection):
+    """schema.sqlに列を追加した後、既存DBにも反映させるための簡易マイグレーション。
+    CREATE TABLE IF NOT EXISTS は既存テーブルへの列追加はしてくれないため、
+    ALTER TABLE ADD COLUMN を個別に試し、「既にある」エラーは無視する。
+    """
+    migrations = [
+        ("entries", "flying_count", "INTEGER"),
+        ("entries", "late_count", "INTEGER"),
+    ]
+    for table, column, coltype in migrations:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
+            conn.commit()
+        except sqlite3.OperationalError as e:
+            if "duplicate column name" not in str(e):
+                raise  # 列名重複以外のエラーは想定外なので伝播させる
 
 
 def save_raw(conn: sqlite3.Connection, race_date: date, kind: str, payload: Optional[dict]):
@@ -91,8 +110,8 @@ def parse_programs(conn: sqlite3.Connection, race_date: date, payload: Optional[
                         racer_name, racer_branch, racer_class, racer_age, racer_weight_kg,
                         national_win_rate, national_2連率, local_win_rate, local_2連率,
                         motor_number, motor_2連率, boat_hull_number, boat_hull_2連率,
-                        average_start_timing)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        average_start_timing, flying_count, late_count)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(race_id, boat_number) DO NOTHING""",
                 (
                     race_id, boat_number,
@@ -111,6 +130,8 @@ def parse_programs(conn: sqlite3.Connection, race_date: date, payload: Optional[
                     pick(boat, "racer_assigned_boat_number", "boat_hull_number"),
                     pick(boat, "racer_assigned_boat_top_2_percent", "boat_hull_2連率"),
                     pick(boat, "racer_average_start_timing", "average_start_timing"),
+                    pick(boat, "racer_flying_count", "racer_boat_flying_count", "flying_count"),
+                    pick(boat, "racer_late_count", "racer_boat_late_count", "late_count"),
                 ),
             )
     conn.commit()
@@ -159,6 +180,61 @@ def parse_results(conn: sqlite3.Connection, race_date: date, payload: Optional[d
     conn.commit()
 
 
+def parse_previews(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
+    """直前情報JSON -> previews テーブル(選手ごと) + races テーブルの天候欄へ格納"""
+    if not payload:
+        return
+    races = pick(payload, "results", "races", default=[])
+    for race in races:
+        stadium_number = pick(race, "race_stadium_number", "stadium_number")
+        race_number = pick(race, "race_number")
+
+        # 天候はレース単位(6艇共通)の情報なので、races テーブル側を更新する
+        conn.execute(
+            """UPDATE races SET
+                 weather=?, wind_direction=?, wind_speed_m=?, wave_height_cm=?,
+                 temperature_c=?, water_temperature_c=?
+               WHERE race_date=? AND stadium_number=? AND race_number=?""",
+            (
+                pick(race, "race_weather_condition", "weather"),
+                pick(race, "race_wind_direction_number", "wind_direction"),
+                pick(race, "race_wind_velocity", "wind_speed_m"),
+                pick(race, "race_wave_height", "wave_height_cm"),
+                pick(race, "race_temperature", "temperature_c"),
+                pick(race, "race_water_temperature", "water_temperature_c"),
+                race_date.isoformat(), stadium_number, race_number,
+            ),
+        )
+
+        boats = pick(race, "boats", "entries", default=[])
+        for boat in boats:
+            boat_number = pick(boat, "racer_boat_number", "boat_number")
+            entry_id = get_entry_id(conn, race_date, stadium_number, race_number, boat_number)
+            if entry_id is None:
+                continue  # 出走表が先に取り込まれていない場合はスキップ
+            conn.execute(
+                """INSERT INTO previews (entry_id, exhibition_time, tilt_angle,
+                        weight_adjustment_kg, start_course, start_timing_preview,
+                        parts_exchanged)
+                   VALUES (?,?,?,?,?,?,?)
+                   ON CONFLICT(entry_id) DO UPDATE SET
+                     exhibition_time=excluded.exhibition_time,
+                     tilt_angle=excluded.tilt_angle,
+                     start_course=excluded.start_course,
+                     start_timing_preview=excluded.start_timing_preview""",
+                (
+                    entry_id,
+                    pick(boat, "racer_exhibition_time", "exhibition_time"),
+                    pick(boat, "racer_tilt", "tilt_angle"),
+                    pick(boat, "racer_weight_adjustment", "weight_adjustment_kg"),
+                    pick(boat, "racer_course_number", "start_course"),
+                    pick(boat, "racer_start_timing", "start_timing_preview"),
+                    pick(boat, "racer_parts_exchanged", "parts_exchanged"),
+                ),
+            )
+    conn.commit()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", required=True, help="YYYY-MM-DD")
@@ -179,8 +255,8 @@ def main():
         conn.commit()
 
         parse_programs(conn, d, day_data["programs"])
+        parse_previews(conn, d, day_data["previews"])
         parse_results(conn, d, day_data["results"])
-        # previewsのパースはprogramsと同様のパターンで追加可能(必要になったら実装)
 
     conn.close()
     print("完了しました。")

@@ -45,16 +45,25 @@ STADIUM_NAMES = {
 }
 
 
-def score_boat(entry: dict, course_stats: dict) -> float:
+def score_boat(entry: dict, course_stats: dict, race_context: dict = None) -> float:
     """予想スコアリング関数(暫定・ヒューリスティック)。
     MLモデル(model.txt)が用意されていれば predict_with_model() の方が優先して使われる。
-    全国勝率・当地勝率に加え、場ごとのコース別決まり手統計(逃げ率・まくり率等)から
-    導いた「コースの勝ちやすさ」を加味する。1号艇については個人の逃し率が分かれば
-    さらに調整する。
+    全国勝率・当地勝率・連対率・モーター/ボートの2連率に加え、場ごとのコース別決まり手統計
+    (逃げ率・まくり率等)から導いた「コースの勝ちやすさ」を加味する。1号艇については
+    個人の逃し率が分かればさらに調整する。天候(波・風)やレースグレードによる補正も行う。
+    race_context: {"wave_height_cm":.., "wind_speed_m":.., "race_grade":..} (省略可)
     """
     nat = entry.get("national_win_rate") or 4.0     # データ欠損時は全国平均程度で補完
     local = entry.get("local_win_rate") or nat
     course = entry.get("boat_number")
+
+    # 連対率(2着以内に入る率)。安定感の指標として勝率と別枠で少しだけ加味する
+    nat_place = (entry.get("national_2連率") or 33.0) / 5
+    local_place = (entry.get("local_2連率") or 33.0) / 5
+
+    # モーター・ボートの2連率は0〜100%スケールなので、勝率(0〜7程度)と揃うように/5している
+    motor = (entry.get("motor_2連率") or 33.0) / 5
+    hull = (entry.get("boat_hull_2連率") or 33.0) / 5
 
     course_adv = course_advantage_score(course_stats, course) if course_stats else COURSE_ADVANTAGE.get(course, 0.3) * 10
 
@@ -62,7 +71,36 @@ def score_boat(entry: dict, course_stats: dict) -> float:
         # 逃し率(先マイを取っても差される/まくられる率)が高い選手ほど1コース優位を割り引く
         course_adv *= max(0.3, 1 - entry["nigashi_rate"])
 
-    return nat * 0.35 + local * 0.35 + course_adv * 0.30
+    # フライング(F)は1号艇だと即失格に直結するため、F持ちの選手は特に1号艇での信頼度を下げる。
+    # 出遅れ(L)はどのコースでも先マイを取り損ねるリスクとして軽く減点する。
+    flying = entry.get("flying_count") or 0
+    late = entry.get("late_count") or 0
+    if flying > 0:
+        penalty = 0.25 if course == 1 else 0.10
+        course_adv *= max(0.4, 1 - penalty * min(flying, 3))
+    if late > 0:
+        course_adv *= max(0.6, 1 - 0.05 * min(late, 3))
+
+    if race_context:
+        # 波が高い/風が強いと1号艇が不利になりやすい(スタートで水を被りやすく、艇が跳ねやすいため)
+        wave = race_context.get("wave_height_cm") or 0
+        wind = race_context.get("wind_speed_m") or 0
+        if course == 1 and (wave >= 3 or wind >= 5):
+            course_adv *= 0.85
+        elif course != 1 and (wave >= 3 or wind >= 5):
+            course_adv *= 1.05
+
+        # SG/G1は出走選手のレベルが拮抗しがちなので、コース有利さの影響を少し弱める(差がつきにくい)
+        grade = (race_context.get("race_grade") or "")
+        if any(g in str(grade) for g in ["SG", "G1"]):
+            course_adv *= 0.9
+
+    return (
+        nat * 0.20 + local * 0.20
+        + nat_place * 0.08 + local_place * 0.07
+        + course_adv * 0.25
+        + motor * 0.13 + hull * 0.07
+    )
 
 
 def predict_with_model(entries: list, course_stats: dict, model) -> list:
@@ -158,8 +196,10 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
          temperature_c, water_temperature_c) in races:
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_name, e.racer_registration_number,
-                      e.national_win_rate, e.local_win_rate, e.motor_2連率, e.boat_hull_2連率,
-                      e.average_start_timing, p.exhibition_time
+                      e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
+                      e.motor_2連率, e.boat_hull_2連率,
+                      e.average_start_timing, p.exhibition_time,
+                      e.flying_count, e.late_count
                FROM entries e
                LEFT JOIN previews p ON p.entry_id = e.entry_id
                WHERE e.race_id = ? ORDER BY e.boat_number""",
@@ -172,17 +212,28 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
         course_stats = course_stats_cache[stadium_number]
 
+        race_context = {
+            "wave_height_cm": wave_height_cm,
+            "wind_speed_m": wind_speed_m,
+            "race_grade": race_grade,
+        }
+
         boat_dicts = []
-        for bn, name, reg_no, nat, local, motor_2r, hull_2r, avg_st, exh_time in entries:
+        for (bn, name, reg_no, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
+             avg_st, exh_time, flying_count, late_count) in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
                 "national_win_rate": nat,
+                "national_2連率": nat_2r,
                 "local_win_rate": local,
+                "local_2連率": local_2r,
                 "motor_2連率": motor_2r,
                 "boat_hull_2連率": hull_2r,
                 "average_start_timing": avg_st,
                 "exhibition_time": exh_time,
+                "flying_count": flying_count,
+                "late_count": late_count,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -194,7 +245,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             scores = predict_with_model(boat_dicts, course_stats, model)
             pcts = normalize_to_pct(scores, use_softmax=False)
         else:
-            scores = [score_boat(b, course_stats) for b in boat_dicts]
+            scores = [score_boat(b, course_stats, race_context) for b in boat_dicts]
             pcts = normalize_to_pct(scores, use_softmax=True)
 
         boats_out = []
@@ -205,7 +256,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "pct": pct,
                 "natWin": b["national_win_rate"],
                 "localWin": b["local_win_rate"],
+                "natPlace": b["national_2連率"],
+                "localPlace": b["local_2連率"],
                 "exh": b["exhibition_time"],
+                "motor2r": b["motor_2連率"],
+                "flying": b["flying_count"],
+                "late": b["late_count"],
             })
         # 予想順にソートして印を付与
         boats_ranked = sorted(boats_out, key=lambda x: -x["pct"])
