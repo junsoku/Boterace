@@ -2,11 +2,12 @@ name: Update boatrace data
 
 on:
   schedule:
+    # UTC 21:00 = 日本時間 6:00。毎朝、前日の結果+当日の出走表を取得して予想を再計算する。
     - cron: "0 21 * * *"
-  workflow_dispatch: {}
+  workflow_dispatch: {}  # Actionsタブから手動実行もできるようにする
 
 permissions:
-  contents: write
+  contents: write  # boatrace.db / data/today.json をコミットし直すために必要
 
 jobs:
   update:
@@ -35,6 +36,13 @@ jobs:
             --start ${{ steps.dates.outputs.yesterday }} \
             --end ${{ steps.dates.outputs.today }} \
             --db data-collection/boatrace.db
+
+      - name: 取得したJSONの実際の構造をログに表示(確認用)
+        run: |
+          echo "----- programs -----"
+          python data-collection/inspect_raw_json.py --db data-collection/boatrace.db --date ${{ steps.dates.outputs.today }} --kind programs || true
+          echo "----- previews -----"
+          python data-collection/inspect_raw_json.py --db data-collection/boatrace.db --date ${{ steps.dates.outputs.today }} --kind previews || true
 
       - name: 当日の予想JSONを生成
         run: |
