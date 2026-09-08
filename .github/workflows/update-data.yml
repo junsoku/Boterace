@@ -1,0 +1,52 @@
+name: Update boatrace data
+
+on:
+  schedule:
+    - cron: "0 21 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r data-collection/requirements.txt
+
+      - name: 日本時間の日付を計算
+        id: dates
+        run: |
+          echo "today=$(TZ='Asia/Tokyo' date +%F)" >> "$GITHUB_OUTPUT"
+          echo "yesterday=$(TZ='Asia/Tokyo' date -d '-1 day' +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: 前日の結果 + 当日の出走表を取得
+        run: |
+          python data-collection/ingest.py \
+            --start ${{ steps.dates.outputs.yesterday }} \
+            --end ${{ steps.dates.outputs.today }} \
+            --db data-collection/boatrace.db
+
+      - name: 当日の予想JSONを生成
+        run: |
+          python data-collection/export_today.py \
+            --db data-collection/boatrace.db \
+            --date ${{ steps.dates.outputs.today }} \
+            --out data/today.json
+
+      - name: 変更をコミットしてpush(Pagesに反映される)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data-collection/boatrace.db data/today.json
+          git diff --cached --quiet || git commit -m "データ更新: ${{ steps.dates.outputs.today }}"
+          git push
