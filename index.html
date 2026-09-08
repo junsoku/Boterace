@@ -268,6 +268,17 @@ function makeLanes(seed){
   }));
 }
 
+// 外部データ(APIから取得した文字列)をHTMLに埋め込む前に必ずエスケープする(XSS対策)
+function escapeHtml(str){
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const MOCK_STADIUMS = [
   {
     name:"桐生",
@@ -376,7 +387,7 @@ function renderStadiumChips(){
   STADIUMS.forEach((st, idx)=>{
     const chip = document.createElement("div");
     chip.className = "chip" + (idx===activeIndex ? " active" : "");
-    chip.innerHTML = st.name + (st.grade ? `<span class="grade">${st.grade}</span>` : "");
+    chip.innerHTML = escapeHtml(st.name) + (st.grade ? `<span class="grade">${escapeHtml(st.grade)}</span>` : "");
     chip.onclick = ()=>{ activeIndex = idx; renderAll(); };
     wrap.appendChild(chip);
   });
@@ -386,7 +397,7 @@ function renderVenue(){
   const st = STADIUMS[activeIndex];
   document.getElementById("venueTitle").textContent = st.name;
   document.getElementById("venueMeta").innerHTML =
-    `全${st.races.length}レース<br>1R 締切 ${st.races[0].close}`;
+    `全${st.races.length}レース<br>1R 締切 ${escapeHtml(st.races[0].close)}`;
 }
 
 function renderRaces(){
@@ -407,14 +418,14 @@ function renderRaces(){
       <div class="race-num">${race.number}<sub-r>R</sub-r></div>
       <div class="race-body">
         <div class="race-toprow">
-          <div class="close-time">締切 <b>${race.close}</b></div>
-          ${race.grade ? `<div class="grade-tag ${gradeClass}">${race.grade}</div>` : ""}
+          <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
+          ${race.grade ? `<div class="grade-tag ${gradeClass}">${escapeHtml(race.grade)}</div>` : ""}
         </div>
         <div class="lanes">
           ${race.lanes.map(b=>`
             <div class="lane">
               <div class="lane-badge l${b.lane}">${b.lane}</div>
-              <div class="lane-name">${b.name}</div>
+              <div class="lane-name">${escapeHtml(b.name)}</div>
             </div>
           `).join("")}
         </div>
