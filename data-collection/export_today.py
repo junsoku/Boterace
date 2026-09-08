@@ -17,7 +17,17 @@ from datetime import date
 from pathlib import Path
 
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
-from build_features import FEATURE_COLS
+
+# build_features.py と同じ並び・同じ特徴量(直接定義してファイル間の依存をなくしている)
+FEATURE_COLS = [
+    "boat_number",
+    "national_win_rate",
+    "local_win_rate",
+    "motor_2連率",
+    "boat_hull_2連率",
+    "average_start_timing",
+    "course_win_rate",
+]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
 # ※ technique_stats.compute_course_technique_rates() が使えるならそちらを優先し、
@@ -133,7 +143,9 @@ def estimate_bets(boats: list, top_n: int = 4) -> list:
 
 def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
     races = conn.execute(
-        """SELECT race_id, stadium_number, race_number, race_grade, close_at
+        """SELECT race_id, stadium_number, race_number, race_grade, close_at,
+                  weather, wind_direction, wind_speed_m, wave_height_cm,
+                  temperature_c, water_temperature_c
            FROM races WHERE race_date = ? ORDER BY stadium_number, race_number""",
         (target_date.isoformat(),),
     ).fetchall()
@@ -141,12 +153,16 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
     stadium_map = {}
     course_stats_cache = {}  # stadium_number -> compute_course_technique_rates() の結果(場ごとに1回だけ計算)
 
-    for race_id, stadium_number, race_number, race_grade, close_at in races:
+    for (race_id, stadium_number, race_number, race_grade, close_at,
+         weather, wind_direction, wind_speed_m, wave_height_cm,
+         temperature_c, water_temperature_c) in races:
         entries = conn.execute(
-            """SELECT boat_number, racer_name, racer_registration_number,
-                      national_win_rate, local_win_rate, motor_2連率, boat_hull_2連率,
-                      average_start_timing
-               FROM entries WHERE race_id = ? ORDER BY boat_number""",
+            """SELECT e.boat_number, e.racer_name, e.racer_registration_number,
+                      e.national_win_rate, e.local_win_rate, e.motor_2連率, e.boat_hull_2連率,
+                      e.average_start_timing, p.exhibition_time
+               FROM entries e
+               LEFT JOIN previews p ON p.entry_id = e.entry_id
+               WHERE e.race_id = ? ORDER BY e.boat_number""",
             (race_id,),
         ).fetchall()
         if not entries:
@@ -157,7 +173,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         course_stats = course_stats_cache[stadium_number]
 
         boat_dicts = []
-        for bn, name, reg_no, nat, local, motor_2r, hull_2r, avg_st in entries:
+        for bn, name, reg_no, nat, local, motor_2r, hull_2r, avg_st, exh_time in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
@@ -166,6 +182,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "motor_2連率": motor_2r,
                 "boat_hull_2連率": hull_2r,
                 "average_start_timing": avg_st,
+                "exhibition_time": exh_time,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -188,6 +205,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "pct": pct,
                 "natWin": b["national_win_rate"],
                 "localWin": b["local_win_rate"],
+                "exh": b["exhibition_time"],
             })
         # 予想順にソートして印を付与
         boats_ranked = sorted(boats_out, key=lambda x: -x["pct"])
@@ -198,6 +216,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "number": race_number,
             "close": close_at,
             "grade": race_grade,
+            "weather": weather,
+            "windDirection": wind_direction,
+            "windSpeed": wind_speed_m,
+            "waveHeight": wave_height_cm,
+            "temperature": temperature_c,
+            "waterTemperature": water_temperature_c,
             "boats": sorted(boats_ranked, key=lambda x: x["lane"]),  # 表示は号艇順
             "boats_ranked": boats_ranked,                            # 予想順(印付き)
             "bets": estimate_bets(boats_out),
