@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>予想の履歴 | 競艇予想</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E2436;
+    --navy-soft:#16324A;
+    --paper:#EEF1EF;
+    --card:#FFFFFF;
+    --line:#D8DEDC;
+    --ink:#16232B;
+    --ink-soft:#5B6B72;
+    --accent:#16786B;
+    --accent-soft:#E4F1EE;
+    --miss:#B3261E;
+    --miss-soft:#FCE8E6;
+    --lane1:#FFFFFF; --lane1-line:#26313A;
+    --lane2:#1A1A1A;
+    --lane3:#D2352C;
+    --lane4:#1D63B4;
+    --lane5:#F2B705;
+    --lane6:#2E8B4E;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:44px;
+  }
+
+  .appbar{
+    background:var(--navy);
+    color:#fff;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:sticky; top:0; z-index:10;
+  }
+  .back{
+    font-size:22px;
+    color:#CBD9DE;
+    line-height:1;
+  }
+  .appbar-title{
+    font-family:'Shippori Mincho', serif;
+    font-size:19px;
+    font-weight:700;
+  }
+  .appbar-sub{
+    font-size:12px;
+    color:#8FA6B2;
+    margin-top:2px;
+  }
+
+  .summary-bar{
+    display:flex;
+    gap:10px;
+    padding:16px;
+  }
+  .summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .summary-num{
+    font-family:'Shippori Mincho', serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .summary-label{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+
+  .date-header{
+    padding:14px 18px 6px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+
+  .race-list{
+    padding:0 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .race-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .race-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .race-card-title{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .hit-badge{
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .hit-badge.hit{
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .hit-badge.miss{
+    background:var(--miss-soft);
+    color:var(--miss);
+  }
+
+  .compare-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .compare-side{
+    flex:1;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .compare-label{
+    font-size:10px;
+    color:var(--ink-soft);
+    width:34px;
+    flex:0 0 auto;
+  }
+  .lane-badge{
+    width:24px; height:24px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    flex:0 0 auto;
+  }
+  .lane-badge.l1{ background:var(--lane1); color:#16232B; border:1.5px solid var(--lane1-line); }
+  .lane-badge.l2{ background:var(--lane2); color:#fff; }
+  .lane-badge.l3{ background:var(--lane3); color:#fff; }
+  .lane-badge.l4{ background:var(--lane4); color:#fff; }
+  .lane-badge.l5{ background:var(--lane5); color:#3A2E00; }
+  .lane-badge.l6{ background:var(--lane6); color:#fff; }
+  .compare-name{
+    font-size:12.5px;
+    font-weight:700;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .compare-arrow{
+    color:var(--ink-soft);
+    font-size:14px;
+    flex:0 0 auto;
+  }
+
+  .trifecta-note{
+    margin-top:8px;
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+
+  .empty-note{
+    padding:60px 24px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    line-height:1.7;
+  }
+
+  .data-note{
+    margin:20px 16px 0;
+    padding:12px 14px;
+    background:#FFF6E0;
+    border:1px solid #F0DFA6;
+    border-radius:8px;
+    font-size:11.5px;
+    color:#6B5410;
+    line-height:1.7;
+  }
+</style>
+</head>
+<body>
+
+  <div class="appbar">
+    <div class="back" onclick="location.href='index.html'">‹</div>
+    <div>
+      <div class="appbar-title">予想の履歴</div>
+      <div class="appbar-sub" id="periodLabel">直近14日間</div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="summary-num" id="evaluatedNum">-</div>
+      <div class="summary-label">検証レース数</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="winHitNum">-</div>
+      <div class="summary-label">◎単勝的中率</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="trifectaHitNum">-</div>
+      <div class="summary-label">3連単的中率</div>
+    </div>
+  </div>
+
+  <div id="listArea"></div>
+
+  <div class="data-note">
+    現在のロジックで過去のレースを再計算し、実際の結果と突き合わせた参考値です。当時実際に表示していた予想そのものではありません。
+  </div>
+
+<script>
+function escapeHtml(str){
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+const MOCK_DATA = {
+  generatedAt: "2026-09-09",
+  periodStart: "2026-08-26",
+  periodEnd: "2026-09-09",
+  summary: { evaluated: 42, winHitRate: 0.52, trifectaHitRate: 0.11 },
+  races: [
+    {date:"2026-09-08", stadium:"桐生", raceNumber:3, grade:null,
+     predictedTop:{lane:1,name:"田中 一輝",pct:34}, actualWinner:{lane:1,name:"田中 一輝"},
+     winHit:true, trifectaHit:true, actualCombo:"1-4-2"},
+    {date:"2026-09-08", stadium:"戸田", raceNumber:7, grade:"G1",
+     predictedTop:{lane:2,name:"鈴木 亮太",pct:28}, actualWinner:{lane:4,name:"渡辺 翔"},
+     winHit:false, trifectaHit:false, actualCombo:"4-1-3"},
+  ]
+};
+
+function fmtPct(v){
+  return v === null || v === undefined ? "-" : Math.round(v * 1000) / 10 + "%";
+}
+
+function renderSummary(data){
+  document.getElementById("periodLabel").textContent = `${data.periodStart} 〜 ${data.periodEnd}`;
+  document.getElementById("evaluatedNum").textContent = data.summary.evaluated;
+  document.getElementById("winHitNum").textContent = fmtPct(data.summary.winHitRate);
+  document.getElementById("trifectaHitNum").textContent = fmtPct(data.summary.trifectaHitRate);
+}
+
+function renderList(data){
+  const area = document.getElementById("listArea");
+  if (!data.races || data.races.length === 0){
+    area.innerHTML = `<div class="empty-note">まだ検証できるレースがありません。<br>結果データが溜まるとここに表示されます。</div>`;
+    return;
+  }
+
+  let html = "";
+  let lastDate = null;
+  for (const race of data.races){
+    if (race.date !== lastDate){
+      html += `<div class="date-header">${escapeHtml(race.date)}</div>`;
+      lastDate = race.date;
+    }
+    html += `<div class="race-list"><div class="race-card">
+      <div class="race-card-head">
+        <div class="race-card-title">${escapeHtml(race.stadium)} ${race.raceNumber}R${race.grade ? " ・ " + escapeHtml(race.grade) : ""}</div>
+        <div class="hit-badge ${race.winHit ? "hit" : "miss"}">${race.winHit ? "◎ 的中" : "◎ 不的中"}</div>
+      </div>
+      <div class="compare-row">
+        <div class="compare-side">
+          <div class="compare-label">予想◎</div>
+          <div class="lane-badge l${race.predictedTop.lane}">${race.predictedTop.lane}</div>
+          <div class="compare-name">${escapeHtml(race.predictedTop.name)}</div>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-side">
+          <div class="compare-label">実際1着</div>
+          <div class="lane-badge l${race.actualWinner.lane}">${race.actualWinner.lane}</div>
+          <div class="compare-name">${escapeHtml(race.actualWinner.name)}</div>
+        </div>
+      </div>
+      <div class="trifecta-note">実際の着順 ${escapeHtml(race.actualCombo)} ・ 推奨3連単は${race.trifectaHit ? "的中" : "不的中"}</div>
+    </div></div>`;
+  }
+  area.innerHTML = html;
+}
+
+async function loadData(){
+  let data = MOCK_DATA;
+  try{
+    const res = await fetch("./data/history.json", {cache:"no-store"});
+    if(!res.ok) throw new Error("no data file");
+    const json = await res.json();
+    if(json.races) data = json;
+  }catch(e){
+    // 取得できない場合はサンプルデータのまま表示
+  }
+  renderSummary(data);
+  renderList(data);
+}
+
+loadData();
+</script>
+
+</body>
+</html>

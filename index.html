@@ -42,6 +42,14 @@
   .appbar-top{
     display:flex; align-items:baseline; justify-content:space-between;
   }
+  .history-link{
+    font-size:12px;
+    color:#CBD9DE;
+    border:1px solid #3A5568;
+    border-radius:14px;
+    padding:5px 12px;
+    white-space:nowrap;
+  }
   .appbar-date{
     font-family:'Shippori Mincho', serif;
     font-weight:700;
@@ -239,6 +247,7 @@
   <div class="appbar">
     <div class="appbar-top">
       <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
+      <div class="history-link" onclick="location.href='history.html'">履歴</div>
     </div>
     <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
   </div>
