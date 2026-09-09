@@ -140,6 +140,15 @@
     border-radius:4px;
     margin-left:2px;
   }
+  .class-tag{
+    font-size:10px;
+    font-weight:700;
+    color:#16324A;
+    background:#E4E8EC;
+    padding:1px 5px;
+    border-radius:4px;
+    margin-left:2px;
+  }
   .rank-bar-track{
     height:5px;
     background:#E4E8E7;
@@ -290,12 +299,12 @@ function escapeHtml(str){
 }
 
 const MOCK_RANK = [
-  {mark:"◎", lane:1, name:"田中 一輝", pct:34, exh:"6.72", natWin:"6.21", localWin:"6.80", motor2r:38.5},
-  {mark:"○", lane:4, name:"佐藤 直人", pct:24, exh:"6.75", natWin:"5.44", localWin:"5.10", motor2r:35.2},
-  {mark:"▲", lane:2, name:"鈴木 亮太", pct:17, exh:"6.78", natWin:"5.02", localWin:"4.85", motor2r:33.0},
-  {mark:"△", lane:3, name:"高橋 誠",   pct:13, exh:"6.80", natWin:"4.71", localWin:"4.50", motor2r:31.8},
-  {mark:"×", lane:6, name:"伊藤 大輔", pct:7,  exh:"6.83", natWin:"4.30", localWin:"4.02", motor2r:29.4},
-  {mark:"注", lane:5, name:"渡辺 翔",  pct:5,  exh:"6.85", natWin:"3.95", localWin:"3.60", motor2r:27.1},
+  {mark:"◎", lane:1, name:"田中 一輝", pct:34, exh:"6.72", natWin:"6.21", localWin:"6.80", motor2r:38.5, class:"A1"},
+  {mark:"○", lane:4, name:"佐藤 直人", pct:24, exh:"6.75", natWin:"5.44", localWin:"5.10", motor2r:35.2, class:"A1"},
+  {mark:"▲", lane:2, name:"鈴木 亮太", pct:17, exh:"6.78", natWin:"5.02", localWin:"4.85", motor2r:33.0, class:"A2"},
+  {mark:"△", lane:3, name:"高橋 誠",   pct:13, exh:"6.80", natWin:"4.71", localWin:"4.50", motor2r:31.8, class:"A2"},
+  {mark:"×", lane:6, name:"伊藤 大輔", pct:7,  exh:"6.83", natWin:"4.30", localWin:"4.02", motor2r:29.4, class:"B1"},
+  {mark:"注", lane:5, name:"渡辺 翔",  pct:5,  exh:"6.85", natWin:"3.95", localWin:"3.60", motor2r:27.1, class:"B1"},
 ];
 const MOCK_BETS = [
   {combo:"1-4-2", prob:"9.8%"},
@@ -326,7 +335,7 @@ async function loadRealData(){
       mark: b.mark, lane: b.lane, name: b.name, pct: b.pct,
       exh: b.exh ?? "-", natWin: b.natWin ?? "-", localWin: b.localWin ?? "-",
       motor2r: b.motor2r ?? null, natPlace: b.natPlace ?? null, localPlace: b.localPlace ?? null,
-      flying: b.flying ?? 0, late: b.late ?? 0
+      flying: b.flying ?? 0, late: b.late ?? 0, class: b.class ?? null
     }));
     BETS = race.bets;
     document.querySelector(".appbar-title").textContent = `${st.name} ${race.number}R 予想`;
@@ -361,7 +370,7 @@ function renderRank(){
       <div class="mark">${r.mark}</div>
       <div class="lane-badge l${r.lane}">${r.lane}</div>
       <div class="rank-body">
-        <div class="rank-name">${escapeHtml(r.name)}${r.flying ? ' <span class="risk-tag">F'+r.flying+'</span>' : ''}${r.late ? ' <span class="risk-tag">L'+r.late+'</span>' : ''}</div>
+        <div class="rank-name">${escapeHtml(r.name)}${r.class ? ' <span class="class-tag">'+escapeHtml(r.class)+'</span>' : ''}${r.flying ? ' <span class="risk-tag">F'+r.flying+'</span>' : ''}${r.late ? ' <span class="risk-tag">L'+r.late+'</span>' : ''}</div>
         <div class="rank-bar-track"><div class="rank-bar-fill" style="width:${r.pct}%"></div></div>
       </div>
       <div class="rank-pct">${r.pct}%</div>
