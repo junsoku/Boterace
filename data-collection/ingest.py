@@ -24,6 +24,9 @@ from boatrace_client import fetch_unified, date_range
 # 決まり手番号 -> 名称(公式サイトの表記に準拠。技術情報が数値コードのみのため変換に使用)
 TECHNIQUE_NAMES = {1: "逃げ", 2: "差し", 3: "まくり", 4: "まくり差し", 5: "抜き", 6: "恵まれ"}
 
+# 級別番号 -> 名称。rank_number_source(スクレイピング元の文字列)が取れない場合のフォールバック変換
+RANK_NAMES = {1: "A1", 2: "A2", 3: "B1", 4: "B2"}
+
 
 def init_db(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
@@ -139,6 +142,7 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                             average_start_timing, flying_count, late_count)
                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                        ON CONFLICT(race_id, boat_number) DO UPDATE SET
+                         racer_class=excluded.racer_class,
                          national_win_rate=excluded.national_win_rate,
                          national_2連率=excluded.national_2連率,
                          local_win_rate=excluded.local_win_rate,
@@ -152,7 +156,7 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                         racer.get("number"),
                         racer.get("name"),
                         racer.get("branch_number_source") or racer.get("branch_number"),
-                        racer.get("rank_number_source") or racer.get("rank_number"),
+                        racer.get("rank_number_source") or RANK_NAMES.get(racer.get("rank_number"), racer.get("rank_number")),
                         racer.get("age"),
                         racer.get("weight"),
                         racer.get("national_win_rate"),
