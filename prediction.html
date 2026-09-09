@@ -53,6 +53,17 @@
     font-size:19px;
     font-weight:700;
   }
+  .star-tag{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    background:#FFF3D6;
+    color:#8A6100;
+    vertical-align:middle;
+    margin-left:2px;
+  }
   .appbar-sub{
     font-size:12px;
     color:#8FA6B2;
@@ -261,7 +272,7 @@
   <div class="appbar">
     <div class="back" onclick="history.back()">‹</div>
     <div>
-      <div class="appbar-title">桐生 3R 予想</div>
+      <div class="appbar-title"><span id="titleText">桐生 3R 予想</span> <span class="star-tag" id="confidenceBadge" style="display:none;">★ 自信あり</span></div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
     </div>
   </div>
@@ -338,7 +349,9 @@ async function loadRealData(){
       flying: b.flying ?? 0, late: b.late ?? 0, class: b.class ?? null
     }));
     BETS = race.bets;
-    document.querySelector(".appbar-title").textContent = `${st.name} ${race.number}R 予想`;
+    document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
+    document.getElementById("confidenceBadge").style.display =
+      (race.confidence && race.confidence.isConfident) ? "inline" : "none";
     document.querySelector(".appbar-sub").textContent =
       `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}` +
       (race.weather ? ` ・ ${race.weather}` : "") +
@@ -348,7 +361,7 @@ async function loadRealData(){
   }catch(e){
     // stadium/raceパラメータがあればタイトルだけ反映してサンプルデータを使う
     if(stadiumParam){
-      document.querySelector(".appbar-title").textContent =
+      document.querySelector("#titleText").textContent =
         `${stadiumParam} ${raceParam || ""}R 予想`;
     }
     RANK = MOCK_RANK;
