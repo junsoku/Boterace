@@ -185,6 +185,37 @@
     font-size:10.5px;
     color:var(--ink-soft);
   }
+  .bet-compare{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .bet-combo-box{
+    flex:1;
+    text-align:center;
+  }
+  .bet-combo-label{
+    font-size:10px;
+    color:var(--ink-soft);
+    margin-bottom:2px;
+  }
+  .bet-combo-num{
+    font-family:'Shippori Mincho', serif;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.02em;
+  }
+  .bet-combo-num.hit{ color:var(--accent); }
+  .bet-combo-num.miss{ color:var(--ink); }
+  .bet-payout{
+    font-size:10px;
+    color:var(--accent);
+    font-weight:700;
+    margin-top:2px;
+  }
 
   .empty-note{
     padding:60px 24px;
@@ -312,7 +343,18 @@ function renderList(data){
           <div class="compare-name">${escapeHtml(race.actualWinner.name)}</div>
         </div>
       </div>
-      <div class="trifecta-note">実際の着順 ${escapeHtml(race.actualCombo)} ・ 本命3連単は${race.betHit ? "的中" : "不的中"}${race.actualPayout ? `(払戻 ${race.actualPayout.toLocaleString()}円)` : ""}</div>
+      <div class="bet-compare">
+        <div class="bet-combo-box">
+          <div class="bet-combo-label">推奨3連単</div>
+          <div class="bet-combo-num ${race.betHit ? "hit" : "miss"}">${escapeHtml(race.predictedBetCombo || "-")}</div>
+        </div>
+        <div class="compare-arrow">${race.betHit ? "=" : "→"}</div>
+        <div class="bet-combo-box">
+          <div class="bet-combo-label">実際1〜3着</div>
+          <div class="bet-combo-num ${race.betHit ? "hit" : "miss"}">${escapeHtml(race.actualCombo)}</div>
+          ${race.actualPayout ? `<div class="bet-payout">払戻 ${race.actualPayout.toLocaleString()}円</div>` : ""}
+        </div>
+      </div>
     </div></div>`;
   }
   area.innerHTML = html;
