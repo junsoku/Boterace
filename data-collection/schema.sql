@@ -101,3 +101,17 @@ CREATE TABLE IF NOT EXISTS payouts (
 CREATE INDEX IF NOT EXISTS idx_races_date ON races(race_date);
 CREATE INDEX IF NOT EXISTS idx_entries_race ON entries(race_id);
 CREATE INDEX IF NOT EXISTS idx_results_entry ON results(entry_id);
+
+-- 予想スナップショットのログ(export_today.py実行のたびに追記)。
+-- 「今のロジックで過去を再計算」ではなく「その時点で実際に出していた予想」を
+-- 振り返れるようにするためのテーブル。
+CREATE TABLE IF NOT EXISTS prediction_log (
+    log_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    race_id         INTEGER NOT NULL REFERENCES races(race_id),
+    computed_at        TEXT NOT NULL,   -- このスナップショットを計算した日時(ISO8601)
+    top_lane              INTEGER,      -- ◎(予想1位)の号艇
+    top_pct                  INTEGER,   -- ◎の予想確率(%)
+    top_bet_combo               TEXT,   -- 推奨3連単の本命
+    is_confident                   INTEGER  -- 「自信あり」判定だったか(0/1)
+);
+CREATE INDEX IF NOT EXISTS idx_prediction_log_race ON prediction_log(race_id, computed_at);

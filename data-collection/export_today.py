@@ -13,7 +13,7 @@ DBから本日(または指定日)のレースを取り出し、フロントエ�
 import argparse
 import json
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
@@ -312,9 +312,20 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "confidence": confidence,
         }
 
+        # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)
+        top_bet_combo = race_out["bets"][0]["combo"] if race_out["bets"] else None
+        conn.execute(
+            """INSERT INTO prediction_log (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident)
+               VALUES (?,?,?,?,?,?)""",
+            (race_id, datetime.now().isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
+             top_bet_combo, int(confidence["isConfident"])),
+        )
+
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
         stadium_map.setdefault(stadium_name, {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []})
         stadium_map[stadium_name]["races"].append(race_out)
+
+    conn.commit()
 
     return {
         "date": target_date.isoformat(),
@@ -348,7 +359,8 @@ def main():
         print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで続行します)")
 
     target_date = date.fromisoformat(args.date) if args.date else date.today()
-    conn = sqlite3.connect(args.db)
+    from ingest import init_db  # schema.sql適用+マイグレーションを共通化するため再利用
+    conn = init_db(args.db)
     result = build_today_json(conn, target_date, model=model)
     conn.close()
 
