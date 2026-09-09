@@ -42,10 +42,15 @@ jobs:
 
       - name: 当日の予想JSONを生成
         run: |
+          MODEL_ARG=""
+          if [ -f data-collection/model.txt ]; then
+            MODEL_ARG="--model data-collection/model.txt"
+          fi
           python data-collection/export_today.py \
             --db data-collection/boatrace.db \
             --date ${{ steps.dates.outputs.today }} \
-            --out data/today.json
+            --out data/today.json \
+            $MODEL_ARG
 
       - name: 履歴JSONを生成
         run: |
