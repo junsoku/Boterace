@@ -37,6 +37,10 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
     win_hits = 0
     trifecta_hits = 0
     evaluated = 0
+    stake_single = 0
+    return_single = 0
+    stake_multi = 0
+    return_multi = 0
 
     for race_id, race_date_str, stadium_number, race_number, race_grade, wave, wind in races:
         entries = conn.execute(
@@ -93,7 +97,9 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
         actual_combo = "-".join(str(d["boat_number"]) for d, _ in actual_order[:3])
 
         boats_for_bets = [{"lane": d["boat_number"], "pct": pct} for (d, _), pct in zip(boat_dicts, pcts)]
-        predicted_bets = {b["combo"] for b in estimate_bets(boats_for_bets, top_n=6)}
+        bet_list = estimate_bets(boats_for_bets, top_n=6)
+        predicted_bets = {b["combo"] for b in bet_list}
+        top_bet_combo = bet_list[0]["combo"] if bet_list else None
         trifecta_hit = actual_combo in predicted_bets
 
         evaluated += 1
@@ -102,6 +108,21 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             win_hits += 1
         if trifecta_hit:
             trifecta_hits += 1
+
+        # 実際の3連単払戻金額(取れた場合のみ回収率の計算対象にする)
+        payout_row = conn.execute(
+            "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
+            (race_id, actual_combo),
+        ).fetchone()
+        race_payout = payout_row[0] if payout_row else None
+        if race_payout is not None:
+            stake_single += 100
+            if top_bet_combo == actual_combo:
+                return_single += race_payout
+            n_bets = len(bet_list)
+            stake_multi += 100 * n_bets
+            if trifecta_hit:
+                return_multi += race_payout
 
         history.append({
             "date": race_date_str,
@@ -120,6 +141,8 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             "winHit": win_hit,
             "trifectaHit": trifecta_hit,
             "actualCombo": actual_combo,
+            "actualPayout": race_payout,
+            "topBetHit": top_bet_combo == actual_combo,
         })
 
     history.sort(key=lambda h: (h["date"], h["stadium"], h["raceNumber"]), reverse=True)
@@ -133,6 +156,10 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             "evaluated": evaluated,
             "winHitRate": win_hits / evaluated if evaluated else None,
             "trifectaHitRate": trifecta_hits / evaluated if evaluated else None,
+            "recoveryRateSingle": (return_single / stake_single) if stake_single else None,
+            "recoveryRateMulti": (return_multi / stake_multi) if stake_multi else None,
+            "stakeSingle": stake_single,
+            "returnSingle": return_single,
         },
         "races": history,
     }
