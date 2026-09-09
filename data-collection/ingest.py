@@ -1,17 +1,16 @@
 """
-BoatraceOpenAPIから出走表・直前情報・結果を取得し、SQLiteに保存するメインスクリプト。
+BoatraceOpenAPI 統合API(v1)から出走表・直前情報・結果・払戻を取得し、SQLiteに保存する
+メインスクリプト。
 
 使い方:
     python ingest.py --start 2026-08-01 --end 2026-08-31 --db boatrace.db
 
 設計方針:
-    1. 生JSONは必ず raw_json テーブルにそのまま保存する
-       (パースのキー名が実際のAPI仕様とズレていても、後から再パースできるようにするため)
-    2. 正規化テーブル(races/entries/previews/results)への変換はベストエフォート。
-       このスクリプトを書いた時点ではAPIレスポンスを実機取得して検証できていないため、
-       フィールド名は BoatraceOpenAPI の一般的な命名慣習からの推測が含まれます。
-       初回実行時は必ず --inspect オプションでJSON構造を確認し、
-       parse_programs() 等の pick() 呼び出しのキー名を実データに合わせて調整してください。
+    1. 生JSONは必ず raw_json テーブルにそのまま保存する(再パースできるようにするため)
+    2. 項目名は公式スキーマ文書(下記)で確認済みの正確なものを使っている(推測ではない)
+       https://github.com/boatraceopenapi/api/blob/gh-pages/docs/v1/schema.md
+    3. `_source` 付きの項目(級別・天候・グレードなど)は、コード化された数値ではなく
+       スクレイピング元の人間可読な文字列(例: "A1"、"晴")をそのまま使う。
 """
 import argparse
 import json
@@ -20,15 +19,10 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from boatrace_client import fetch_day, date_range
+from boatrace_client import fetch_unified, date_range
 
-
-def pick(d: dict, *candidates: str, default: Any = None) -> Any:
-    """複数の想定キー名から最初に見つかった値を返す(API側の命名揺れに対応)"""
-    for key in candidates:
-        if key in d:
-            return d[key]
-    return default
+# 決まり手番号 -> 名称(公式サイトの表記に準拠。技術情報が数値コードのみのため変換に使用)
+TECHNIQUE_NAMES = {1: "逃げ", 2: "差し", 3: "まくり", 4: "まくり差し", 5: "抜き", 6: "恵まれ"}
 
 
 def init_db(db_path: str) -> sqlite3.Connection:
@@ -41,10 +35,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
 
 
 def _migrate_add_missing_columns(conn: sqlite3.Connection):
-    """schema.sqlに列を追加した後、既存DBにも反映させるための簡易マイグレーション。
-    CREATE TABLE IF NOT EXISTS は既存テーブルへの列追加はしてくれないため、
-    ALTER TABLE ADD COLUMN を個別に試し、「既にある」エラーは無視する。
-    """
+    """schema.sqlに列を追加した後、既存DBにも反映させるための簡易マイグレーション。"""
     migrations = [
         ("entries", "flying_count", "INTEGER"),
         ("entries", "late_count", "INTEGER"),
@@ -55,183 +46,194 @@ def _migrate_add_missing_columns(conn: sqlite3.Connection):
             conn.commit()
         except sqlite3.OperationalError as e:
             if "duplicate column name" not in str(e):
-                raise  # 列名重複以外のエラーは想定外なので伝播させる
+                raise
+
+    # payoutsの重複防止(30分おきの再取り込みで同じ払戻行が増殖しないようにする)
+    try:
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_payouts_unique ON payouts(race_id, bet_type, combination)"
+        )
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        print(f"[WARN] payouts一意インデックス作成に失敗(既存データに重複がある可能性): {e}")
 
 
-def save_raw(conn: sqlite3.Connection, race_date: date, kind: str, payload: Optional[dict]):
+def save_raw(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
     if payload is None:
         return
     conn.execute(
         """INSERT INTO raw_json (race_date, kind, fetched_at, payload)
-           VALUES (?, ?, ?, ?)
+           VALUES (?, 'unified', ?, ?)
            ON CONFLICT(race_date, kind) DO UPDATE SET
              fetched_at=excluded.fetched_at, payload=excluded.payload""",
-        (race_date.isoformat(), kind, datetime.now().isoformat(), json.dumps(payload, ensure_ascii=False)),
+        (race_date.isoformat(), datetime.now().isoformat(), json.dumps(payload, ensure_ascii=False)),
     )
 
 
-def parse_programs(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
-    """出走表JSON -> races / entries テーブルへ格納"""
-    if not payload:
-        return
-    races = pick(payload, "results", "programs", "races", default=[])
-    for race in races:
-        stadium_number = pick(race, "race_stadium_number", "stadium_number")
-        race_number = pick(race, "race_number")
-        if stadium_number is None or race_number is None:
-            continue
-        cur = conn.execute(
-            """INSERT INTO races (race_date, stadium_number, race_number, race_title,
-                                   race_grade, close_at, distance_m)
-               VALUES (?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT(race_date, stadium_number, race_number) DO UPDATE SET
-                 race_title=excluded.race_title, race_grade=excluded.race_grade,
-                 close_at=excluded.close_at, distance_m=excluded.distance_m""",
-            (
-                race_date.isoformat(), stadium_number, race_number,
-                pick(race, "race_title", "title"),
-                pick(race, "race_grade_number", "race_grade"),
-                pick(race, "race_closed_at", "close_at"),
-                pick(race, "race_distance", "distance_m", default=1800),
-            ),
-        )
-        race_id = conn.execute(
-            "SELECT race_id FROM races WHERE race_date=? AND stadium_number=? AND race_number=?",
-            (race_date.isoformat(), stadium_number, race_number),
-        ).fetchone()[0]
-
-        boats = pick(race, "boats", "entries", default=[])
-        for boat in boats:
-            boat_number = pick(boat, "racer_boat_number", "boat_number")
-            if boat_number is None:
-                continue
-            conn.execute(
-                """INSERT INTO entries (race_id, boat_number, racer_registration_number,
-                        racer_name, racer_branch, racer_class, racer_age, racer_weight_kg,
-                        national_win_rate, national_2連率, local_win_rate, local_2連率,
-                        motor_number, motor_2連率, boat_hull_number, boat_hull_2連率,
-                        average_start_timing, flying_count, late_count)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                   ON CONFLICT(race_id, boat_number) DO NOTHING""",
-                (
-                    race_id, boat_number,
-                    pick(boat, "racer_number", "racer_registration_number"),
-                    pick(boat, "racer_name"),
-                    pick(boat, "racer_branch_number", "racer_branch"),
-                    pick(boat, "racer_class_number", "racer_class"),
-                    pick(boat, "racer_age"),
-                    pick(boat, "racer_weight"),
-                    pick(boat, "racer_national_top_1_percent", "national_win_rate"),
-                    pick(boat, "racer_national_top_2_percent", "national_2連率"),
-                    pick(boat, "racer_local_top_1_percent", "local_win_rate"),
-                    pick(boat, "racer_local_top_2_percent", "local_2連率"),
-                    pick(boat, "racer_assigned_motor_number", "motor_number"),
-                    pick(boat, "racer_assigned_motor_top_2_percent", "motor_2連率"),
-                    pick(boat, "racer_assigned_boat_number", "boat_hull_number"),
-                    pick(boat, "racer_assigned_boat_top_2_percent", "boat_hull_2連率"),
-                    pick(boat, "racer_average_start_timing", "average_start_timing"),
-                    pick(boat, "racer_flying_count", "racer_boat_flying_count", "flying_count"),
-                    pick(boat, "racer_late_count", "racer_boat_late_count", "late_count"),
-                ),
-            )
-    conn.commit()
-
-
-def get_entry_id(conn: sqlite3.Connection, race_date: date, stadium_number, race_number, boat_number) -> Optional[int]:
+def get_entry_id(conn: sqlite3.Connection, race_id: int, boat_number: int) -> Optional[int]:
     row = conn.execute(
-        """SELECT e.entry_id FROM entries e
-           JOIN races r ON r.race_id = e.race_id
-           WHERE r.race_date=? AND r.stadium_number=? AND r.race_number=? AND e.boat_number=?""",
-        (race_date.isoformat(), stadium_number, race_number, boat_number),
+        "SELECT entry_id FROM entries WHERE race_id=? AND boat_number=?",
+        (race_id, boat_number),
     ).fetchone()
     return row[0] if row else None
 
 
-def parse_results(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
-    """結果JSON -> results テーブルへ格納(先にentriesが存在している必要あり)"""
+def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
+    """統合JSON(programs.stadiums.{場}.races.{R} 直下に出走表+preview+result)を全テーブルへ格納"""
     if not payload:
         return
-    races = pick(payload, "results", "races", default=[])
-    for race in races:
-        stadium_number = pick(race, "race_stadium_number", "stadium_number")
-        race_number = pick(race, "race_number")
-        boats = pick(race, "boats", "entries", default=[])
-        for boat in boats:
-            boat_number = pick(boat, "racer_boat_number", "boat_number")
-            entry_id = get_entry_id(conn, race_date, stadium_number, race_number, boat_number)
-            if entry_id is None:
-                continue  # 出走表が先に取り込まれていない場合はスキップ
+    stadiums = (payload.get("programs") or {}).get("stadiums") or {}
+
+    for stadium_str, stadium_obj in stadiums.items():
+        stadium_number = int(stadium_str)
+        races = (stadium_obj or {}).get("races") or {}
+
+        for race_str, race in races.items():
+            race_number = int(race_str)
+            preview = race.get("preview") or {}
+            result = race.get("result") or {}
+
+            # 天候は直前情報を優先(締切直前の実況値)。まだなければ結果側の値で埋める。
+            weather_source = preview.get("weather_number_source") or result.get("weather_number_source")
+            wind_speed = preview.get("wind_speed") or result.get("wind_speed")
+            wind_dir = preview.get("wind_direction_number") or result.get("wind_direction_number")
+            wave_height = preview.get("wave_height") or result.get("wave_height")
+            air_temp = preview.get("air_temperature") or result.get("air_temperature")
+            water_temp = preview.get("water_temperature") or result.get("water_temperature")
+
             conn.execute(
-                """INSERT INTO results (entry_id, arrival_order, actual_course,
-                        actual_start_timing, race_time, winning_technique, remarks)
-                   VALUES (?,?,?,?,?,?,?)
-                   ON CONFLICT(entry_id) DO UPDATE SET
-                     arrival_order=excluded.arrival_order""",
+                """INSERT INTO races (race_date, stadium_number, race_number, race_title,
+                                       race_grade, close_at, distance_m,
+                                       weather, wind_direction, wind_speed_m, wave_height_cm,
+                                       temperature_c, water_temperature_c)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                   ON CONFLICT(race_date, stadium_number, race_number) DO UPDATE SET
+                     race_title=excluded.race_title, race_grade=excluded.race_grade,
+                     close_at=excluded.close_at, distance_m=excluded.distance_m,
+                     weather=excluded.weather, wind_direction=excluded.wind_direction,
+                     wind_speed_m=excluded.wind_speed_m, wave_height_cm=excluded.wave_height_cm,
+                     temperature_c=excluded.temperature_c, water_temperature_c=excluded.water_temperature_c""",
                 (
-                    entry_id,
-                    pick(boat, "racer_place_number", "arrival_order"),
-                    pick(boat, "racer_course_number", "actual_course"),
-                    pick(boat, "racer_start_timing", "actual_start_timing"),
-                    pick(boat, "race_time"),
-                    pick(boat, "winning_technique"),
-                    pick(boat, "remarks"),
+                    race_date.isoformat(), stadium_number, race_number,
+                    race.get("title"),
+                    race.get("grade_number_source") or race.get("grade_number"),
+                    race.get("closed_at"),
+                    race.get("distance") or 1800,
+                    weather_source, wind_dir, wind_speed, wave_height, air_temp, water_temp,
                 ),
             )
-    conn.commit()
+            race_id = conn.execute(
+                "SELECT race_id FROM races WHERE race_date=? AND stadium_number=? AND race_number=?",
+                (race_date.isoformat(), stadium_number, race_number),
+            ).fetchone()[0]
 
+            # ---- 出走表(選手情報)----
+            racers = race.get("racers") or {}
+            for entry_str, racer in racers.items():
+                boat_number = racer.get("entry_number") or int(entry_str)
+                conn.execute(
+                    """INSERT INTO entries (race_id, boat_number, racer_registration_number,
+                            racer_name, racer_branch, racer_class, racer_age, racer_weight_kg,
+                            national_win_rate, national_2連率, local_win_rate, local_2連率,
+                            motor_number, motor_2連率, boat_hull_number, boat_hull_2連率,
+                            average_start_timing, flying_count, late_count)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       ON CONFLICT(race_id, boat_number) DO UPDATE SET
+                         national_win_rate=excluded.national_win_rate,
+                         national_2連率=excluded.national_2連率,
+                         local_win_rate=excluded.local_win_rate,
+                         local_2連率=excluded.local_2連率,
+                         motor_2連率=excluded.motor_2連率,
+                         boat_hull_2連率=excluded.boat_hull_2連率,
+                         flying_count=excluded.flying_count,
+                         late_count=excluded.late_count""",
+                    (
+                        race_id, boat_number,
+                        racer.get("number"),
+                        racer.get("name"),
+                        racer.get("branch_number_source") or racer.get("branch_number"),
+                        racer.get("rank_number_source") or racer.get("rank_number"),
+                        racer.get("age"),
+                        racer.get("weight"),
+                        racer.get("national_win_rate"),
+                        racer.get("national_top_2_percent"),
+                        racer.get("local_win_rate"),
+                        racer.get("local_top_2_percent"),
+                        racer.get("motor_number"),
+                        racer.get("motor_top_2_percent"),
+                        racer.get("boat_number"),
+                        racer.get("boat_top_2_percent"),
+                        racer.get("average_start_timing"),
+                        racer.get("flying_count"),
+                        racer.get("late_count"),
+                    ),
+                )
 
-def parse_previews(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
-    """直前情報JSON -> previews テーブル(選手ごと) + races テーブルの天候欄へ格納"""
-    if not payload:
-        return
-    races = pick(payload, "results", "races", default=[])
-    for race in races:
-        stadium_number = pick(race, "race_stadium_number", "stadium_number")
-        race_number = pick(race, "race_number")
+            # ---- 直前情報(選手ごと)----
+            preview_racers = preview.get("racers") or {}
+            for entry_str, p in preview_racers.items():
+                boat_number = p.get("entry_number") or int(entry_str)
+                entry_id = get_entry_id(conn, race_id, boat_number)
+                if entry_id is None:
+                    continue
+                conn.execute(
+                    """INSERT INTO previews (entry_id, exhibition_time, tilt_angle,
+                            weight_adjustment_kg, start_course, start_timing_preview)
+                       VALUES (?,?,?,?,?,?)
+                       ON CONFLICT(entry_id) DO UPDATE SET
+                         exhibition_time=excluded.exhibition_time,
+                         tilt_angle=excluded.tilt_angle,
+                         weight_adjustment_kg=excluded.weight_adjustment_kg,
+                         start_course=excluded.start_course,
+                         start_timing_preview=excluded.start_timing_preview""",
+                    (
+                        entry_id,
+                        p.get("exhibition_time"),
+                        p.get("tilt_adjustment"),
+                        p.get("weight_adjustment"),
+                        p.get("course_number"),
+                        p.get("start_timing"),
+                    ),
+                )
 
-        # 天候はレース単位(6艇共通)の情報なので、races テーブル側を更新する
-        conn.execute(
-            """UPDATE races SET
-                 weather=?, wind_direction=?, wind_speed_m=?, wave_height_cm=?,
-                 temperature_c=?, water_temperature_c=?
-               WHERE race_date=? AND stadium_number=? AND race_number=?""",
-            (
-                pick(race, "race_weather_condition", "weather"),
-                pick(race, "race_wind_direction_number", "wind_direction"),
-                pick(race, "race_wind_velocity", "wind_speed_m"),
-                pick(race, "race_wave_height", "wave_height_cm"),
-                pick(race, "race_temperature", "temperature_c"),
-                pick(race, "race_water_temperature", "water_temperature_c"),
-                race_date.isoformat(), stadium_number, race_number,
-            ),
-        )
+            # ---- 結果(選手ごと)+ 決まり手(レース単位のtechnique_numberを1着艇に紐付け)----
+            result_racers = result.get("racers") or {}
+            technique_name = TECHNIQUE_NAMES.get(result.get("technique_number"))
+            for entry_str, r in result_racers.items():
+                boat_number = r.get("entry_number") or int(entry_str)
+                entry_id = get_entry_id(conn, race_id, boat_number)
+                if entry_id is None:
+                    continue
+                place = r.get("place_number")
+                conn.execute(
+                    """INSERT INTO results (entry_id, arrival_order, actual_course,
+                            actual_start_timing, winning_technique)
+                       VALUES (?,?,?,?,?)
+                       ON CONFLICT(entry_id) DO UPDATE SET
+                         arrival_order=excluded.arrival_order,
+                         actual_course=excluded.actual_course,
+                         actual_start_timing=excluded.actual_start_timing,
+                         winning_technique=excluded.winning_technique""",
+                    (
+                        entry_id, place,
+                        r.get("course_number"),
+                        r.get("start_timing"),
+                        technique_name if place == 1 else None,
+                    ),
+                )
 
-        boats = pick(race, "boats", "entries", default=[])
-        for boat in boats:
-            boat_number = pick(boat, "racer_boat_number", "boat_number")
-            entry_id = get_entry_id(conn, race_date, stadium_number, race_number, boat_number)
-            if entry_id is None:
-                continue  # 出走表が先に取り込まれていない場合はスキップ
-            conn.execute(
-                """INSERT INTO previews (entry_id, exhibition_time, tilt_angle,
-                        weight_adjustment_kg, start_course, start_timing_preview,
-                        parts_exchanged)
-                   VALUES (?,?,?,?,?,?,?)
-                   ON CONFLICT(entry_id) DO UPDATE SET
-                     exhibition_time=excluded.exhibition_time,
-                     tilt_angle=excluded.tilt_angle,
-                     start_course=excluded.start_course,
-                     start_timing_preview=excluded.start_timing_preview""",
-                (
-                    entry_id,
-                    pick(boat, "racer_exhibition_time", "exhibition_time"),
-                    pick(boat, "racer_tilt", "tilt_angle"),
-                    pick(boat, "racer_weight_adjustment", "weight_adjustment_kg"),
-                    pick(boat, "racer_course_number", "start_course"),
-                    pick(boat, "racer_start_timing", "start_timing_preview"),
-                    pick(boat, "racer_parts_exchanged", "parts_exchanged"),
-                ),
-            )
+            # ---- 払戻 ----
+            payouts = result.get("payouts") or {}
+            for bet_type, items in payouts.items():
+                for item in items or []:
+                    conn.execute(
+                        """INSERT INTO payouts (race_id, bet_type, combination, payout_yen)
+                           VALUES (?,?,?,?)
+                           ON CONFLICT(race_id, bet_type, combination) DO UPDATE SET
+                             payout_yen=excluded.payout_yen""",
+                        (race_id, bet_type, item.get("combination"), item.get("amount")),
+                    )
+
     conn.commit()
 
 
@@ -248,15 +250,10 @@ def main():
 
     for d in date_range(start, end):
         print(f"取得中: {d}")
-        day_data = fetch_day(d)
-        save_raw(conn, d, "programs", day_data["programs"])
-        save_raw(conn, d, "previews", day_data["previews"])
-        save_raw(conn, d, "results", day_data["results"])
+        payload = fetch_unified(d)
+        save_raw(conn, d, payload)
         conn.commit()
-
-        parse_programs(conn, d, day_data["programs"])
-        parse_previews(conn, d, day_data["previews"])
-        parse_results(conn, d, day_data["results"])
+        parse_unified(conn, d, payload)
 
     conn.close()
     print("完了しました。")

@@ -91,10 +91,11 @@ CREATE TABLE IF NOT EXISTS results (
 CREATE TABLE IF NOT EXISTS payouts (
     payout_id     INTEGER PRIMARY KEY AUTOINCREMENT,
     race_id         INTEGER NOT NULL REFERENCES races(race_id),
-    bet_type          TEXT NOT NULL,   -- '3連単' '2連単' '拡連複' 等
-    combination         TEXT NOT NULL, -- '1-2-3' のような組み合わせ文字列
+    bet_type          TEXT NOT NULL,   -- 'trifecta'(3連単) 'trio'(3連複) 'exacta'(2連単) 等(API仕様のキー名をそのまま使用)
+    combination         TEXT NOT NULL, -- '4-3-1' のような組み合わせ文字列(同着時は'1=3=4'表記)
     payout_yen            INTEGER,
-    popularity_rank          INTEGER  -- 人気順位(オッズ人気)
+    popularity_rank          INTEGER, -- 人気順位(このAPIには含まれないため常にNULL)
+    UNIQUE(race_id, bet_type, combination)
 );
 
 CREATE INDEX IF NOT EXISTS idx_races_date ON races(race_date);

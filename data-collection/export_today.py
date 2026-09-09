@@ -91,15 +91,26 @@ def score_boat(entry: dict, course_stats: dict, race_context: dict = None) -> fl
             course_adv *= 1.05
 
         # SG/G1は出走選手のレベルが拮抗しがちなので、コース有利さの影響を少し弱める(差がつきにくい)
-        grade = (race_context.get("race_grade") or "")
-        if any(g in str(grade) for g in ["SG", "G1"]):
+        import unicodedata
+        grade = unicodedata.normalize("NFKC", str(race_context.get("race_grade") or ""))
+        if any(g in grade for g in ["SG", "G1"]):
             course_adv *= 0.9
+
+    # 選手の級別(A1が最上位)。勝率とある程度重複するが、直近の再格付けを反映した指標として少しだけ加点。
+    class_bonus = {"A1": 0.5, "A2": 0.2, "B1": 0.0, "B2": -0.3}.get(entry.get("racer_class"), 0.0)
+
+    # 展示タイムは、そのレース6艇の平均より速いほどプラス評価(仕上がりの良さを示す実測値)。
+    # レース平均は build_today_json 側で計算して race_context 経由で渡す。
+    exh_bonus = 0.0
+    if race_context and race_context.get("avg_exhibition_time") and entry.get("exhibition_time"):
+        exh_bonus = (race_context["avg_exhibition_time"] - entry["exhibition_time"]) * 3
 
     return (
         nat * 0.20 + local * 0.20
         + nat_place * 0.08 + local_place * 0.07
         + course_adv * 0.25
         + motor * 0.13 + hull * 0.07
+        + class_bonus + exh_bonus
     )
 
 
@@ -195,7 +206,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
          weather, wind_direction, wind_speed_m, wave_height_cm,
          temperature_c, water_temperature_c) in races:
         entries = conn.execute(
-            """SELECT e.boat_number, e.racer_name, e.racer_registration_number,
+            """SELECT e.boat_number, e.racer_name, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率,
                       e.average_start_timing, p.exhibition_time,
@@ -212,18 +223,23 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
         course_stats = course_stats_cache[stadium_number]
 
+        exh_values = [row[11] for row in entries if row[11]]
+        avg_exhibition_time = sum(exh_values) / len(exh_values) if exh_values else None
+
         race_context = {
             "wave_height_cm": wave_height_cm,
             "wind_speed_m": wind_speed_m,
             "race_grade": race_grade,
+            "avg_exhibition_time": avg_exhibition_time,
         }
 
         boat_dicts = []
-        for (bn, name, reg_no, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
+        for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
              avg_st, exh_time, flying_count, late_count) in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
+                "racer_class": racer_class,
                 "national_win_rate": nat,
                 "national_2連率": nat_2r,
                 "local_win_rate": local,
@@ -253,6 +269,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             boats_out.append({
                 "lane": b["boat_number"],
                 "name": b["racer_name"] or f'{b["boat_number"]}号艇選手',
+                "class": b["racer_class"],
                 "pct": pct,
                 "natWin": b["national_win_rate"],
                 "localWin": b["local_win_rate"],
