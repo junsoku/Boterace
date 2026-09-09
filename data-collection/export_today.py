@@ -191,6 +191,9 @@ def estimate_bets(boats: list, top_n: int = 4) -> list:
 
 
 def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
+    from confidence import compute_confidence_calibration, lookup_confidence  # 遅延importで循環参照を回避
+    calibration = compute_confidence_calibration(conn)
+
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
                   weather, wind_direction, wind_speed_m, wave_height_cm,
@@ -285,6 +288,14 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         for i, b in enumerate(boats_ranked):
             b["mark"] = MARKS[i] if i < len(MARKS) else ""
 
+        confidence_raw = lookup_confidence(calibration, boats_ranked[0]["pct"])
+        confidence = {
+            "isConfident": confidence_raw["is_confident"],
+            "hitRate": confidence_raw["hit_rate"],
+            "sampleSize": confidence_raw["sample_size"],
+            "bucket": confidence_raw["bucket"],
+        }
+
         race_out = {
             "number": race_number,
             "close": close_at,
@@ -298,6 +309,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "boats": sorted(boats_ranked, key=lambda x: x["lane"]),  # 表示は号艇順
             "boats_ranked": boats_ranked,                            # 予想順(印付き)
             "bets": estimate_bets(boats_out),
+            "confidence": confidence,
         }
 
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
