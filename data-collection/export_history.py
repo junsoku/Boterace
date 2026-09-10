@@ -58,6 +58,8 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
     evaluated = 0
     stake = 0
     payout_return = 0
+    stake_all = 0
+    payout_return_all = 0
 
     for race_id, race_date_str, stadium_number, race_number, race_grade, close_at in races:
         snapshots = conn.execute(
@@ -95,16 +97,6 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
         if bet_hit:
             bet_hits += 1
 
-        payout_row = conn.execute(
-            "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
-            (race_id, actual_combo),
-        ).fetchone()
-        race_payout = payout_row[0] if payout_row else None
-        if race_payout is not None:
-            stake += 100
-            if bet_hit:
-                payout_return += race_payout
-
         # 上位候補(通常4件)を、各候補が実際に的中したかどうか付きで展開する。
         # top_bets_json が無い古い記録(この機能を追加する前のレース)は、
         # 従来の本命1件だけにフォールバックする。
@@ -127,6 +119,24 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
                 "prob": None,
                 "hit": bet_hit,
             })
+
+        payout_row = conn.execute(
+            "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
+            (race_id, actual_combo),
+        ).fetchone()
+        race_payout = payout_row[0] if payout_row else None
+        if race_payout is not None:
+            # 本命1点(100円)の回収率
+            stake += 100
+            if bet_hit:
+                payout_return += race_payout
+
+            # 上位候補すべてを均等(各100円)買いした場合の回収率。
+            # 候補のどれか1つでも実際の組み合わせと一致すれば、その点だけ払戻を受け取る。
+            n_candidates = len(predicted_bet_combos) if predicted_bet_combos else 1
+            stake_all += 100 * n_candidates
+            if any(c["hit"] for c in predicted_bet_combos):
+                payout_return_all += race_payout
 
         history.append({
             "date": race_date_str,
@@ -159,6 +169,9 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             "recoveryRate": (payout_return / stake) if stake else None,
             "stake": stake,
             "payoutReturn": payout_return,
+            "recoveryRateAll": (payout_return_all / stake_all) if stake_all else None,
+            "stakeAll": stake_all,
+            "payoutReturnAll": payout_return_all,
         },
         "races": history,
     }
