@@ -3,8 +3,10 @@ DBから本日(または指定日)のレースを取り出し、フロントエ�
 そのまま読み込めるJSON(today.json)を出力するスクリプト。
 
 暫定スコアリング:
-    まだMLモデルがないため、全国勝率・当地勝率・コース(号艇)有利さの加重平均で
-    仮のスコアを出している。MLモデルができたら score_boat() だけ差し替えればよい。
+    train_model.py で学習したMLモデル(model.txt)があれば predict_with_model() で
+    それを使う。無い場合(--model未指定、またはファイルが見つからない場合)のみ、
+    全国勝率・当地勝率・コース(号艇)有利さの加重平均によるヒューリスティック
+    (score_boat())にフォールバックする。
 
 使い方:
     python export_today.py --db boatrace.db --date 2026-09-07 --out data/today.json
@@ -215,8 +217,12 @@ def estimate_bets(boats: list, top_n: int = 4) -> list:
 
 
 def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
-    from confidence import compute_confidence_calibration, lookup_confidence  # 遅延importで循環参照を回避
-    calibration = compute_confidence_calibration(conn)
+    from confidence import (  # 遅延importで循環参照を回避
+        compute_confidence_calibration, lookup_confidence,
+        compute_bet_confidence_calibration, lookup_bet_confidence,
+    )
+    calibration = compute_confidence_calibration(conn, model=model)
+    bet_calibration = compute_bet_confidence_calibration(conn, model=model)
 
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
@@ -321,6 +327,21 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "bucket": confidence_raw["bucket"],
         }
 
+        bets = estimate_bets(boats_out)
+        bet_confidence = None
+        if bets:
+            try:
+                top_bet_prob = float(bets[0]["prob"].rstrip("%"))
+                bet_confidence_raw = lookup_bet_confidence(bet_calibration, top_bet_prob)
+                bet_confidence = {
+                    "isConfident": bet_confidence_raw["is_confident"],
+                    "hitRate": bet_confidence_raw["hit_rate"],
+                    "sampleSize": bet_confidence_raw["sample_size"],
+                    "bucket": bet_confidence_raw["bucket"],
+                }
+            except (ValueError, AttributeError):
+                bet_confidence = None
+
         race_out = {
             "number": race_number,
             "close": close_at,
@@ -333,8 +354,9 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "waterTemperature": water_temperature_c,
             "boats": sorted(boats_ranked, key=lambda x: x["lane"]),  # 表示は号艇順
             "boats_ranked": boats_ranked,                            # 予想順(印付き)
-            "bets": estimate_bets(boats_out),
-            "confidence": confidence,
+            "bets": bets,
+            "confidence": confidence,           # ◎(単勝)の確信度
+            "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
         }
 
         # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)。
@@ -343,10 +365,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         top_bets_json = json.dumps(race_out["bets"], ensure_ascii=False) if race_out["bets"] else None
         conn.execute(
             """INSERT INTO prediction_log
-                   (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident, top_bets_json)
-               VALUES (?,?,?,?,?,?,?)""",
+                   (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident,
+                    top_bets_json, bet_is_confident)
+               VALUES (?,?,?,?,?,?,?,?)""",
             (race_id, datetime.now().isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
-             top_bet_combo, int(confidence["isConfident"]), top_bets_json),
+             top_bet_combo, int(confidence["isConfident"]), top_bets_json,
+             int(bet_confidence["isConfident"]) if bet_confidence else None),
         )
 
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
