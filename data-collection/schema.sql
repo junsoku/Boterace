@@ -111,7 +111,8 @@ CREATE TABLE IF NOT EXISTS prediction_log (
     computed_at        TEXT NOT NULL,   -- このスナップショットを計算した日時(ISO8601)
     top_lane              INTEGER,      -- ◎(予想1位)の号艇
     top_pct                  INTEGER,   -- ◎の予想確率(%)
-    top_bet_combo               TEXT,   -- 推奨3連単の本命
-    is_confident                   INTEGER  -- 「自信あり」判定だったか(0/1)
+    top_bet_combo               TEXT,   -- 推奨3連単の本命(後方互換のため残す。先頭候補と同じ値)
+    is_confident                   INTEGER,  -- 「自信あり」判定だったか(0/1)
+    top_bets_json                     TEXT   -- 上位候補(通常4件)を [{"combo":"1-4-2","prob":"9.8%"}, ...] のJSON文字列で保存
 );
 CREATE INDEX IF NOT EXISTS idx_prediction_log_race ON prediction_log(race_id, computed_at);

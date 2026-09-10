@@ -61,14 +61,15 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
 
     for race_id, race_date_str, stadium_number, race_number, race_grade, close_at in races:
         snapshots = conn.execute(
-            """SELECT computed_at, top_lane, top_pct, top_bet_combo, is_confident
+            """SELECT computed_at, top_lane, top_pct, top_bet_combo, is_confident, top_bets_json
                FROM prediction_log WHERE race_id = ? ORDER BY computed_at""",
             (race_id,),
         ).fetchall()
         if not snapshots:
             continue  # このレースは記録開始前に終わっていた(または未記録)
 
-        computed_at, top_lane, top_pct, top_bet_combo, is_confident = choose_snapshot(snapshots, close_at)
+        (computed_at, top_lane, top_pct, top_bet_combo,
+         is_confident, top_bets_json) = choose_snapshot(snapshots, close_at)
 
         results = conn.execute(
             """SELECT e.boat_number, e.racer_name, r.arrival_order
@@ -104,6 +105,29 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             if bet_hit:
                 payout_return += race_payout
 
+        # 上位候補(通常4件)を、各候補が実際に的中したかどうか付きで展開する。
+        # top_bets_json が無い古い記録(この機能を追加する前のレース)は、
+        # 従来の本命1件だけにフォールバックする。
+        predicted_bet_combos = []
+        if top_bets_json:
+            try:
+                candidates = json.loads(top_bets_json)
+            except (TypeError, ValueError):
+                candidates = []
+            for c in candidates:
+                combo = c.get("combo")
+                predicted_bet_combos.append({
+                    "combo": combo,
+                    "prob": c.get("prob"),
+                    "hit": combo == actual_combo,
+                })
+        if not predicted_bet_combos and top_bet_combo:
+            predicted_bet_combos.append({
+                "combo": top_bet_combo,
+                "prob": None,
+                "hit": bet_hit,
+            })
+
         history.append({
             "date": race_date_str,
             "stadium": STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場"),
@@ -112,6 +136,7 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             "predictedAt": computed_at,
             "predictedTop": {"lane": top_lane, "name": top_lane_name, "pct": top_pct},
             "predictedBetCombo": top_bet_combo,
+            "predictedBetCombos": predicted_bet_combos,
             "wasConfident": bool(is_confident),
             "actualWinner": {"lane": actual_winner_lane, "name": actual_winner_name},
             "actualCombo": actual_combo,

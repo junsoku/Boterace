@@ -312,13 +312,16 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "confidence": confidence,
         }
 
-        # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)
+        # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)。
+        # top_bet_combo は後方互換のため先頭候補のみ残し、top_bets_json に全候補(通常4件)を保存する。
         top_bet_combo = race_out["bets"][0]["combo"] if race_out["bets"] else None
+        top_bets_json = json.dumps(race_out["bets"], ensure_ascii=False) if race_out["bets"] else None
         conn.execute(
-            """INSERT INTO prediction_log (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident)
-               VALUES (?,?,?,?,?,?)""",
+            """INSERT INTO prediction_log
+                   (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident, top_bets_json)
+               VALUES (?,?,?,?,?,?,?)""",
             (race_id, datetime.now().isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
-             top_bet_combo, int(confidence["isConfident"])),
+             top_bet_combo, int(confidence["isConfident"]), top_bets_json),
         )
 
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")

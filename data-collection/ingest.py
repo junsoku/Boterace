@@ -42,6 +42,7 @@ def _migrate_add_missing_columns(conn: sqlite3.Connection):
     migrations = [
         ("entries", "flying_count", "INTEGER"),
         ("entries", "late_count", "INTEGER"),
+        ("prediction_log", "top_bets_json", "TEXT"),
     ]
     for table, column, coltype in migrations:
         try:
@@ -96,7 +97,6 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
             preview = race.get("preview") or {}
             result = race.get("result") or {}
 
-            # 天候は直前情報を優先(締切直前の実況値)。まだなければ結果側の値で埋める。
             weather_source = preview.get("weather_number_source") or result.get("weather_number_source")
             wind_speed = preview.get("wind_speed") or result.get("wind_speed")
             wind_dir = preview.get("wind_direction_number") or result.get("wind_direction_number")
@@ -130,7 +130,6 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                 (race_date.isoformat(), stadium_number, race_number),
             ).fetchone()[0]
 
-            # ---- 出走表(選手情報)----
             racers = race.get("racers") or {}
             for entry_str, racer in racers.items():
                 boat_number = racer.get("entry_number") or int(entry_str)
@@ -173,7 +172,6 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                     ),
                 )
 
-            # ---- 直前情報(選手ごと)----
             preview_racers = preview.get("racers") or {}
             for entry_str, p in preview_racers.items():
                 boat_number = p.get("entry_number") or int(entry_str)
@@ -200,7 +198,6 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                     ),
                 )
 
-            # ---- 結果(選手ごと)+ 決まり手(レース単位のtechnique_numberを1着艇に紐付け)----
             result_racers = result.get("racers") or {}
             technique_name = TECHNIQUE_NAMES.get(result.get("technique_number"))
             for entry_str, r in result_racers.items():
@@ -226,7 +223,6 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                     ),
                 )
 
-            # ---- 払戻 ----
             payouts = result.get("payouts") or {}
             for bet_type, items in payouts.items():
                 for item in items or []:
