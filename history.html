@@ -399,7 +399,9 @@ function renderSummary(data){
   document.getElementById("recoveryNum").textContent = fmtPct(data.summary.recoveryRate);
   const lines = [`本命3連単的中率 ${fmtPct(data.summary.betHitRate)}`];
   if (data.summary.recoveryRateAll !== null && data.summary.recoveryRateAll !== undefined){
-    lines.push(`候補4点均等買いの回収率 ${fmtPct(data.summary.recoveryRateAll)}`);
+    const stakeAll = data.summary.stakeAll;
+    const returnAll = data.summary.payoutReturnAll;
+    lines.push(`候補4点均等買いの回収率 ${fmtPct(data.summary.recoveryRateAll)}(賭け金${fmtYen(stakeAll)} / 払戻${fmtYen(returnAll)})`);
   }
   document.getElementById("summaryExtra").innerHTML = lines.map(l => escapeHtml(l)).join("<br>");
 }
