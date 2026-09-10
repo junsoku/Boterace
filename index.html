@@ -408,10 +408,8 @@ async function loadRealData(){
         number: r.number,
         close: r.close || "--:--",
         grade: r.grade || null,
-        isConfident: r.confidence ? r.confidence.isConfident : false,
-        confidenceHitRate: r.confidence ? r.confidence.hitRate : null,
-        confidenceSampleSize: r.confidence ? r.confidence.sampleSize : null,
-        confidenceBucket: r.confidence ? r.confidence.bucket : null,
+        confWin: r.confidence || null,
+        confBet: r.betConfidence || null,
         lanes: r.boats.map(b => ({ lane: b.lane, name: b.name }))
       }))
     }));
@@ -450,12 +448,22 @@ function renderVenue(){
     `全${st.races.length}レース<br>1R 締切 ${escapeHtml(st.races[0].close)}`;
 }
 
+const CONFIDENCE_LABELS = { win: "◎単勝", bet: "3連単" };
+
 // 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
 function toggleConfidenceDetail(e, btn){
   e.stopPropagation(); // レースカード全体のクリック(予想画面への遷移)を発火させない
-  const panel = btn.parentElement.querySelector(".confidence-detail");
-  if(!panel) return;
+  const panel = btn.nextElementSibling;
+  if(!panel || !panel.classList.contains("confidence-detail")) return;
   panel.classList.toggle("open");
+}
+
+function confidenceDetailText(kind, conf){
+  if (!conf || conf.hitRate === null || conf.hitRate === undefined){
+    return "根拠データがまだ十分に溜まっていません。";
+  }
+  return `${CONFIDENCE_LABELS[kind]}のこの確信度の帯(${escapeHtml(conf.bucket ?? "-")})では、`
+    + `過去 ${conf.sampleSize ?? 0}件中 ${Math.round((conf.hitRate ?? 0) * 100)}% が的中しています。`;
 }
 
 function renderRaces(){
@@ -473,20 +481,24 @@ function renderRaces(){
 
     const gradeClass = race.grade === "SG" ? "sg" : race.grade === "G1" ? "g1" : "";
 
-    const hasConfidenceDetail = race.confidenceHitRate !== null && race.confidenceHitRate !== undefined;
-    const confidenceDetailText = hasConfidenceDetail
-      ? `この確信度の帯(${escapeHtml(race.confidenceBucket ?? "-")})では、過去 ${race.confidenceSampleSize ?? 0}件中 ${Math.round((race.confidenceHitRate ?? 0) * 100)}% が的中しています。`
-      : "根拠データがまだ十分に溜まっていません。";
+    const winConfident = race.confWin && race.confWin.isConfident;
+    const betConfident = race.confBet && race.confBet.isConfident;
 
     card.innerHTML = `
       <div class="race-num">${race.number}<sub-r>R</sub-r></div>
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
-          ${race.isConfident ? `<button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ 自信あり ⓘ</button>` : ""}
+          ${winConfident ? `
+            <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ ◎単勝 自信あり ⓘ</button>
+            <div class="confidence-detail">${confidenceDetailText("win", race.confWin)}</div>
+          ` : ""}
+          ${betConfident ? `
+            <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ 3連単 自信あり ⓘ</button>
+            <div class="confidence-detail">${confidenceDetailText("bet", race.confBet)}</div>
+          ` : ""}
           ${race.grade ? `<div class="grade-tag ${gradeClass}">${escapeHtml(race.grade)}</div>` : ""}
         </div>
-        ${race.isConfident ? `<div class="confidence-detail">${confidenceDetailText}</div>` : ""}
         <div class="lanes">
           ${race.lanes.map(b=>`
             <div class="lane">

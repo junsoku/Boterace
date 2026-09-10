@@ -295,12 +295,17 @@
   <div class="appbar">
     <button class="back" onclick="history.back()">‹</button>
     <div>
-      <div class="appbar-title"><span id="titleText">桐生 3R 予想</span> <button class="star-tag" id="confidenceBadge" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail()">★ 自信あり ⓘ</button></div>
+      <div class="appbar-title">
+        <span id="titleText">桐生 3R 予想</span>
+        <button class="star-tag" id="confidenceBadgeWin" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('win')">★ ◎単勝 自信あり ⓘ</button>
+        <button class="star-tag" id="confidenceBadgeBet" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('bet')">★ 3連単 自信あり ⓘ</button>
+      </div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
     </div>
   </div>
 
-  <div class="confidence-detail" id="confidenceDetail"></div>
+  <div class="confidence-detail" id="confidenceDetailWin"></div>
+  <div class="confidence-detail" id="confidenceDetailBet"></div>
 
   <div class="section">
     <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
@@ -351,17 +356,24 @@ const MOCK_BETS = [
 
 let RANK = MOCK_RANK;
 let BETS = MOCK_BETS;
-let CONFIDENCE = null; // {isConfident, hitRate, sampleSize, bucket}
+// それぞれ {isConfident, hitRate, sampleSize, bucket}
+let CONFIDENCE = { win: null, bet: null };
+
+const CONFIDENCE_LABELS = {
+  win: "◎単勝",
+  bet: "3連単",
+};
 
 // 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
-function toggleConfidenceDetail(){
-  const panel = document.getElementById("confidenceDetail");
-  const btn = document.getElementById("confidenceBadge");
+function toggleConfidenceDetail(kind){
+  const panel = document.getElementById(kind === "win" ? "confidenceDetailWin" : "confidenceDetailBet");
+  const btn = document.getElementById(kind === "win" ? "confidenceBadgeWin" : "confidenceBadgeBet");
   const isOpen = panel.classList.toggle("open");
   btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
   if(isOpen){
-    panel.textContent = CONFIDENCE && CONFIDENCE.hitRate !== null && CONFIDENCE.hitRate !== undefined
-      ? `この確信度の帯(${CONFIDENCE.bucket ?? "-"})では、過去 ${CONFIDENCE.sampleSize ?? 0}件中 ${Math.round((CONFIDENCE.hitRate ?? 0) * 100)}% が的中しています。`
+    const c = CONFIDENCE[kind];
+    panel.textContent = c && c.hitRate !== null && c.hitRate !== undefined
+      ? `${CONFIDENCE_LABELS[kind]}のこの確信度の帯(${c.bucket ?? "-"})では、過去 ${c.sampleSize ?? 0}件中 ${Math.round((c.hitRate ?? 0) * 100)}% が的中しています。`
       : "根拠データがまだ十分に溜まっていません。";
   }
 }
@@ -388,10 +400,12 @@ async function loadRealData(){
       flying: b.flying ?? 0, late: b.late ?? 0, class: b.class ?? null
     }));
     BETS = race.bets;
-    CONFIDENCE = race.confidence || null;
+    CONFIDENCE = { win: race.confidence || null, bet: race.betConfidence || null };
     document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
-    document.getElementById("confidenceBadge").style.display =
-      (CONFIDENCE && CONFIDENCE.isConfident) ? "inline" : "none";
+    document.getElementById("confidenceBadgeWin").style.display =
+      (CONFIDENCE.win && CONFIDENCE.win.isConfident) ? "inline" : "none";
+    document.getElementById("confidenceBadgeBet").style.display =
+      (CONFIDENCE.bet && CONFIDENCE.bet.isConfident) ? "inline" : "none";
     document.querySelector(".appbar-sub").textContent =
       `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}` +
       (race.weather ? ` ・ ${race.weather}` : "") +
@@ -406,7 +420,7 @@ async function loadRealData(){
     }
     RANK = MOCK_RANK;
     BETS = MOCK_BETS;
-    CONFIDENCE = null;
+    CONFIDENCE = { win: null, bet: null };
   }
   document.querySelector(".disclaimer").textContent = usingReal
     ? "実データに基づく予想です。舟券の購入は自己責任で、当たりを保証するものではありません。"
