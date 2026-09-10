@@ -47,6 +47,11 @@
     font-size:22px;
     color:#CBD9DE;
     line-height:1;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .appbar-title{
     font-family:'Shippori Mincho', serif;
@@ -63,11 +68,29 @@
     color:#8A6100;
     vertical-align:middle;
     margin-left:2px;
+    border:none;
+    -webkit-tap-highlight-color:transparent;
   }
   .appbar-sub{
     font-size:12px;
     color:#8FA6B2;
     margin-top:2px;
+  }
+
+  .confidence-detail{
+    display:none;
+    margin:0 16px 0;
+    padding:10px 14px;
+    background:#FFF9EC;
+    border:1px solid #F0DFA6;
+    border-radius:8px;
+    font-size:11.5px;
+    color:#6B5410;
+    line-height:1.7;
+  }
+  .confidence-detail.open{
+    display:block;
+    margin-top:14px;
   }
 
   .section{
@@ -270,12 +293,14 @@
 <body>
 
   <div class="appbar">
-    <div class="back" onclick="history.back()">‹</div>
+    <button class="back" onclick="history.back()">‹</button>
     <div>
-      <div class="appbar-title"><span id="titleText">桐生 3R 予想</span> <span class="star-tag" id="confidenceBadge" style="display:none;">★ 自信あり</span></div>
+      <div class="appbar-title"><span id="titleText">桐生 3R 予想</span> <button class="star-tag" id="confidenceBadge" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail()">★ 自信あり ⓘ</button></div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
     </div>
   </div>
+
+  <div class="confidence-detail" id="confidenceDetail"></div>
 
   <div class="section">
     <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
@@ -326,6 +351,20 @@ const MOCK_BETS = [
 
 let RANK = MOCK_RANK;
 let BETS = MOCK_BETS;
+let CONFIDENCE = null; // {isConfident, hitRate, sampleSize, bucket}
+
+// 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
+function toggleConfidenceDetail(){
+  const panel = document.getElementById("confidenceDetail");
+  const btn = document.getElementById("confidenceBadge");
+  const isOpen = panel.classList.toggle("open");
+  btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  if(isOpen){
+    panel.textContent = CONFIDENCE && CONFIDENCE.hitRate !== null && CONFIDENCE.hitRate !== undefined
+      ? `この確信度の帯(${CONFIDENCE.bucket ?? "-"})では、過去 ${CONFIDENCE.sampleSize ?? 0}件中 ${Math.round((CONFIDENCE.hitRate ?? 0) * 100)}% が的中しています。`
+      : "根拠データがまだ十分に溜まっていません。";
+  }
+}
 
 // URLの ?stadium=桐生&race=3 を読み取り、data/today.json から該当レースを探す
 async function loadRealData(){
@@ -349,9 +388,10 @@ async function loadRealData(){
       flying: b.flying ?? 0, late: b.late ?? 0, class: b.class ?? null
     }));
     BETS = race.bets;
+    CONFIDENCE = race.confidence || null;
     document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
     document.getElementById("confidenceBadge").style.display =
-      (race.confidence && race.confidence.isConfident) ? "inline" : "none";
+      (CONFIDENCE && CONFIDENCE.isConfident) ? "inline" : "none";
     document.querySelector(".appbar-sub").textContent =
       `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}` +
       (race.weather ? ` ・ ${race.weather}` : "") +
@@ -366,6 +406,7 @@ async function loadRealData(){
     }
     RANK = MOCK_RANK;
     BETS = MOCK_BETS;
+    CONFIDENCE = null;
   }
   document.querySelector(".disclaimer").textContent = usingReal
     ? "実データに基づく予想です。舟券の購入は自己責任で、当たりを保証するものではありません。"

@@ -49,6 +49,11 @@
     font-size:22px;
     color:#CBD9DE;
     line-height:1;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .appbar-title{
     font-family:'Shippori Mincho', serif;
@@ -90,6 +95,33 @@
     font-size:11.5px;
     color:var(--ink-soft);
     text-align:center;
+  }
+
+  .period-switch{
+    display:flex;
+    gap:6px;
+    padding:0 16px 12px;
+    overflow-x:auto;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .period-switch::-webkit-scrollbar{ display:none; }
+  .period-btn{
+    flex:0 0 auto;
+    background:var(--card);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    border-radius:16px;
+    padding:6px 14px;
+    font-size:12px;
+    font-weight:700;
+    font-family:inherit;
+    white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .period-btn.active{
+    background:var(--navy);
+    border-color:var(--navy);
+    color:#fff;
   }
 
   .date-header{
@@ -316,7 +348,7 @@
 <body>
 
   <div class="appbar">
-    <div class="back" onclick="location.href='index.html'">‹</div>
+    <button class="back" onclick="location.href='index.html'">‹</button>
     <div>
       <div class="appbar-title">予想の履歴</div>
       <div class="appbar-sub" id="periodLabel">直近14日間</div>
@@ -338,6 +370,8 @@
     </div>
   </div>
   <div class="summary-extra" id="summaryExtra"></div>
+
+  <div class="period-switch" id="periodSwitch"></div>
 
   <div id="listArea"></div>
 
@@ -384,6 +418,81 @@ const MOCK_DATA = {
      winHit:false, betHit:false, actualCombo:"4-1-3", actualPayout:null},
   ]
 };
+
+let RAW_DATA = MOCK_DATA;
+let activePeriodDays = 14; // null は「全期間」
+
+const PERIOD_OPTIONS = [
+  {label:"7日間", days:7},
+  {label:"14日間", days:14},
+  {label:"30日間", days:30},
+  {label:"90日間", days:90},
+  {label:"全期間", days:null},
+];
+
+function filterRacesByPeriod(races, days){
+  if (days === null) return races;
+  // races は日付の新しい順に並んでいる前提。先頭(最新)の日付を基準に days 日さかのぼる。
+  if (races.length === 0) return races;
+  const latest = new Date(races[0].date);
+  const threshold = new Date(latest);
+  threshold.setDate(threshold.getDate() - (days - 1));
+  return races.filter(r => new Date(r.date) >= threshold);
+}
+
+// サーバー(export_history.py)が出力したサマリーは、その時にエクスポートした期間全体のもの。
+// 期間を切り替えたら、絞り込んだレース一覧から同じロジックでサマリーを再計算する。
+function recomputeSummary(races){
+  let evaluated = 0, winHits = 0, betHits = 0;
+  let stake = 0, payoutReturn = 0, stakeAll = 0, payoutReturnAll = 0;
+  for (const race of races){
+    evaluated++;
+    if (race.winHit) winHits++;
+    if (race.betHit) betHits++;
+    if (race.actualPayout !== null && race.actualPayout !== undefined){
+      stake += 100;
+      if (race.betHit) payoutReturn += race.actualPayout;
+      const combos = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length
+        ? race.predictedBetCombos : [{hit: race.betHit}];
+      stakeAll += 100 * combos.length;
+      if (combos.some(c => c.hit)) payoutReturnAll += race.actualPayout;
+    }
+  }
+  return {
+    evaluated,
+    winHitRate: evaluated ? winHits / evaluated : null,
+    betHitRate: evaluated ? betHits / evaluated : null,
+    recoveryRate: stake ? payoutReturn / stake : null,
+    stake, payoutReturn,
+    recoveryRateAll: stakeAll ? payoutReturnAll / stakeAll : null,
+    stakeAll, payoutReturnAll,
+  };
+}
+
+function renderPeriodSwitch(){
+  const wrap = document.getElementById("periodSwitch");
+  wrap.innerHTML = "";
+  PERIOD_OPTIONS.forEach(opt=>{
+    const btn = document.createElement("button");
+    btn.className = "period-btn" + (opt.days === activePeriodDays ? " active" : "");
+    btn.textContent = opt.label;
+    btn.onclick = ()=>{
+      activePeriodDays = opt.days;
+      applyPeriod();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+function applyPeriod(){
+  const races = filterRacesByPeriod(RAW_DATA.races || [], activePeriodDays);
+  const summary = recomputeSummary(races);
+  const periodStart = races.length ? races[races.length - 1].date : RAW_DATA.periodStart;
+  const periodEnd = races.length ? races[0].date : RAW_DATA.periodEnd;
+  renderPeriodSwitch();
+  renderSummary({ periodStart, periodEnd, summary });
+  renderList({ races });
+}
 
 function fmtPct(v){
   return v === null || v === undefined ? "-" : Math.round(v * 1000) / 10 + "%";
@@ -497,8 +606,8 @@ async function loadData(){
   }catch(e){
     // 取得できない場合はサンプルデータのまま表示
   }
-  renderSummary(data);
-  renderList(data);
+  RAW_DATA = data;
+  applyPeriod();
 }
 
 loadData();

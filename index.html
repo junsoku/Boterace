@@ -45,10 +45,13 @@
   .history-link{
     font-size:12px;
     color:#CBD9DE;
+    background:none;
     border:1px solid #3A5568;
     border-radius:14px;
     padding:5px 12px;
     white-space:nowrap;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .appbar-date{
     font-family:'Shippori Mincho', serif;
@@ -86,6 +89,8 @@
     font-size:14px;
     font-weight:500;
     white-space:nowrap;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .chip.active{
     background:var(--accent);
@@ -134,6 +139,11 @@
     align-items:center;
     gap:14px;
     position:relative;
+    width:100%;
+    text-align:left;
+    font-family:inherit;
+    color:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .race-card.upcoming{
     border-color:var(--accent);
@@ -160,6 +170,7 @@
     align-items:center;
     gap:8px;
     margin-bottom:8px;
+    flex-wrap:wrap;
   }
   .close-time{
     font-size:13px;
@@ -187,9 +198,26 @@
     background:#FFF3D6;
     color:#8A6100;
     letter-spacing:.02em;
+    border:none;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
   .grade-tag.sg{ background:#8A1F2D; }
   .grade-tag.g1{ background:#1D63B4; }
+
+  .confidence-detail{
+    display:none;
+    width:100%;
+    margin:-4px 0 8px;
+    padding:8px 10px;
+    background:#FFF9EC;
+    border:1px solid #F0DFA6;
+    border-radius:6px;
+    font-size:11px;
+    color:#6B5410;
+    line-height:1.6;
+  }
+  .confidence-detail.open{ display:block; }
 
   .lanes{
     display:flex;
@@ -256,7 +284,7 @@
   <div class="appbar">
     <div class="appbar-top">
       <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
-      <div class="history-link" onclick="location.href='history.html'">履歴</div>
+      <button class="history-link" onclick="location.href='history.html'">履歴</button>
     </div>
     <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
   </div>
@@ -381,6 +409,9 @@ async function loadRealData(){
         close: r.close || "--:--",
         grade: r.grade || null,
         isConfident: r.confidence ? r.confidence.isConfident : false,
+        confidenceHitRate: r.confidence ? r.confidence.hitRate : null,
+        confidenceSampleSize: r.confidence ? r.confidence.sampleSize : null,
+        confidenceBucket: r.confidence ? r.confidence.bucket : null,
         lanes: r.boats.map(b => ({ lane: b.lane, name: b.name }))
       }))
     }));
@@ -404,7 +435,7 @@ function renderStadiumChips(){
   const wrap = document.getElementById("stadiumScroll");
   wrap.innerHTML = "";
   STADIUMS.forEach((st, idx)=>{
-    const chip = document.createElement("div");
+    const chip = document.createElement("button");
     chip.className = "chip" + (idx===activeIndex ? " active" : "");
     chip.innerHTML = escapeHtml(st.name) + (st.grade ? `<span class="grade">${escapeHtml(st.grade)}</span>` : "");
     chip.onclick = ()=>{ activeIndex = idx; renderAll(); };
@@ -419,12 +450,21 @@ function renderVenue(){
     `全${st.races.length}レース<br>1R 締切 ${escapeHtml(st.races[0].close)}`;
 }
 
+// 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
+function toggleConfidenceDetail(e, btn){
+  e.stopPropagation(); // レースカード全体のクリック(予想画面への遷移)を発火させない
+  const panel = btn.parentElement.querySelector(".confidence-detail");
+  if(!panel) return;
+  panel.classList.toggle("open");
+}
+
 function renderRaces(){
   const list = document.getElementById("raceList");
   const st = STADIUMS[activeIndex];
   list.innerHTML = "";
   st.races.forEach((race, i)=>{
-    const card = document.createElement("div");
+    const card = document.createElement("button");
+    card.type = "button";
     card.className = "race-card" + (i===0 ? " upcoming" : "");
     card.onclick = ()=>{
       const params = new URLSearchParams({ stadium: st.name, race: race.number });
@@ -433,14 +473,20 @@ function renderRaces(){
 
     const gradeClass = race.grade === "SG" ? "sg" : race.grade === "G1" ? "g1" : "";
 
+    const hasConfidenceDetail = race.confidenceHitRate !== null && race.confidenceHitRate !== undefined;
+    const confidenceDetailText = hasConfidenceDetail
+      ? `この確信度の帯(${escapeHtml(race.confidenceBucket ?? "-")})では、過去 ${race.confidenceSampleSize ?? 0}件中 ${Math.round((race.confidenceHitRate ?? 0) * 100)}% が的中しています。`
+      : "根拠データがまだ十分に溜まっていません。";
+
     card.innerHTML = `
       <div class="race-num">${race.number}<sub-r>R</sub-r></div>
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
-          ${race.isConfident ? `<div class="star-tag">★ 自信あり</div>` : ""}
+          ${race.isConfident ? `<button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ 自信あり ⓘ</button>` : ""}
           ${race.grade ? `<div class="grade-tag ${gradeClass}">${escapeHtml(race.grade)}</div>` : ""}
         </div>
+        ${race.isConfident ? `<div class="confidence-detail">${confidenceDetailText}</div>` : ""}
         <div class="lanes">
           ${race.lanes.map(b=>`
             <div class="lane">
