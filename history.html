@@ -334,7 +334,7 @@
     </div>
     <div class="summary-card">
       <div class="summary-num" id="recoveryNum">-</div>
-      <div class="summary-label">回収率(本命1点)</div>
+      <div class="summary-label">3連単回収率(本命1点)</div>
     </div>
   </div>
   <div class="summary-extra" id="summaryExtra"></div>
@@ -360,7 +360,7 @@ const MOCK_DATA = {
   generatedAt: "2026-09-09",
   periodStart: "2026-08-26",
   periodEnd: "2026-09-09",
-  summary: { evaluated: 42, winHitRate: 0.52, betHitRate: 0.11, recoveryRate: 0.78 },
+  summary: { evaluated: 42, winHitRate: 0.52, betHitRate: 0.11, recoveryRate: 0.78, recoveryRateAll: 0.86 },
   races: [
     {date:"2026-09-08", stadium:"桐生", raceNumber:3, grade:null,
      predictedTop:{lane:1,name:"田中 一輝",pct:34}, actualWinner:{lane:1,name:"田中 一輝"},
@@ -397,8 +397,11 @@ function renderSummary(data){
   document.getElementById("evaluatedNum").textContent = data.summary.evaluated;
   document.getElementById("winHitNum").textContent = fmtPct(data.summary.winHitRate);
   document.getElementById("recoveryNum").textContent = fmtPct(data.summary.recoveryRate);
-  document.getElementById("summaryExtra").textContent =
-    `本命3連単的中率 ${fmtPct(data.summary.betHitRate)}`;
+  const lines = [`本命3連単的中率 ${fmtPct(data.summary.betHitRate)}`];
+  if (data.summary.recoveryRateAll !== null && data.summary.recoveryRateAll !== undefined){
+    lines.push(`候補4点均等買いの回収率 ${fmtPct(data.summary.recoveryRateAll)}`);
+  }
+  document.getElementById("summaryExtra").innerHTML = lines.map(l => escapeHtml(l)).join("<br>");
 }
 
 function toggleOthers(btn){
