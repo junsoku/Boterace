@@ -113,8 +113,10 @@
   }
   .race-card-head{
     display:flex;
+    flex-wrap:wrap;
     justify-content:space-between;
     align-items:center;
+    gap:6px;
     margin-bottom:8px;
   }
   .race-card-title{
@@ -122,11 +124,18 @@
     font-weight:700;
     color:var(--navy);
   }
+  .badge-group{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-left:auto;
+  }
   .hit-badge{
     font-size:11px;
     font-weight:700;
     padding:2px 8px;
     border-radius:10px;
+    white-space:nowrap;
   }
   .hit-badge.hit{
     background:var(--accent-soft);
@@ -433,7 +442,10 @@ function renderList(data){
     html += `<div class="race-list"><div class="race-card">
       <div class="race-card-head">
         <div class="race-card-title">${escapeHtml(race.stadium)} ${race.raceNumber}R${race.grade ? " ・ " + escapeHtml(race.grade) : ""}</div>
-        <div class="hit-badge ${race.winHit ? "hit" : "miss"}">${race.winHit ? "◎ 的中" : "◎ 不的中"}</div>
+        <div class="badge-group">
+          <div class="hit-badge ${race.winHit ? "hit" : "miss"}">${race.winHit ? "◎単勝 的中" : "◎単勝 不的中"}</div>
+          <div class="hit-badge ${race.betHit ? "hit" : "miss"}">${race.betHit ? "3連単 的中" : "3連単 不的中"}</div>
+        </div>
       </div>
       <div class="compare-row">
         <div class="compare-side">
