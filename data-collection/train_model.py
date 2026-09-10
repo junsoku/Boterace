@@ -76,8 +76,20 @@ def main():
     hit_rate = test_df.loc[test_df.groupby("race_id")["pred"].idxmax(), "is_winner"].mean()
     print(f"予測1位の的中率(単勝的中率相当の目安): {hit_rate:.1%}")
 
+    # 特徴量重要度(どの特徴量がモデルの判断に効いているか)
+    # gain: その特徴量を使った分岐が損失をどれだけ減らしたかの合計(効き目の強さの目安)
+    importance = pd.DataFrame({
+        "feature": FEATURE_COLS,
+        "gain": model.feature_importance(importance_type="gain"),
+    }).sort_values("gain", ascending=False)
+    importance["gain_pct"] = (importance["gain"] / importance["gain"].sum() * 100).round(1)
+
+    print("\n特徴量重要度(貢献度が高い順):")
+    for _, row in importance.iterrows():
+        print(f"  {row['feature']:<22} {row['gain_pct']:>5.1f}%")
+
     model.save_model(args.out)
-    print(f"モデルを保存しました: {args.out}")
+    print(f"\nモデルを保存しました: {args.out}")
 
 
 if __name__ == "__main__":
