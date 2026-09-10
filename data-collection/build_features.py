@@ -14,6 +14,10 @@ import pandas as pd
 
 from technique_stats import compute_course_technique_rates
 
+# racer_class(文字列 "A1"/"A2"/"B1"/"B2") を数値化するためのマップ。
+# 数値が大きいほど上位級(LightGBMに渡すための単純な序列エンコーディング)。
+RACER_CLASS_RANK = {"A1": 4, "A2": 3, "B1": 2, "B2": 1}
+
 FEATURE_COLS = [
     "boat_number",
     "national_win_rate",
@@ -22,6 +26,16 @@ FEATURE_COLS = [
     "boat_hull_2連率",
     "average_start_timing",
     "course_win_rate",
+    # ここから追加分
+    "racer_class_rank",
+    "national_2連率",
+    "local_2連率",
+    "flying_count",
+    "late_count",
+    "exhibition_time",
+    "tilt_angle",
+    "wind_speed_m",
+    "wave_height_cm",
 ]
 
 
@@ -29,12 +43,18 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
     query = """
         SELECT
             races.race_id, races.race_date, races.stadium_number, races.race_number,
+            races.wind_speed_m, races.wave_height_cm,
             e.entry_id, e.boat_number, e.racer_registration_number, e.racer_name,
-            e.national_win_rate, e.local_win_rate,
+            e.racer_class,
+            e.national_win_rate, e.national_2連率,
+            e.local_win_rate, e.local_2連率,
             e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
+            e.flying_count, e.late_count,
+            p.exhibition_time, p.tilt_angle,
             r.arrival_order
         FROM entries e
         JOIN races ON races.race_id = e.race_id
+        LEFT JOIN previews p ON p.entry_id = e.entry_id
         LEFT JOIN results r ON r.entry_id = e.entry_id
     """
     df = pd.read_sql_query(query, conn)
@@ -57,6 +77,9 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
 
     df["course_win_rate"] = df.apply(course_win_rate, axis=1)
     df["is_winner"] = (df["arrival_order"] == 1).astype(int)
+
+    # 級別(文字列)を序列の数値に変換。未知の値/欠損は後段の中央値補完に任せる。
+    df["racer_class_rank"] = df["racer_class"].map(RACER_CLASS_RANK)
 
     # 欠損値は列の中央値で補完(学習を止めないための簡易対応。件数が増えたら要見直し)
     for col in FEATURE_COLS:
