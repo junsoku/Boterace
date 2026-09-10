@@ -217,6 +217,73 @@
     margin-top:2px;
   }
 
+  /* ---- 他の候補(表示する/閉じる) ---- */
+  .toggle-others{
+    margin-top:8px;
+    width:100%;
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 0;
+    font-family:inherit;
+    font-size:11px;
+    font-weight:700;
+    color:var(--navy-soft);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .toggle-others:active{
+    background:#F2F4F3;
+  }
+  .other-combos{
+    display:none;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed var(--line);
+  }
+  .other-combos.open{
+    display:block;
+  }
+  .other-combo-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:5px 2px;
+    font-size:12px;
+  }
+  .other-combo-rank{
+    color:var(--ink-soft);
+    width:20px;
+    flex:0 0 auto;
+  }
+  .other-combo-num{
+    font-family:'Shippori Mincho', serif;
+    font-size:14px;
+    font-weight:700;
+    flex:1;
+  }
+  .other-combo-num.hit{ color:var(--accent); }
+  .other-combo-prob{
+    color:var(--ink-soft);
+    font-size:11px;
+    flex:0 0 auto;
+  }
+  .other-combo-hit-tag{
+    font-size:10px;
+    font-weight:700;
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:1px 6px;
+    border-radius:8px;
+    margin-left:6px;
+    flex:0 0 auto;
+  }
+  .other-combos-empty{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    padding:4px 0;
+  }
+
   .empty-note{
     padding:60px 24px;
     text-align:center;
@@ -288,9 +355,23 @@ const MOCK_DATA = {
   races: [
     {date:"2026-09-08", stadium:"桐生", raceNumber:3, grade:null,
      predictedTop:{lane:1,name:"田中 一輝",pct:34}, actualWinner:{lane:1,name:"田中 一輝"},
+     predictedBetCombo:"1-4-2",
+     predictedBetCombos:[
+       {combo:"1-4-2", prob:"9.8%", hit:true},
+       {combo:"1-2-4", prob:"7.1%", hit:false},
+       {combo:"1-4-3", prob:"5.9%", hit:false},
+       {combo:"4-1-2", prob:"4.2%", hit:false},
+     ],
      winHit:true, betHit:true, actualCombo:"1-4-2", actualPayout:1520},
     {date:"2026-09-08", stadium:"戸田", raceNumber:7, grade:"G1",
      predictedTop:{lane:2,name:"鈴木 亮太",pct:28}, actualWinner:{lane:4,name:"渡辺 翔"},
+     predictedBetCombo:"2-1-4",
+     predictedBetCombos:[
+       {combo:"2-1-4", prob:"8.3%", hit:false},
+       {combo:"2-4-1", prob:"6.5%", hit:false},
+       {combo:"1-2-4", prob:"5.7%", hit:false},
+       {combo:"4-1-3", prob:"4.9%", hit:true},
+     ],
      winHit:false, betHit:false, actualCombo:"4-1-3", actualPayout:null},
   ]
 };
@@ -311,6 +392,29 @@ function renderSummary(data){
     `本命3連単的中率 ${fmtPct(data.summary.betHitRate)}`;
 }
 
+function toggleOthers(btn){
+  const panel = btn.nextElementSibling;
+  const open = panel.classList.toggle("open");
+  btn.textContent = open ? "閉じる ▲" : "他の候補も表示する ▼";
+}
+
+function renderOtherCombos(race){
+  // predictedBetCombos は本命(1位)を含む配列。2位以降だけを「他の候補」として出す。
+  const combos = Array.isArray(race.predictedBetCombos) ? race.predictedBetCombos : [];
+  const others = combos.slice(1);
+  if (others.length === 0){
+    return `<div class="other-combos-empty">この記録には他候補のデータがありません(機能追加前のレースのため)</div>`;
+  }
+  return others.map((c, i) => `
+    <div class="other-combo-row">
+      <div class="other-combo-rank">${i + 2}位</div>
+      <div class="other-combo-num ${c.hit ? "hit" : ""}">${escapeHtml(c.combo)}</div>
+      <div class="other-combo-prob">${escapeHtml(c.prob || "-")}</div>
+      ${c.hit ? `<div class="other-combo-hit-tag">的中</div>` : ""}
+    </div>
+  `).join("");
+}
+
 function renderList(data){
   const area = document.getElementById("listArea");
   if (!data.races || data.races.length === 0){
@@ -325,6 +429,7 @@ function renderList(data){
       html += `<div class="date-header">${escapeHtml(race.date)}</div>`;
       lastDate = race.date;
     }
+    const hasOthers = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length > 1;
     html += `<div class="race-list"><div class="race-card">
       <div class="race-card-head">
         <div class="race-card-title">${escapeHtml(race.stadium)} ${race.raceNumber}R${race.grade ? " ・ " + escapeHtml(race.grade) : ""}</div>
@@ -345,7 +450,7 @@ function renderList(data){
       </div>
       <div class="bet-compare">
         <div class="bet-combo-box">
-          <div class="bet-combo-label">推奨3連単</div>
+          <div class="bet-combo-label">推奨3連単(本命)</div>
           <div class="bet-combo-num ${race.betHit ? "hit" : "miss"}">${escapeHtml(race.predictedBetCombo || "-")}</div>
         </div>
         <div class="compare-arrow">${race.betHit ? "=" : "→"}</div>
@@ -355,6 +460,11 @@ function renderList(data){
           ${race.actualPayout ? `<div class="bet-payout">払戻 ${race.actualPayout.toLocaleString()}円</div>` : ""}
         </div>
       </div>
+      ${hasOthers ? `
+      <button class="toggle-others" onclick="toggleOthers(this)">他の候補も表示する ▼</button>
+      <div class="other-combos">
+        ${renderOtherCombos(race)}
+      </div>` : ""}
     </div></div>`;
   }
   area.innerHTML = html;
