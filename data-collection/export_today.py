@@ -19,6 +19,10 @@ from pathlib import Path
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
 
 # build_features.py と同じ並び・同じ特徴量(直接定義してファイル間の依存をなくしている)
+# ※ build_features.py の FEATURE_COLS を変更したら、必ずこちらも合わせて直すこと。
+#   ここがズレると「学習時と予測時で特徴量の数が違う」エラーになる。
+RACER_CLASS_RANK = {"A1": 4, "A2": 3, "B1": 2, "B2": 1}
+
 FEATURE_COLS = [
     "boat_number",
     "national_win_rate",
@@ -27,6 +31,15 @@ FEATURE_COLS = [
     "boat_hull_2連率",
     "average_start_timing",
     "course_win_rate",
+    "racer_class_rank",
+    "national_2連率",
+    "local_2連率",
+    "flying_count",
+    "late_count",
+    "exhibition_time",
+    "tilt_angle",
+    "wind_speed_m",
+    "wave_height_cm",
 ]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
@@ -114,10 +127,12 @@ def score_boat(entry: dict, course_stats: dict, race_context: dict = None) -> fl
     )
 
 
-def predict_with_model(entries: list, course_stats: dict, model) -> list:
+def predict_with_model(entries: list, course_stats: dict, model, race_context: dict = None) -> list:
     """train_model.py で学習したLightGBMモデルで各艇の勝利確率を予測する。
     build_features.py の FEATURE_COLS と同じ並び・同じ特徴量になるよう揃えている。
+    race_context: {"wind_speed_m":.., "wave_height_cm":..} (レース単位の値なので全艇共通)
     """
+    race_context = race_context or {}
     rows = []
     for e in entries:
         course_win_rate = course_stats.get(e["boat_number"], {}).get("win_rate") if course_stats else None
@@ -129,6 +144,15 @@ def predict_with_model(entries: list, course_stats: dict, model) -> list:
             "boat_hull_2連率": e.get("boat_hull_2連率") or 30.0,
             "average_start_timing": e.get("average_start_timing") or 0.17,
             "course_win_rate": course_win_rate if course_win_rate is not None else 0.2,
+            "racer_class_rank": RACER_CLASS_RANK.get(e.get("racer_class"), 2),  # 不明時はB1相当で補完
+            "national_2連率": e.get("national_2連率") or 33.0,
+            "local_2連率": e.get("local_2連率") or 33.0,
+            "flying_count": e.get("flying_count") or 0,
+            "late_count": e.get("late_count") or 0,
+            "exhibition_time": e.get("exhibition_time") or 6.80,  # 展示未取得時はおおよその平均値で補完
+            "tilt_angle": e.get("tilt_angle") if e.get("tilt_angle") is not None else 0.0,
+            "wind_speed_m": race_context.get("wind_speed_m") or 0.0,
+            "wave_height_cm": race_context.get("wave_height_cm") or 0.0,
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]
@@ -212,7 +236,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             """SELECT e.boat_number, e.racer_name, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率,
-                      e.average_start_timing, p.exhibition_time,
+                      e.average_start_timing, p.exhibition_time, p.tilt_angle,
                       e.flying_count, e.late_count
                FROM entries e
                LEFT JOIN previews p ON p.entry_id = e.entry_id
@@ -238,7 +262,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
 
         boat_dicts = []
         for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
-             avg_st, exh_time, flying_count, late_count) in entries:
+             avg_st, exh_time, tilt_angle, flying_count, late_count) in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
@@ -251,6 +275,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "boat_hull_2連率": hull_2r,
                 "average_start_timing": avg_st,
                 "exhibition_time": exh_time,
+                "tilt_angle": tilt_angle,
                 "flying_count": flying_count,
                 "late_count": late_count,
             }
@@ -261,7 +286,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             boat_dicts.append(d)
 
         if model is not None:
-            scores = predict_with_model(boat_dicts, course_stats, model)
+            scores = predict_with_model(boat_dicts, course_stats, model, race_context)
             pcts = normalize_to_pct(scores, use_softmax=False)
         else:
             scores = [score_boat(b, course_stats, race_context) for b in boat_dicts]
