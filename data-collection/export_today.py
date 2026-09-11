@@ -252,6 +252,20 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         if not entries:
             continue  # 出走表未取得のレースはスキップ
 
+        # このレースの結果がもう確定しているか(6艇分の着順が揃っているか)を調べる。
+        # 場のタブの「開催終了」表示や、レースカードの「結果あり」表示に使う。
+        result_rows = conn.execute(
+            """SELECT e.boat_number, e.racer_name, r.arrival_order
+               FROM entries e LEFT JOIN results r ON r.entry_id = e.entry_id
+               WHERE e.race_id = ? ORDER BY e.boat_number""",
+            (race_id,),
+        ).fetchall()
+        is_finished = len(result_rows) == 6 and all(row[2] is not None for row in result_rows)
+        actual_winner = None
+        if is_finished:
+            winner_row = min(result_rows, key=lambda row: row[2])
+            actual_winner = {"lane": winner_row[0], "name": winner_row[1]}
+
         if stadium_number not in course_stats_cache:
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
         course_stats = course_stats_cache[stadium_number]
@@ -357,6 +371,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "bets": bets,
             "confidence": confidence,           # ◎(単勝)の確信度
             "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
+            "isFinished": is_finished,          # このレースの結果がもう確定しているか
+            "actualWinner": actual_winner,      # 確定していれば{"lane":.., "name":..}
         }
 
         # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)。
