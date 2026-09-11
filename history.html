@@ -177,6 +177,10 @@
     background:var(--miss-soft);
     color:var(--miss);
   }
+  .hit-badge.partial{
+    background:#FFF3D6;
+    color:#8A6100;
+  }
 
   .compare-row{
     display:flex;
@@ -538,6 +542,16 @@ function renderOtherCombos(race){
   `).join("");
 }
 
+// 推奨3連単の的中状況を3段階で判定する。
+// 本命(1位候補)が当たった/本命は外れたが2〜4位のどれかが当たった/4点とも外れた、の3パターン。
+function betStatus(race){
+  const combos = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length
+    ? race.predictedBetCombos : [{hit: race.betHit}];
+  if (combos[0] && combos[0].hit) return {cls:"hit", label:"本命3連単的中"};
+  if (combos.some(c => c.hit)) return {cls:"partial", label:"推奨3連単的中"};
+  return {cls:"miss", label:"3連単不的中"};
+}
+
 function renderList(data){
   const area = document.getElementById("listArea");
   if (!data.races || data.races.length === 0){
@@ -553,12 +567,13 @@ function renderList(data){
       lastDate = race.date;
     }
     const hasOthers = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length > 1;
+    const bet = betStatus(race);
     html += `<div class="race-list"><div class="race-card">
       <div class="race-card-head">
         <div class="race-card-title">${escapeHtml(race.stadium)} ${race.raceNumber}R${race.grade ? " ・ " + escapeHtml(race.grade) : ""}</div>
         <div class="badge-group">
           <div class="hit-badge ${race.winHit ? "hit" : "miss"}">${race.winHit ? "◎単勝 的中" : "◎単勝 不的中"}</div>
-          <div class="hit-badge ${race.betHit ? "hit" : "miss"}">${race.betHit ? "3連単 的中" : "3連単 不的中"}</div>
+          <div class="hit-badge ${bet.cls}">${bet.label}</div>
         </div>
       </div>
       <div class="compare-row">
