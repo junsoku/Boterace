@@ -7,6 +7,8 @@ on:
         description: "学習に必要な最低レース数(これ未満なら安全に中止)"
         required: false
         default: "300"
+  schedule:
+    - cron: "30 14 * * *"  # 毎日 UTC 14:30 = JST 23:30(その日のupdateが終わった後を想定)
 
 permissions:
   contents: write  # model.txt をコミットするために必要
@@ -37,7 +39,9 @@ jobs:
           python data-collection/train_model.py \
             --features data-collection/features.csv \
             --out data-collection/model.txt \
-            --min-races ${{ github.event.inputs.min_races }}
+            --min-races ${{ github.event.inputs.min_races || '300' }}
+        # schedule実行時は github.event.inputs.min_races が空になるため、
+        # その場合はデフォルト値 300 にフォールバックする。
 
       - name: モデルをコミットしてpush
         run: |
