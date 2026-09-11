@@ -262,9 +262,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         ).fetchall()
         is_finished = len(result_rows) == 6 and all(row[2] is not None for row in result_rows)
         actual_winner = None
+        actual_combo = None
         if is_finished:
-            winner_row = min(result_rows, key=lambda row: row[2])
+            ordered = sorted(result_rows, key=lambda row: row[2])
+            winner_row = ordered[0]
             actual_winner = {"lane": winner_row[0], "name": winner_row[1]}
+            actual_combo = "-".join(str(row[0]) for row in ordered[:3])
 
         if stadium_number not in course_stats_cache:
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
@@ -373,6 +376,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
             "isFinished": is_finished,          # このレースの結果がもう確定しているか
             "actualWinner": actual_winner,      # 確定していれば{"lane":.., "name":..}
+            "actualCombo": actual_combo,         # 確定していれば "1-2-3" のような1〜3着の文字列
         }
 
         # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)。
