@@ -434,6 +434,7 @@ async function loadRealData(){
         confBet: r.betConfidence || null,
         isFinished: !!r.isFinished,
         actualWinner: r.actualWinner || null,
+        actualCombo: r.actualCombo || null,
         lanes: r.boats.map(b => ({ lane: b.lane, name: b.name }))
       }))
     }));
@@ -519,7 +520,7 @@ function renderRaces(){
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
-          ${race.isFinished ? `<div class="result-tag">結果あり${race.actualWinner ? "・1着 " + race.actualWinner.lane : ""}</div>` : ""}
+          ${race.isFinished ? `<div class="result-tag">結果あり${race.actualCombo ? "・" + escapeHtml(race.actualCombo) : ""}</div>` : ""}
           ${winConfident ? `
             <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ ◎単勝 自信あり ⓘ</button>
             <div class="confidence-detail">${confidenceDetailText("win", race.confWin)}</div>
