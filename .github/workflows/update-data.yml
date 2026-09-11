@@ -56,8 +56,11 @@ jobs:
         run: |
           python data-collection/export_history.py \
             --db data-collection/boatrace.db \
-            --days 14 \
+            --days 90 \
+            --limit 1000 \
             --out data/history.json
+        # history.html側に7/14/30/90日間・全期間の切り替えUIがあるため、
+        # 90日分を出力しておく(export_history.pyのデフォルトと合わせている)。
 
       - name: 変更をコミットしてpush(Pagesに反映される)
         run: |
