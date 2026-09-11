@@ -105,6 +105,28 @@
     border-radius:4px;
     margin-left:5px;
   }
+  .chip.finished{
+    opacity:.55;
+  }
+  .chip .finished-tag{
+    font-size:10px;
+    background:rgba(255,255,255,.18);
+    padding:1px 5px;
+    border-radius:4px;
+    margin-left:5px;
+  }
+
+  .result-tag{
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    background:#E4E8EC;
+    color:#3A4750;
+  }
+  .race-card.finished{
+    opacity:.7;
+  }
 
   .venue-header{
     padding:20px 18px 6px;
@@ -410,6 +432,8 @@ async function loadRealData(){
         grade: r.grade || null,
         confWin: r.confidence || null,
         confBet: r.betConfidence || null,
+        isFinished: !!r.isFinished,
+        actualWinner: r.actualWinner || null,
         lanes: r.boats.map(b => ({ lane: b.lane, name: b.name }))
       }))
     }));
@@ -433,9 +457,12 @@ function renderStadiumChips(){
   const wrap = document.getElementById("stadiumScroll");
   wrap.innerHTML = "";
   STADIUMS.forEach((st, idx)=>{
+    const allFinished = st.races.length > 0 && st.races.every(r => r.isFinished);
     const chip = document.createElement("button");
-    chip.className = "chip" + (idx===activeIndex ? " active" : "");
-    chip.innerHTML = escapeHtml(st.name) + (st.grade ? `<span class="grade">${escapeHtml(st.grade)}</span>` : "");
+    chip.className = "chip" + (idx===activeIndex ? " active" : "") + (allFinished ? " finished" : "");
+    chip.innerHTML = escapeHtml(st.name)
+      + (st.grade ? `<span class="grade">${escapeHtml(st.grade)}</span>` : "")
+      + (allFinished ? `<span class="finished-tag">開催終了</span>` : "");
     chip.onclick = ()=>{ activeIndex = idx; renderAll(); };
     wrap.appendChild(chip);
   });
@@ -470,10 +497,13 @@ function renderRaces(){
   const list = document.getElementById("raceList");
   const st = STADIUMS[activeIndex];
   list.innerHTML = "";
+  const nextUpcomingIndex = st.races.findIndex(r => !r.isFinished);
   st.races.forEach((race, i)=>{
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "race-card" + (i===0 ? " upcoming" : "");
+    card.className = "race-card"
+      + (i === nextUpcomingIndex ? " upcoming" : "")
+      + (race.isFinished ? " finished" : "");
     card.onclick = ()=>{
       const params = new URLSearchParams({ stadium: st.name, race: race.number });
       location.href = `prediction.html?${params.toString()}`;
@@ -489,6 +519,7 @@ function renderRaces(){
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
+          ${race.isFinished ? `<div class="result-tag">結果あり${race.actualWinner ? "・1着 " + race.actualWinner.lane : ""}</div>` : ""}
           ${winConfident ? `
             <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ ◎単勝 自信あり ⓘ</button>
             <div class="confidence-detail">${confidenceDetailText("win", race.confWin)}</div>
