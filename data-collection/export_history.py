@@ -60,6 +60,7 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
     payout_return = 0
     stake_all = 0
     payout_return_all = 0
+    bet_hits_all = 0  # 推奨3連単(4候補)のうち、どれか1つでも的中したレース数
 
     for race_id, race_date_str, stadium_number, race_number, race_grade, close_at in races:
         snapshots = conn.execute(
@@ -119,6 +120,8 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
                 "prob": None,
                 "hit": bet_hit,
             })
+        if any(c["hit"] for c in predicted_bet_combos):
+            bet_hits_all += 1
 
         payout_row = conn.execute(
             "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
@@ -166,6 +169,7 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
             "evaluated": evaluated,
             "winHitRate": win_hits / evaluated if evaluated else None,
             "betHitRate": bet_hits / evaluated if evaluated else None,
+            "betHitRateAll": bet_hits_all / evaluated if evaluated else None,
             "recoveryRate": (payout_return / stake) if stake else None,
             "stake": stake,
             "payoutReturn": payout_return,
