@@ -165,7 +165,12 @@
     text-align:left;
     font-family:inherit;
     color:inherit;
+    cursor:pointer;
     -webkit-tap-highlight-color:transparent;
+  }
+  .race-card:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
   }
   .race-card.upcoming{
     border-color:var(--accent);
@@ -288,6 +293,12 @@
     font-size:14px;
     display:none;
   }
+  .loading-note{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
 
   .data-note{
     margin:22px 16px 0;
@@ -318,7 +329,7 @@
     <div class="venue-meta" id="venueMeta">全12レース<br>1R 締切 10:32</div>
   </div>
 
-  <div class="race-list" id="raceList"></div>
+  <div class="race-list" id="raceList"><div class="loading-note">読み込み中...</div></div>
 
   <div class="data-note">
     現在はサンプルデータを表示しています。データ収集モジュールと接続すると、ここに実際の本日の出走表が表示されます。
@@ -500,14 +511,25 @@ function renderRaces(){
   list.innerHTML = "";
   const nextUpcomingIndex = st.races.findIndex(r => !r.isFinished);
   st.races.forEach((race, i)=>{
-    const card = document.createElement("button");
-    card.type = "button";
+    // 中に「自信ありバッジ」というボタンを含むため、race-card自体は<button>にしない
+    // (button内button はHTML的に不正でアクセシビリティツールが誤動作する)。
+    // 代わりにdiv+role="button"+tabindexでキーボード操作にも対応する。
+    const card = document.createElement("div");
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
     card.className = "race-card"
       + (i === nextUpcomingIndex ? " upcoming" : "")
       + (race.isFinished ? " finished" : "");
-    card.onclick = ()=>{
+    const goToPrediction = ()=>{
       const params = new URLSearchParams({ stadium: st.name, race: race.number });
       location.href = `prediction.html?${params.toString()}`;
+    };
+    card.onclick = goToPrediction;
+    card.onkeydown = (e)=>{
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        goToPrediction();
+      }
     };
 
     const gradeClass = race.grade === "SG" ? "sg" : race.grade === "G1" ? "g1" : "";

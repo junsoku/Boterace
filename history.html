@@ -336,6 +336,12 @@
     font-size:13px;
     line-height:1.7;
   }
+  .loading-note{
+    padding:40px 24px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
 
   .data-note{
     margin:20px 16px 0;
@@ -377,7 +383,7 @@
 
   <div class="period-switch" id="periodSwitch"></div>
 
-  <div id="listArea"></div>
+  <div id="listArea"><div class="loading-note">読み込み中...</div></div>
 
   <div class="data-note">
     表示している予想は、実際にその時点で計算されアプリに表示されていたものを記録した実履歴です(後から作り直した参考値ではありません)。ただし記録の仕組みを導入した時点より前のレースは含まれません。

@@ -278,6 +278,13 @@
     color:var(--ink);
   }
 
+  .loading-note{
+    padding:24px 14px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+
   .disclaimer{
     margin:20px 16px 0;
     padding:12px 14px;
@@ -309,12 +316,12 @@
 
   <div class="section">
     <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
-    <div class="rank-list" id="rankList"></div>
+    <div class="rank-list" id="rankList"><div class="loading-note">読み込み中...</div></div>
   </div>
 
   <div class="section">
     <div class="section-label">推奨 3連単 <span class="note">的中確率順</span></div>
-    <div class="bet-list" id="betList"></div>
+    <div class="bet-list" id="betList"><div class="loading-note">読み込み中...</div></div>
   </div>
 
   <div class="section">
