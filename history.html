@@ -404,7 +404,7 @@ const MOCK_DATA = {
   generatedAt: "2026-09-09",
   periodStart: "2026-08-26",
   periodEnd: "2026-09-09",
-  summary: { evaluated: 42, winHitRate: 0.52, betHitRate: 0.11, recoveryRate: 0.78, recoveryRateAll: 0.86 },
+  summary: { evaluated: 42, winHitRate: 0.52, betHitRate: 0.11, betHitRateAll: 0.34, recoveryRate: 0.78, recoveryRateAll: 0.86 },
   races: [
     {date:"2026-09-08", stadium:"桐生", raceNumber:3, grade:null,
      predictedTop:{lane:1,name:"田中 一輝",pct:34}, actualWinner:{lane:1,name:"田中 一輝"},
@@ -453,17 +453,18 @@ function filterRacesByPeriod(races, days){
 // サーバー(export_history.py)が出力したサマリーは、その時にエクスポートした期間全体のもの。
 // 期間を切り替えたら、絞り込んだレース一覧から同じロジックでサマリーを再計算する。
 function recomputeSummary(races){
-  let evaluated = 0, winHits = 0, betHits = 0;
+  let evaluated = 0, winHits = 0, betHits = 0, betHitsAll = 0;
   let stake = 0, payoutReturn = 0, stakeAll = 0, payoutReturnAll = 0;
   for (const race of races){
     evaluated++;
     if (race.winHit) winHits++;
     if (race.betHit) betHits++;
+    const combos = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length
+      ? race.predictedBetCombos : [{hit: race.betHit}];
+    if (combos.some(c => c.hit)) betHitsAll++;
     if (race.actualPayout !== null && race.actualPayout !== undefined){
       stake += 100;
       if (race.betHit) payoutReturn += race.actualPayout;
-      const combos = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length
-        ? race.predictedBetCombos : [{hit: race.betHit}];
       stakeAll += 100 * combos.length;
       if (combos.some(c => c.hit)) payoutReturnAll += race.actualPayout;
     }
@@ -472,6 +473,7 @@ function recomputeSummary(races){
     evaluated,
     winHitRate: evaluated ? winHits / evaluated : null,
     betHitRate: evaluated ? betHits / evaluated : null,
+    betHitRateAll: evaluated ? betHitsAll / evaluated : null,
     recoveryRate: stake ? payoutReturn / stake : null,
     stake, payoutReturn,
     recoveryRateAll: stakeAll ? payoutReturnAll / stakeAll : null,
@@ -517,6 +519,9 @@ function renderSummary(data){
   document.getElementById("winHitNum").textContent = fmtPct(data.summary.winHitRate);
   document.getElementById("recoveryNum").textContent = fmtPct(data.summary.recoveryRate);
   const lines = [`本命3連単的中率 ${fmtPct(data.summary.betHitRate)}`];
+  if (data.summary.betHitRateAll !== null && data.summary.betHitRateAll !== undefined){
+    lines.push(`推奨3連単的中率(候補4点のいずれか) ${fmtPct(data.summary.betHitRateAll)}`);
+  }
   if (data.summary.recoveryRateAll !== null && data.summary.recoveryRateAll !== undefined){
     const stakeAll = data.summary.stakeAll;
     const returnAll = data.summary.payoutReturnAll;
