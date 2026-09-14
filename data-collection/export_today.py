@@ -312,9 +312,11 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
     from confidence import (  # 遅延importで循環参照を回避
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
+        compute_exacta_confidence_calibration, lookup_exacta_confidence,
     )
     calibration = compute_confidence_calibration(conn, model=model)
     bet_calibration = compute_bet_confidence_calibration(conn, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
+    exacta_calibration = compute_exacta_confidence_calibration(conn, model=model, model_2nd=model_2nd)
 
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
@@ -457,6 +459,20 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
             except (ValueError, AttributeError):
                 bet_confidence = None
 
+        exacta_confidence = None
+        if exacta_bets:
+            try:
+                top_exacta_prob = float(exacta_bets[0]["prob"].rstrip("%"))
+                exacta_confidence_raw = lookup_exacta_confidence(exacta_calibration, top_exacta_prob)
+                exacta_confidence = {
+                    "isConfident": exacta_confidence_raw["is_confident"],
+                    "hitRate": exacta_confidence_raw["hit_rate"],
+                    "sampleSize": exacta_confidence_raw["sample_size"],
+                    "bucket": exacta_confidence_raw["bucket"],
+                }
+            except (ValueError, AttributeError):
+                exacta_confidence = None
+
         race_out = {
             "number": race_number,
             "close": close_at,
@@ -473,6 +489,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
             "exactaBets": exacta_bets,   # 2連単の推奨候補(通常2件)
             "confidence": confidence,           # ◎(単勝)の確信度
             "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
+            "exactaConfidence": exacta_confidence,  # 推奨2連単(本命)の確信度
             "isFinished": is_finished,          # このレースの結果がもう確定しているか
             "actualWinner": actual_winner,      # 確定していれば{"lane":.., "name":..}
             "actualCombo": actual_combo,         # 確定していれば "1-2-3" のような1〜3着の文字列

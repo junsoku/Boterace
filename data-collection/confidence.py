@@ -28,7 +28,8 @@ import sqlite3
 from datetime import date, timedelta
 
 from export_today import (
-    score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml, predict_with_model,
+    score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml,
+    estimate_exacta_bets, estimate_exacta_bets_ml, predict_with_model,
 )
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate
 
@@ -47,6 +48,13 @@ MIN_SAMPLE_FOR_BET_STAR = 20
 # 「自信あり」の目安にする。実績が溜まってきたら調整して良い。
 BET_CONFIDENCE_THRESHOLD = 0.15
 
+# ---- 推奨2連単(本命1点)用の確信度設定 ----
+# 2連単(6艇中30通り)は3連単より的中しやすい(ランダムなら1/30≈3.3%)ので、
+# バケットは3連単よりやや粗めに、しきい値も高めに取る。
+EXACTA_BUCKET_SIZE = 5
+MIN_SAMPLE_FOR_EXACTA_STAR = 20
+EXACTA_CONFIDENCE_THRESHOLD = 0.30
+
 
 def _bucket_label(pct: int) -> str:
     lower = (pct // BUCKET_SIZE) * BUCKET_SIZE
@@ -57,6 +65,12 @@ def _bucket_label(pct: int) -> str:
 def _bet_bucket_label(pct: float) -> str:
     lower = (int(pct) // BET_BUCKET_SIZE) * BET_BUCKET_SIZE
     upper = lower + BET_BUCKET_SIZE - 1
+    return f"{lower}-{upper}%"
+
+
+def _exacta_bucket_label(pct: float) -> str:
+    lower = (int(pct) // EXACTA_BUCKET_SIZE) * EXACTA_BUCKET_SIZE
+    upper = lower + EXACTA_BUCKET_SIZE - 1
     return f"{lower}-{upper}%"
 
 
@@ -208,6 +222,49 @@ def compute_bet_confidence_calibration(conn: sqlite3.Connection, lookback_days: 
     }
 
 
+def compute_exacta_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None,
+                                           model_2nd=None) -> dict:
+    """
+    過去lookback_days日分の結果確定レースを、現在のロジック(modelがあればMLモデル)で再予想し、
+    推奨2連単(本命1点)の推定確率帯ごとに、実際にその組み合わせが的中していた割合を集計する。
+    戻り値: {"15-19%": {"hit_rate":0.35,"sample_size":40}, ...}
+
+    model_2nd があれば estimate_exacta_bets_ml()(2段階モデル)で推定する。
+    無ければ旧来の estimate_exacta_bets()(1着確率の按分)にフォールバックする。
+    """
+    buckets = {}  # label -> [hits, total]
+    use_ml_bets = model_2nd is not None
+
+    for boats, actual_order, boat_dicts, course_stats, race_context in _iter_calibration_races(conn, lookback_days, model):
+        if use_ml_bets:
+            p1_by_lane = {b["lane"]: b["pct"] for b in boats}
+            bets = estimate_exacta_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane,
+                                            model_2nd, top_n=1)
+        else:
+            bets = estimate_exacta_bets(boats, top_n=1)
+        if not bets:
+            continue
+        top_bet = bets[0]
+        try:
+            prob_val = float(top_bet["prob"].rstrip("%"))
+        except (ValueError, AttributeError):
+            continue
+
+        label = _exacta_bucket_label(prob_val)
+        if label not in buckets:
+            buckets[label] = [0, 0]
+        buckets[label][1] += 1
+
+        actual_combo = "-".join(str(n) for n in actual_order[:2])
+        if top_bet["combo"] == actual_combo:
+            buckets[label][0] += 1
+
+    return {
+        label: {"hit_rate": hits / total if total else None, "sample_size": total}
+        for label, (hits, total) in buckets.items()
+    }
+
+
 def lookup_confidence(calibration: dict, top_pick_pct: int) -> dict:
     """今日の予想の◎確率から、対応するバケットの実績を引いて信頼度を判定する"""
     label = _bucket_label(top_pick_pct)
@@ -235,4 +292,19 @@ def lookup_bet_confidence(calibration: dict, top_bet_prob_pct: float) -> dict:
         "hit_rate": stat["hit_rate"],
         "sample_size": stat["sample_size"],
         "is_confident": stat["hit_rate"] >= BET_CONFIDENCE_THRESHOLD,
+    }
+
+
+def lookup_exacta_confidence(calibration: dict, top_exacta_prob_pct: float) -> dict:
+    """今日の推奨2連単(本命)の推定確率から、対応するバケットの実績を引いて信頼度を判定する"""
+    label = _exacta_bucket_label(top_exacta_prob_pct)
+    stat = calibration.get(label)
+    if not stat or stat["sample_size"] < MIN_SAMPLE_FOR_EXACTA_STAR:
+        return {"bucket": label, "hit_rate": stat["hit_rate"] if stat else None,
+                "sample_size": stat["sample_size"] if stat else 0, "is_confident": False}
+    return {
+        "bucket": label,
+        "hit_rate": stat["hit_rate"],
+        "sample_size": stat["sample_size"],
+        "is_confident": stat["hit_rate"] >= EXACTA_CONFIDENCE_THRESHOLD,
     }
