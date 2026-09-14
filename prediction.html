@@ -324,6 +324,11 @@
     <div class="bet-list" id="betList"><div class="loading-note">読み込み中...</div></div>
   </div>
 
+  <div class="section" id="exactaSection" style="display:none;">
+    <div class="section-label">推奨 2連単 <span class="note">的中確率順</span></div>
+    <div class="bet-list" id="exactaBetList"><div class="loading-note">読み込み中...</div></div>
+  </div>
+
   <div class="section">
     <div class="section-label">予想根拠データ</div>
     <div class="data-table" id="dataTable"></div>
@@ -360,9 +365,14 @@ const MOCK_BETS = [
   {combo:"1-4-3", prob:"5.9%"},
   {combo:"4-1-2", prob:"4.2%"},
 ];
+const MOCK_EXACTA_BETS = [
+  {combo:"1-4", prob:"18.2%"},
+  {combo:"1-2", prob:"12.5%"},
+];
 
 let RANK = MOCK_RANK;
 let BETS = MOCK_BETS;
+let EXACTA_BETS = MOCK_EXACTA_BETS;
 // それぞれ {isConfident, hitRate, sampleSize, bucket}
 let CONFIDENCE = { win: null, bet: null };
 
@@ -407,6 +417,8 @@ async function loadRealData(){
       flying: b.flying ?? 0, late: b.late ?? 0, class: b.class ?? null
     }));
     BETS = race.bets;
+    EXACTA_BETS = Array.isArray(race.exactaBets) ? race.exactaBets : [];
+    document.getElementById("exactaSection").style.display = EXACTA_BETS.length ? "" : "none";
     CONFIDENCE = { win: race.confidence || null, bet: race.betConfidence || null };
     document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
     document.getElementById("confidenceBadgeWin").style.display =
@@ -427,6 +439,8 @@ async function loadRealData(){
     }
     RANK = MOCK_RANK;
     BETS = MOCK_BETS;
+    EXACTA_BETS = MOCK_EXACTA_BETS;
+    document.getElementById("exactaSection").style.display = "";
     CONFIDENCE = { win: null, bet: null };
   }
   document.querySelector(".disclaimer").textContent = usingReal
@@ -435,6 +449,7 @@ async function loadRealData(){
 
   renderRank();
   renderBets();
+  renderExactaBets();
   renderData();
 }
 
@@ -456,6 +471,18 @@ function renderRank(){
 function renderBets(){
   const wrap = document.getElementById("betList");
   wrap.innerHTML = BETS.map(b=>`
+    <div class="bet-row">
+      <div class="bet-combo">${b.combo}</div>
+      <div class="bet-meta">
+        <div class="bet-prob">的中確率 ${b.prob}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderExactaBets(){
+  const wrap = document.getElementById("exactaBetList");
+  wrap.innerHTML = EXACTA_BETS.map(b=>`
     <div class="bet-row">
       <div class="bet-combo">${b.combo}</div>
       <div class="bet-meta">
