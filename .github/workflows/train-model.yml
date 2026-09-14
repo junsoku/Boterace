@@ -47,6 +47,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data-collection/model.txt
+          git add data-collection/model.txt data-collection/model_2nd.txt data-collection/model_3rd.txt
           git diff --cached --quiet || git commit -m "MLモデルを学習・更新"
           git push
