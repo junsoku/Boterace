@@ -1,8 +1,13 @@
 """
 蓄積したDB(ingest.pyで作ったboatrace.db)から、機械学習用の特徴量テーブルを作る。
 
-1行 = 1艇(entry)。目的変数 is_winner は「そのレースで1着だったか(0/1)」。
-学習は train_model.py で行う。
+1行 = 1艇(entry)。目的変数は3つ:
+    is_winner: そのレースで1着だったか(0/1)
+    is_second: そのレースで2着だったか(0/1)。2着モデルの学習では「1着だった艇を除いた
+               5艇」の中で使う(train_model.py 側でフィルタする)。
+    is_third:  そのレースで3着だったか(0/1)。3着モデルの学習では「1・2着だった艇を
+               除いた4艇」の中で使う。
+学習は train_model.py で行う(1着・2着・3着の3つのモデルを学習する)。
 
 使い方:
     python build_features.py --db boatrace.db --out features.csv
@@ -77,6 +82,8 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
 
     df["course_win_rate"] = df.apply(course_win_rate, axis=1)
     df["is_winner"] = (df["arrival_order"] == 1).astype(int)
+    df["is_second"] = (df["arrival_order"] == 2).astype(int)  # 2着モデル用(1着だった艇を除いた中で学習)
+    df["is_third"] = (df["arrival_order"] == 3).astype(int)   # 3着モデル用(1・2着だった艇を除いた中で学習)
 
     # 級別(文字列)を序列の数値に変換。未知の値/欠損は後段の中央値補完に任せる。
     df["racer_class_rank"] = df["racer_class"].map(RACER_CLASS_RANK)

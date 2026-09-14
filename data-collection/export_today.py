@@ -180,6 +180,36 @@ def normalize_to_pct(values: list, use_softmax: bool) -> list:
     return rounded
 
 
+def estimate_exacta_bets(boats: list, top_n: int = 2) -> list:
+    """
+    2連単(1着→2着)の確率をPlackett-Luceモデルで推定する。
+    P(a→b) = P(aが1着) × P(bが2着|aを除いた中で)
+    estimate_bets() の3連単計算と同じ考え方で、2着までで打ち切った版。
+    """
+    strengths = {b["lane"]: max(b["pct"], 0.1) for b in boats}
+    lanes = list(strengths.keys())
+    total = sum(strengths.values())
+
+    combos = []
+    for a in lanes:
+        p_a = strengths[a] / total
+        remaining_after_a = {l: s for l, s in strengths.items() if l != a}
+        total_after_a = sum(remaining_after_a.values())
+        for b in remaining_after_a:
+            p_b = remaining_after_a[b] / total_after_a
+            combos.append({
+                "combo": f"{a}-{b}",
+                "raw_prob": p_a * p_b,
+            })
+
+    combos.sort(key=lambda x: -x["raw_prob"])
+    top = combos[:top_n]
+    return [
+        {"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'}
+        for c in top
+    ]
+
+
 def estimate_bets(boats: list, top_n: int = 4) -> list:
     """
     Plackett-Luceモデルで3連単(1着→2着→3着)の確率を推定する。
@@ -216,13 +246,75 @@ def estimate_bets(boats: list, top_n: int = 4) -> list:
     ]
 
 
-def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
+def estimate_bets_ml(boat_dicts: list, course_stats: dict, race_context: dict,
+                      p1_by_lane: dict, model_2nd, model_3rd, top_n: int = 4) -> list:
+    """
+    model_2nd・model_3rd を使って3連単(1着→2着→3着)の確率を推定する。
+    estimate_bets() との違い:「1着になれなかった艇の中で2着になりやすいか」
+    「1・2着になれなかった艇の中で3着になりやすいか」を、1着確率の単純な按分ではなく
+    それぞれ専用に学習したモデルで直接予測する(実際の着順の癖を反映できる)。
+
+    P(a→b→c) = P(aが1着) × P(bが2着|aを除いた5艇の中で,model_2ndによる)
+                × P(cが3着|a,bを除いた4艇の中で,model_3rdによる)
+    """
+    combos = []
+    for a_dict in boat_dicts:
+        a = a_dict["boat_number"]
+        p_a = p1_by_lane[a] / 100
+
+        remaining_after_a = [d for d in boat_dicts if d["boat_number"] != a]
+        scores_2nd = predict_with_model(remaining_after_a, course_stats, model_2nd, race_context)
+        p2_pcts = normalize_to_pct(scores_2nd, use_softmax=False)
+        p2_by_lane = {d["boat_number"]: p for d, p in zip(remaining_after_a, p2_pcts)}
+
+        for b_dict in remaining_after_a:
+            b = b_dict["boat_number"]
+            p_b = p2_by_lane[b] / 100
+
+            remaining_after_ab = [d for d in remaining_after_a if d["boat_number"] != b]
+            scores_3rd = predict_with_model(remaining_after_ab, course_stats, model_3rd, race_context)
+            p3_pcts = normalize_to_pct(scores_3rd, use_softmax=False)
+            p3_by_lane = {d["boat_number"]: p for d, p in zip(remaining_after_ab, p3_pcts)}
+
+            for c_dict in remaining_after_ab:
+                c = c_dict["boat_number"]
+                p_c = p3_by_lane[c] / 100
+                combos.append({"combo": f"{a}-{b}-{c}", "raw_prob": p_a * p_b * p_c})
+
+    combos.sort(key=lambda x: -x["raw_prob"])
+    top = combos[:top_n]
+    return [{"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'} for c in top]
+
+
+def estimate_exacta_bets_ml(boat_dicts: list, course_stats: dict, race_context: dict,
+                             p1_by_lane: dict, model_2nd, top_n: int = 2) -> list:
+    """model_2nd を使って2連単(1着→2着)の確率を推定する。estimate_bets_ml の2着までの版。"""
+    combos = []
+    for a_dict in boat_dicts:
+        a = a_dict["boat_number"]
+        p_a = p1_by_lane[a] / 100
+
+        remaining_after_a = [d for d in boat_dicts if d["boat_number"] != a]
+        scores_2nd = predict_with_model(remaining_after_a, course_stats, model_2nd, race_context)
+        p2_pcts = normalize_to_pct(scores_2nd, use_softmax=False)
+
+        for b_dict, p_b_pct in zip(remaining_after_a, p2_pcts):
+            b = b_dict["boat_number"]
+            combos.append({"combo": f"{a}-{b}", "raw_prob": p_a * (p_b_pct / 100)})
+
+    combos.sort(key=lambda x: -x["raw_prob"])
+    top = combos[:top_n]
+    return [{"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'} for c in top]
+
+
+def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
+                      model_2nd=None, model_3rd=None) -> dict:
     from confidence import (  # 遅延importで循環参照を回避
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
     )
     calibration = compute_confidence_calibration(conn, model=model)
-    bet_calibration = compute_bet_confidence_calibration(conn, model=model)
+    bet_calibration = compute_bet_confidence_calibration(conn, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
 
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
@@ -344,7 +436,13 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "bucket": confidence_raw["bucket"],
         }
 
-        bets = estimate_bets(boats_out)
+        p1_by_lane = {b["lane"]: b["pct"] for b in boats_out}
+        if model_2nd is not None and model_3rd is not None:
+            bets = estimate_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane, model_2nd, model_3rd)
+            exacta_bets = estimate_exacta_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane, model_2nd)
+        else:
+            bets = estimate_bets(boats_out)
+            exacta_bets = estimate_exacta_bets(boats_out)
         bet_confidence = None
         if bets:
             try:
@@ -372,6 +470,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "boats": sorted(boats_ranked, key=lambda x: x["lane"]),  # 表示は号艇順
             "boats_ranked": boats_ranked,                            # 予想順(印付き)
             "bets": bets,
+            "exactaBets": exacta_bets,   # 2連単の推奨候補(通常2件)
             "confidence": confidence,           # ◎(単勝)の確信度
             "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
             "isFinished": is_finished,          # このレースの結果がもう確定しているか
@@ -422,18 +521,32 @@ def main():
     ap.add_argument("--model", default=None, help="train_model.py で作ったmodel.txtのパス(省略時はヒューリスティックで予想)")
     args = ap.parse_args()
 
-    model = None
+    model = model_2nd = model_3rd = None
     if args.model and Path(args.model).exists():
         import lightgbm as lgb
         model = lgb.Booster(model_file=args.model)
-        print(f"MLモデルを読み込みました: {args.model}")
+        print(f"MLモデル(1着)を読み込みました: {args.model}")
+
+        # train_model.py が同じ場所に出力する model_2nd.txt / model_3rd.txt があれば、
+        # 3連単・2連単の予測にも使う(無ければ1着モデルのみで簡易的に按分する旧方式にフォールバック)。
+        base = Path(args.model)
+        path_2nd = base.with_name(f"{base.stem}_2nd{base.suffix}")
+        path_3rd = base.with_name(f"{base.stem}_3rd{base.suffix}")
+        if path_2nd.exists():
+            model_2nd = lgb.Booster(model_file=str(path_2nd))
+            print(f"MLモデル(2着)を読み込みました: {path_2nd}")
+        if path_3rd.exists():
+            model_3rd = lgb.Booster(model_file=str(path_3rd))
+            print(f"MLモデル(3着)を読み込みました: {path_3rd}")
+        if model_2nd is None or model_3rd is None:
+            print("⚠ 2着/3着モデルが見つからないため、3連単・2連単は1着確率の按分による簡易計算にフォールバックします。")
     elif args.model:
         print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで続行します)")
 
     target_date = date.fromisoformat(args.date) if args.date else date.today()
     from ingest import init_db  # schema.sql適用+マイグレーションを共通化するため再利用
     conn = init_db(args.db)
-    result = build_today_json(conn, target_date, model=model)
+    result = build_today_json(conn, target_date, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
     conn.close()
 
     out_path = Path(args.out)
