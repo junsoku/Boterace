@@ -1,5 +1,5 @@
 """
-結果が確定済みのレースに対して、現在の予想ロジック(export_today.pyのscore_boat等)を
+結果が確定済みのレースに対して、現在の予想ロジック(export_today.pyのpredict_with_model等)を
 そのまま当てはめて予想を再現し、実際の結果と突き合わせて的中率を検証するスクリプト。
 
 位置づけ(history.htmlとの違い):
@@ -12,21 +12,32 @@
 - 技術統計(technique_stats)は日々更新されるため、過去のレース当時とは
   条件が変わっている場合がある。とはいえ、今のロジックの妥当性を見る目安にはなる。
 - サンプル数が少ないうちは参考程度。目安として最低30〜50レース以上で見たい。
+- --model を指定しない場合はヒューリスティック(score_boat)で検証する。本番と同じ条件で
+  検証したい場合は、必ず --model data-collection/model.txt のように指定すること
+  (model_2nd.txt・model_3rd.txt が同じ場所にあれば自動的に使われる)。
 
 使い方:
-    python backtest.py --db boatrace.db --days 1        # 直近1日分
+    python backtest.py --db boatrace.db --days 1                       # ヒューリスティックで検証
+    python backtest.py --db boatrace.db --days 7 --model model.txt     # MLモデル(3段階)で検証
     python backtest.py --db boatrace.db --start 2026-09-01 --end 2026-09-08
 """
 import argparse
 import sqlite3
 from datetime import date, timedelta
+from pathlib import Path
 
-from export_today import score_boat, normalize_to_pct, estimate_bets
+from export_today import (
+    score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml, predict_with_model,
+)
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate
 from ingest import _migrate_add_missing_columns
 
 
-def backtest(conn: sqlite3.Connection, start: date, end: date) -> dict:
+def backtest(conn: sqlite3.Connection, start: date, end: date,
+             model=None, model_2nd=None, model_3rd=None) -> dict:
+    use_ml = model is not None
+    use_ml_bets = model_2nd is not None and model_3rd is not None
+
     races = conn.execute(
         """SELECT race_id, race_date, stadium_number, race_number, race_grade,
                   wave_height_cm, wind_speed_m
@@ -50,13 +61,19 @@ def backtest(conn: sqlite3.Connection, start: date, end: date) -> dict:
     payout_data_races = 0 # 払戻データが取れたレース数
 
     for race_id, race_date_str, stadium_number, race_number, race_grade, wave, wind in races:
+        # predict_with_model(MLモデル)が必要とする全特徴量を取得する。
+        # ヒューリスティック(score_boat)しか使わない場合でも、同じクエリで揃えておけば
+        # --model の有無を後から切り替えても困らない。
         entries = conn.execute(
-            """SELECT e.entry_id, e.boat_number, e.racer_registration_number,
+            """SELECT e.entry_id, e.boat_number, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
-                      e.motor_2連率, e.boat_hull_2連率, e.flying_count, e.late_count,
+                      e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
+                      e.flying_count, e.late_count,
+                      p.exhibition_time, p.tilt_angle,
                       r.arrival_order
                FROM entries e
                JOIN results r ON r.entry_id = e.entry_id
+               LEFT JOIN previews p ON p.entry_id = e.entry_id
                WHERE e.race_id = ? ORDER BY e.boat_number""",
             (race_id,),
         ).fetchall()
@@ -67,16 +84,23 @@ def backtest(conn: sqlite3.Connection, start: date, end: date) -> dict:
         if stadium_number not in course_stats_cache:
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
         course_stats = course_stats_cache[stadium_number]
-        race_context = {"wave_height_cm": wave, "wind_speed_m": wind, "race_grade": race_grade}
+
+        exh_values = [row[13] for row in entries if row[13]]
+        avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
+        race_context = {"wave_height_cm": wave, "wind_speed_m": wind, "race_grade": race_grade,
+                         "avg_exhibition_time": avg_exh}
 
         boat_dicts = []
-        for (entry_id, bn, reg_no, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
-             flying, late, arrival_order) in entries:
+        for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
+             avg_st, flying, late, exh, tilt_angle, arrival_order) in entries:
             d = {
-                "boat_number": bn, "national_win_rate": nat, "national_2連率": nat_2r,
+                "boat_number": bn, "racer_class": racer_class,
+                "national_win_rate": nat, "national_2連率": nat_2r,
                 "local_win_rate": local, "local_2連率": local_2r,
                 "motor_2連率": motor_2r, "boat_hull_2連率": hull_2r,
+                "average_start_timing": avg_st,
                 "flying_count": flying, "late_count": late,
+                "exhibition_time": exh, "tilt_angle": tilt_angle,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -84,14 +108,24 @@ def backtest(conn: sqlite3.Connection, start: date, end: date) -> dict:
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append((d, arrival_order))
 
-        scores = [score_boat(d, course_stats, race_context) for d, _ in boat_dicts]
-        pcts = normalize_to_pct(scores, use_softmax=True)
+        if use_ml:
+            scores = predict_with_model([d for d, _ in boat_dicts], course_stats, model, race_context)
+            pcts = normalize_to_pct(scores, use_softmax=False)
+        else:
+            scores = [score_boat(d, course_stats, race_context) for d, _ in boat_dicts]
+            pcts = normalize_to_pct(scores, use_softmax=True)
 
         boats_for_bets = [
             {"lane": d["boat_number"], "pct": pct}
             for (d, _), pct in zip(boat_dicts, pcts)
         ]
-        bet_list = estimate_bets(boats_for_bets, top_n=6)
+
+        if use_ml_bets:
+            p1_by_lane = {b["lane"]: b["pct"] for b in boats_for_bets}
+            bet_list = estimate_bets_ml([d for d, _ in boat_dicts], course_stats, race_context,
+                                         p1_by_lane, model_2nd, model_3rd, top_n=6)
+        else:
+            bet_list = estimate_bets(boats_for_bets, top_n=6)
         predicted_bets = {b["combo"] for b in bet_list}
         top_bet_combo = bet_list[0]["combo"] if bet_list else None
 
@@ -153,7 +187,33 @@ def main():
     ap.add_argument("--start", default=None, help="YYYY-MM-DD")
     ap.add_argument("--end", default=None, help="YYYY-MM-DD")
     ap.add_argument("--days", type=int, default=1, help="--start/--end を省略した場合、直近何日分を検証するか")
+    ap.add_argument("--model", default=None,
+                     help="train_model.py で作ったmodel.txtのパス(省略時はヒューリスティックで検証)。"
+                          "同じ場所に model_2nd.txt / model_3rd.txt があれば3連単の検証にも使う。")
     args = ap.parse_args()
+
+    model = model_2nd = model_3rd = None
+    if args.model and Path(args.model).exists():
+        import lightgbm as lgb
+        model = lgb.Booster(model_file=args.model)
+        print(f"MLモデル(1着)を読み込みました: {args.model}")
+
+        base = Path(args.model)
+        path_2nd = base.with_name(f"{base.stem}_2nd{base.suffix}")
+        path_3rd = base.with_name(f"{base.stem}_3rd{base.suffix}")
+        if path_2nd.exists():
+            model_2nd = lgb.Booster(model_file=str(path_2nd))
+            print(f"MLモデル(2着)を読み込みました: {path_2nd}")
+        if path_3rd.exists():
+            model_3rd = lgb.Booster(model_file=str(path_3rd))
+            print(f"MLモデル(3着)を読み込みました: {path_3rd}")
+        if model_2nd is None or model_3rd is None:
+            print("⚠ 2着/3着モデルが見つからないため、3連単の検証は1着確率の按分による簡易計算になります。")
+    elif args.model:
+        print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで検証します)")
+    else:
+        print("ℹ --model が指定されていないため、ヒューリスティック(score_boat)で検証します。"
+              "本番のMLモデルと同じ条件で検証したい場合は --model を指定してください。")
 
     if args.start and args.end:
         start, end = date.fromisoformat(args.start), date.fromisoformat(args.end)
@@ -163,10 +223,10 @@ def main():
 
     conn = sqlite3.connect(args.db)
     _migrate_add_missing_columns(conn)  # flying_count等の列がまだなければここで追加する
-    result = backtest(conn, start, end)
+    result = backtest(conn, start, end, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
     conn.close()
 
-    print(f"検証期間: {start} 〜 {end}")
+    print(f"\n検証期間: {start} 〜 {end}")
     print(f"検証対象レース数: {result['evaluated']}")
     if result["evaluated"] == 0:
         print("結果が確定しているレースが見つかりませんでした。")
