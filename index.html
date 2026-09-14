@@ -77,6 +77,9 @@
     overflow-x:auto;
     padding:14px 16px 4px;
     -ms-overflow-style:none; scrollbar-width:none;
+    position:sticky;
+    z-index:9;
+    background:var(--paper);
   }
   .stadium-scroll::-webkit-scrollbar{display:none;}
   .chip{
@@ -470,6 +473,7 @@ async function loadRealData(){
   document.getElementById("openCountLabel").textContent = `本日 ${STADIUMS.length}場開催中`;
   activeIndex = 0;
   renderAll();
+  positionStadiumScroll(); // appbar-subのテキストが変わり高さが変化する場合があるため再計算
 }
 
 function renderStadiumChips(){
@@ -634,11 +638,23 @@ function goToStadium(idx){
   }, { passive: true });
 })();
 
+// 場チップの帯を、appbar(日付・履歴ボタンの帯)のすぐ下にくっつけてsticky固定する。
+// appbarの高さはテキストの折り返し等で変わりうるので、実際の高さを測って毎回設定する。
+function positionStadiumScroll(){
+  const appbar = document.querySelector(".appbar");
+  const scroll = document.getElementById("stadiumScroll");
+  if (appbar && scroll){
+    scroll.style.top = appbar.offsetHeight + "px";
+  }
+}
+window.addEventListener("resize", positionStadiumScroll);
+
 // 今日の日付表示
 const today = new Date();
 const days = ["日","月","火","水","木","金","土"];
 document.getElementById("todayLabel").innerHTML =
   `${today.getMonth()+1}月${today.getDate()}日(${days[today.getDay()]})<span>本日の開催</span>`;
+positionStadiumScroll();
 loadRealData();
 </script>
 
