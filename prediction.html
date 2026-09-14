@@ -306,6 +306,7 @@
         <span id="titleText">桐生 3R 予想</span>
         <button class="star-tag" id="confidenceBadgeWin" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('win')">★ ◎単勝 自信あり ⓘ</button>
         <button class="star-tag" id="confidenceBadgeBet" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('bet')">★ 3連単 自信あり ⓘ</button>
+        <button class="star-tag" id="confidenceBadgeExacta" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('exacta')">★ 2連単 自信あり ⓘ</button>
       </div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
     </div>
@@ -313,6 +314,7 @@
 
   <div class="confidence-detail" id="confidenceDetailWin"></div>
   <div class="confidence-detail" id="confidenceDetailBet"></div>
+  <div class="confidence-detail" id="confidenceDetailExacta"></div>
 
   <div class="section">
     <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
@@ -374,17 +376,24 @@ let RANK = MOCK_RANK;
 let BETS = MOCK_BETS;
 let EXACTA_BETS = MOCK_EXACTA_BETS;
 // それぞれ {isConfident, hitRate, sampleSize, bucket}
-let CONFIDENCE = { win: null, bet: null };
+let CONFIDENCE = { win: null, bet: null, exacta: null };
 
 const CONFIDENCE_LABELS = {
   win: "◎単勝",
   bet: "3連単",
+  exacta: "2連単",
+};
+const CONFIDENCE_IDS = {
+  win: { badge: "confidenceBadgeWin", panel: "confidenceDetailWin" },
+  bet: { badge: "confidenceBadgeBet", panel: "confidenceDetailBet" },
+  exacta: { badge: "confidenceBadgeExacta", panel: "confidenceDetailExacta" },
 };
 
 // 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
 function toggleConfidenceDetail(kind){
-  const panel = document.getElementById(kind === "win" ? "confidenceDetailWin" : "confidenceDetailBet");
-  const btn = document.getElementById(kind === "win" ? "confidenceBadgeWin" : "confidenceBadgeBet");
+  const ids = CONFIDENCE_IDS[kind];
+  const panel = document.getElementById(ids.panel);
+  const btn = document.getElementById(ids.badge);
   const isOpen = panel.classList.toggle("open");
   btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
   if(isOpen){
@@ -419,12 +428,14 @@ async function loadRealData(){
     BETS = race.bets;
     EXACTA_BETS = Array.isArray(race.exactaBets) ? race.exactaBets : [];
     document.getElementById("exactaSection").style.display = EXACTA_BETS.length ? "" : "none";
-    CONFIDENCE = { win: race.confidence || null, bet: race.betConfidence || null };
+    CONFIDENCE = { win: race.confidence || null, bet: race.betConfidence || null, exacta: race.exactaConfidence || null };
     document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
     document.getElementById("confidenceBadgeWin").style.display =
       (CONFIDENCE.win && CONFIDENCE.win.isConfident) ? "inline" : "none";
     document.getElementById("confidenceBadgeBet").style.display =
       (CONFIDENCE.bet && CONFIDENCE.bet.isConfident) ? "inline" : "none";
+    document.getElementById("confidenceBadgeExacta").style.display =
+      (CONFIDENCE.exacta && CONFIDENCE.exacta.isConfident) ? "inline" : "none";
     document.querySelector(".appbar-sub").textContent =
       `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}` +
       (race.weather ? ` ・ ${race.weather}` : "") +
@@ -441,7 +452,7 @@ async function loadRealData(){
     BETS = MOCK_BETS;
     EXACTA_BETS = MOCK_EXACTA_BETS;
     document.getElementById("exactaSection").style.display = "";
-    CONFIDENCE = { win: null, bet: null };
+    CONFIDENCE = { win: null, bet: null, exacta: null };
   }
   document.querySelector(".disclaimer").textContent = usingReal
     ? "実データに基づく予想です。舟券の購入は自己責任で、当たりを保証するものではありません。"

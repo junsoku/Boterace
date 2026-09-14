@@ -449,6 +449,7 @@ async function loadRealData(){
         grade: r.grade || null,
         confWin: r.confidence || null,
         confBet: r.betConfidence || null,
+        confExacta: r.exactaConfidence || null,
         isFinished: !!r.isFinished,
         actualWinner: r.actualWinner || null,
         actualCombo: r.actualCombo || null,
@@ -493,7 +494,7 @@ function renderVenue(){
     `全${st.races.length}レース<br>1R 締切 ${escapeHtml(st.races[0].close)}`;
 }
 
-const CONFIDENCE_LABELS = { win: "◎単勝", bet: "3連単" };
+const CONFIDENCE_LABELS = { win: "◎単勝", bet: "3連単", exacta: "2連単" };
 
 // 「自信あり」バッジの根拠(過去の的中率・サンプル数)をタップで開閉表示する
 function toggleConfidenceDetail(e, btn){
@@ -542,6 +543,7 @@ function renderRaces(){
 
     const winConfident = race.confWin && race.confWin.isConfident;
     const betConfident = race.confBet && race.confBet.isConfident;
+    const exactaConfident = race.confExacta && race.confExacta.isConfident;
 
     card.innerHTML = `
       <div class="race-num">${race.number}<sub-r>R</sub-r></div>
@@ -556,6 +558,10 @@ function renderRaces(){
           ${betConfident ? `
             <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ 3連単 自信あり ⓘ</button>
             <div class="confidence-detail">${confidenceDetailText("bet", race.confBet)}</div>
+          ` : ""}
+          ${exactaConfident ? `
+            <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ 2連単 自信あり ⓘ</button>
+            <div class="confidence-detail">${confidenceDetailText("exacta", race.confExacta)}</div>
           ` : ""}
           ${race.grade ? `<div class="grade-tag ${gradeClass}">${escapeHtml(race.grade)}</div>` : ""}
         </div>
