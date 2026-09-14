@@ -227,12 +227,19 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
             payouts = result.get("payouts") or {}
             for bet_type, items in payouts.items():
                 for item in items or []:
+                    combination = item.get("combination")
+                    if combination is None:
+                        # 返還(refunds)など、"combination"を持たない構造のpayoutが
+                        # まれに存在する。combinationはNOT NULL列なので、
+                        # そのまま入れるとクラッシュする。実害がない情報のため、
+                        # 3連単等の払戻計算には使わないこの種のデータはスキップする。
+                        continue
                     conn.execute(
                         """INSERT INTO payouts (race_id, bet_type, combination, payout_yen)
                            VALUES (?,?,?,?)
                            ON CONFLICT(race_id, bet_type, combination) DO UPDATE SET
                              payout_yen=excluded.payout_yen""",
-                        (race_id, bet_type, item.get("combination"), item.get("amount")),
+                        (race_id, bet_type, combination, item.get("amount")),
                     )
 
     conn.commit()
