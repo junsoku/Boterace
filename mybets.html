@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>購入記録 | 競艇予想</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="競艇予想">
+<meta name="theme-color" content="#0E2436">
+<style>
+  :root{
+    --navy:#0E2436;
+    --navy-soft:#16324A;
+    --paper:#EEF1EF;
+    --card:#FFFFFF;
+    --line:#D8DEDC;
+    --ink:#16232B;
+    --ink-soft:#5B6B72;
+    --accent:#16786B;
+    --accent-soft:#E4F1EE;
+    --miss:#B3261E;
+    --miss-soft:#FCE8E6;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:44px;
+  }
+  .appbar{
+    background:var(--navy);
+    color:#fff;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    position:sticky; top:0; z-index:10;
+  }
+  .back{
+    font-size:22px;
+    color:#CBD9DE;
+    line-height:1;
+    background:none;
+    border:none;
+    padding:0;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .appbar-title{
+    font-family:'Shippori Mincho', serif;
+    font-size:19px;
+    font-weight:700;
+  }
+  .appbar-sub{
+    font-size:12px;
+    color:#8FA6B2;
+    margin-top:2px;
+  }
+
+  .summary-bar{
+    display:flex;
+    gap:10px;
+    padding:16px;
+  }
+  .summary-card{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 10px;
+    text-align:center;
+  }
+  .summary-num{
+    font-family:'Shippori Mincho', serif;
+    font-size:20px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .summary-label{
+    font-size:10px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+
+  .note-banner{
+    margin:0 16px 16px;
+    padding:10px 14px;
+    background:#FFF6E0;
+    border:1px solid #F0DFA6;
+    border-radius:8px;
+    font-size:11px;
+    color:#6B5410;
+    line-height:1.6;
+  }
+
+  .date-header{
+    padding:14px 18px 6px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+  .race-list{
+    padding:0 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .race-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .race-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .race-card-title{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .status-tag{
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .status-tag.hit{ background:var(--accent-soft); color:var(--accent); }
+  .status-tag.miss{ background:var(--miss-soft); color:var(--miss); }
+  .status-tag.pending{ background:#EEF0EF; color:var(--ink-soft); }
+
+  .bet-record-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:6px 0;
+    font-size:12.5px;
+    border-top:1px dashed var(--line);
+  }
+  .bet-record-row:first-of-type{ border-top:none; }
+  .bet-record-combo{
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:15px;
+  }
+  .bet-record-combo.hit{ color:var(--accent); }
+  .bet-record-meta{
+    text-align:right;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .delete-btn{
+    background:none;
+    border:none;
+    color:var(--miss);
+    font-size:11px;
+    font-weight:700;
+    padding:2px 6px;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .empty-note{
+    padding:60px 24px;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    line-height:1.7;
+  }
+</style>
+</head>
+<body>
+
+  <div class="appbar">
+    <button class="back" onclick="location.href='index.html'">‹</button>
+    <div>
+      <div class="appbar-title">購入記録</div>
+      <div class="appbar-sub">実際に購入した舟券の記録・集計</div>
+    </div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="summary-num" id="totalCountNum">-</div>
+      <div class="summary-label">記録件数</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="hitRateNum">-</div>
+      <div class="summary-label">的中率(結果確定分)</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-num" id="recoveryNum">-</div>
+      <div class="summary-label">回収率(結果確定分)</div>
+    </div>
+  </div>
+
+  <div class="note-banner">
+    この記録はこの端末のブラウザ内(localStorage)だけに保存されています。他の端末やブラウザには引き継がれません。予想画面(予想結果ページ)の「購入した」ボタンから記録できます。
+  </div>
+
+  <div id="listArea"></div>
+
+<script>
+const MYBETS_STORAGE_KEY = "kyotei_my_bets";
+
+function loadMyBets(){
+  try{
+    const raw = localStorage.getItem(MYBETS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    return [];
+  }
+}
+function saveMyBets(records){
+  try{
+    localStorage.setItem(MYBETS_STORAGE_KEY, JSON.stringify(records));
+  }catch(e){ /* 保存できなくても表示は続行 */ }
+}
+
+function escapeHtml(str){
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+function fmtPct(v){
+  return v === null || v === undefined ? "-" : Math.round(v * 1000) / 10 + "%";
+}
+function fmtYen(v){
+  return v === null || v === undefined ? "-" : v.toLocaleString() + "円";
+}
+
+function deleteRecord(id){
+  if (!confirm("この購入記録を削除しますか?")) return;
+  const records = loadMyBets().filter(r => r.id !== id);
+  saveMyBets(records);
+  render();
+}
+
+// data/history.json(実際にその時点で表示していた予想の履歴)から、
+// 同じ日付・場・レース番号の実際の結果を探して突き合わせる。
+async function fetchHistoryResults(){
+  try{
+    const res = await fetch("./data/history.json", {cache:"no-store"});
+    if(!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json.races) ? json.races : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function matchResult(record, historyRaces){
+  return historyRaces.find(r =>
+    r.date === record.date && r.stadium === record.stadium && r.raceNumber === record.raceNumber
+  ) || null;
+}
+
+async function render(){
+  const records = loadMyBets().sort((a,b)=> (b.date+b.stadium+b.raceNumber).localeCompare(a.date+a.stadium+a.raceNumber) || b.recordedAt.localeCompare(a.recordedAt));
+  const historyRaces = await fetchHistoryResults();
+
+  // 集計(結果が確定しているレコードのみ対象)
+  let evaluated = 0, hits = 0, stake = 0, returnYen = 0;
+  const enriched = records.map(r=>{
+    const match = matchResult(r, historyRaces);
+    let status = "pending", payout = null;
+    if (match && match.actualCombo){
+      evaluated++;
+      stake += r.stake;
+      const hit = match.actualCombo === r.combo;
+      if (hit){
+        hits++;
+        status = "hit";
+        // 該当する組み合わせの払戻(3連単はactualPayout、2連単は現状記録が無いため3連単のみ厳密に計算)
+        if (r.betType === "trifecta" && match.actualPayout){
+          payout = Math.round(match.actualPayout * (r.stake / 100));
+          returnYen += payout;
+        }
+      }else{
+        status = "miss";
+      }
+    }
+    return { ...r, status, match, payout };
+  });
+
+  document.getElementById("totalCountNum").textContent = records.length;
+  document.getElementById("hitRateNum").textContent = evaluated ? fmtPct(hits / evaluated) : "-";
+  document.getElementById("recoveryNum").textContent = stake ? fmtPct(returnYen / stake) : "-";
+
+  const area = document.getElementById("listArea");
+  if (enriched.length === 0){
+    area.innerHTML = `<div class="empty-note">まだ購入記録がありません。<br>予想結果ページの「購入した」ボタンから記録できます。</div>`;
+    return;
+  }
+
+  // レース単位でグループ化(同じレースで複数点買った場合にまとめる)
+  const byRace = new Map();
+  for (const r of enriched){
+    const key = `${r.date}_${r.stadium}_${r.raceNumber}`;
+    if (!byRace.has(key)) byRace.set(key, []);
+    byRace.get(key).push(r);
+  }
+
+  let html = "";
+  let lastDate = null;
+  for (const [key, recs] of byRace){
+    const first = recs[0];
+    if (first.date !== lastDate){
+      html += `<div class="date-header">${escapeHtml(first.date)}</div>`;
+      lastDate = first.date;
+    }
+    const anyHit = recs.some(r => r.status === "hit");
+    const allPending = recs.every(r => r.status === "pending");
+    const statusTag = allPending
+      ? `<div class="status-tag pending">結果待ち</div>`
+      : anyHit
+        ? `<div class="status-tag hit">的中あり</div>`
+        : `<div class="status-tag miss">不的中</div>`;
+
+    html += `<div class="race-list"><div class="race-card">
+      <div class="race-card-head">
+        <div class="race-card-title">${escapeHtml(first.stadium)} ${first.raceNumber}R</div>
+        ${statusTag}
+      </div>
+      ${recs.map(r => `
+        <div class="bet-record-row">
+          <div>
+            <div class="bet-record-combo ${r.status === "hit" ? "hit" : ""}">${escapeHtml(r.combo)}
+              <span style="font-size:10px; font-weight:500; color:var(--ink-soft);">${r.betType === "exacta" ? "(2連単)" : "(3連単)"}</span>
+            </div>
+          </div>
+          <div class="bet-record-meta">
+            ${fmtYen(r.stake)}${r.status === "hit" && r.payout !== null ? ` → 払戻${fmtYen(r.payout)}` : ""}
+            ${r.match && r.match.actualCombo ? `<br>実際: ${escapeHtml(r.match.actualCombo)}` : ""}
+            <button class="delete-btn" onclick="deleteRecord('${r.id}')">削除</button>
+          </div>
+        </div>
+      `).join("")}
+    </div></div>`;
+  }
+  area.innerHTML = html;
+}
+
+render();
+</script>
+
+</body>
+</html>

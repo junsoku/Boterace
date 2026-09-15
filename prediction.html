@@ -218,8 +218,65 @@
     border-radius:8px;
     padding:11px 14px;
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     justify-content:space-between;
+    gap:8px;
+  }
+  .bet-buy-controls{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-left:auto;
+  }
+  .bet-row.bought{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .bet-buy-btn{
+    flex:0 0 auto;
+    font-size:11px;
+    font-weight:700;
+    padding:6px 10px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink-soft);
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+    white-space:nowrap;
+  }
+  .bet-buy-btn.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .bet-stake-input{
+    width:52px;
+    font-size:11px;
+    padding:4px 4px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    text-align:right;
+    font-family:inherit;
+    -moz-appearance:textfield;
+  }
+  .mybets-summary{
+    margin-top:8px;
+    padding:8px 12px;
+    background:#F5F7F6;
+    border-radius:8px;
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .mybets-link{
+    font-size:10.5px;
+    color:var(--accent);
+    font-weight:700;
+    text-decoration:none;
   }
   .bet-combo{
     font-family:'Shippori Mincho', serif;
@@ -342,6 +399,10 @@
     <div class="data-table" id="dataTable"></div>
   </div>
 
+  <div class="section">
+    <a class="mybets-link" href="mybets.html">→ 購入記録の一覧・集計を見る</a>
+  </div>
+
   <div class="disclaimer">
     表示している確率・買い目はサンプルデータによる仮の予想です。実際のモデル・データに接続すると本物の予測に置き換わります。舟券の購入は自己責任で、当たりを保証するものではありません。
   </div>
@@ -411,6 +472,8 @@ function toggleConfidenceDetail(kind){
 }
 
 // URLの ?stadium=桐生&race=3 を読み取り、data/today.json から該当レースを探す
+let CURRENT_RACE = { date: null, stadium: null, raceNumber: null }; // 購入記録のキーに使う
+
 async function loadRealData(){
   const params = new URLSearchParams(location.search);
   const stadiumParam = params.get("stadium");
@@ -424,6 +487,8 @@ async function loadRealData(){
     const st = json.stadiums.find(s => s.name === stadiumParam) || json.stadiums[0];
     const race = st.races.find(r => r.number === raceParam) || st.races[0];
     if(!race) throw new Error("race not found");
+
+    CURRENT_RACE = { date: json.date || null, stadium: st.name, raceNumber: race.number };
 
     RANK = race.boats_ranked.map(b => ({
       mark: b.mark, lane: b.lane, name: b.name, pct: b.pct,
@@ -485,28 +550,101 @@ function renderRank(){
   `).join("");
 }
 
-function renderBets(){
-  const wrap = document.getElementById("betList");
-  wrap.innerHTML = BETS.map(b=>`
-    <div class="bet-row">
-      <div class="bet-combo">${b.combo}</div>
+// ---- 購入記録(このブラウザのlocalStorageに保存。サーバーには送信しない) ----
+const MYBETS_STORAGE_KEY = "kyotei_my_bets";
+
+function loadMyBets(){
+  try{
+    const raw = localStorage.getItem(MYBETS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function saveMyBets(records){
+  try{
+    localStorage.setItem(MYBETS_STORAGE_KEY, JSON.stringify(records));
+  }catch(e){
+    // 保存領域が無い/満杯などの場合は諦める(購入記録は無くても他の機能に影響しない)
+  }
+}
+
+function myBetRecordId(betType, combo){
+  return `${CURRENT_RACE.date}_${CURRENT_RACE.stadium}_${CURRENT_RACE.raceNumber}_${betType}_${combo}`;
+}
+
+function findMyBet(betType, combo){
+  const id = myBetRecordId(betType, combo);
+  return loadMyBets().find(r => r.id === id) || null;
+}
+
+function toggleMyBet(betType, combo, prob){
+  if (!CURRENT_RACE.date || !CURRENT_RACE.stadium){
+    alert("レース情報が読み込めていないため、購入記録を保存できません。");
+    return;
+  }
+  const id = myBetRecordId(betType, combo);
+  const records = loadMyBets();
+  const idx = records.findIndex(r => r.id === id);
+  if (idx >= 0){
+    records.splice(idx, 1); // 既に記録済みなら取り消す
+  }else{
+    const stakeInput = document.getElementById(`stake_${id}`);
+    const stake = stakeInput ? (parseInt(stakeInput.value, 10) || 100) : 100;
+    records.push({
+      id, date: CURRENT_RACE.date, stadium: CURRENT_RACE.stadium,
+      raceNumber: CURRENT_RACE.raceNumber, betType, combo, prob: prob || null,
+      stake, recordedAt: new Date().toISOString(),
+    });
+  }
+  saveMyBets(records);
+  renderBets();
+  renderExactaBets();
+}
+
+function updateMyBetStake(betType, combo){
+  const id = myBetRecordId(betType, combo);
+  const records = loadMyBets();
+  const rec = records.find(r => r.id === id);
+  if (!rec) return; // まだ購入登録していない場合は何もしない
+  const stakeInput = document.getElementById(`stake_${id}`);
+  rec.stake = stakeInput ? (parseInt(stakeInput.value, 10) || 100) : 100;
+  saveMyBets(records);
+}
+
+function renderBetRow(b, betType){
+  const id = myBetRecordId(betType, b.combo);
+  const existing = findMyBet(betType, b.combo);
+  const isBought = !!existing;
+  const stakeVal = existing ? existing.stake : 100;
+  return `
+    <div class="bet-row ${isBought ? "bought" : ""}">
+      <div class="bet-combo">${escapeHtml(b.combo)}</div>
       <div class="bet-meta">
-        <div class="bet-prob">的中確率 ${b.prob}</div>
+        <div class="bet-prob">的中確率 ${escapeHtml(b.prob)}</div>
+      </div>
+      <div class="bet-buy-controls">
+        <input type="number" inputmode="numeric" class="bet-stake-input" id="stake_${id}"
+               value="${stakeVal}" min="100" step="100"
+               onchange="updateMyBetStake('${betType}', '${b.combo}')">
+        <button type="button" class="bet-buy-btn ${isBought ? "active" : ""}"
+                onclick="toggleMyBet('${betType}', '${b.combo}', '${b.prob}')">
+          ${isBought ? "✓ 購入済" : "購入した"}
+        </button>
       </div>
     </div>
-  `).join("");
+  `;
+}
+
+function renderBets(){
+  const wrap = document.getElementById("betList");
+  wrap.innerHTML = BETS.map(b => renderBetRow(b, "trifecta")).join("");
 }
 
 function renderExactaBets(){
   const wrap = document.getElementById("exactaBetList");
-  wrap.innerHTML = EXACTA_BETS.map(b=>`
-    <div class="bet-row">
-      <div class="bet-combo">${b.combo}</div>
-      <div class="bet-meta">
-        <div class="bet-prob">的中確率 ${b.prob}</div>
-      </div>
-    </div>
-  `).join("");
+  wrap.innerHTML = EXACTA_BETS.map(b => renderBetRow(b, "exacta")).join("");
 }
 
 function renderData(){

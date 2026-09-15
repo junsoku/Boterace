@@ -42,6 +42,11 @@
   .appbar-top{
     display:flex; align-items:baseline; justify-content:space-between;
   }
+  .header-links{
+    display:flex;
+    gap:6px;
+    flex:0 0 auto;
+  }
   .history-link{
     font-size:12px;
     color:#CBD9DE;
@@ -330,7 +335,10 @@
   <div class="appbar">
     <div class="appbar-top">
       <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
-      <button class="history-link" onclick="location.href='history.html'">履歴</button>
+      <div class="header-links">
+        <button class="history-link" onclick="location.href='mybets.html'">購入記録</button>
+        <button class="history-link" onclick="location.href='history.html'">履歴</button>
+      </div>
     </div>
     <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
   </div>
