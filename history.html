@@ -124,6 +124,41 @@
     color:#fff;
   }
 
+  .trend-chart-wrap{
+    margin:0 16px 16px;
+    padding:14px 14px 10px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+  }
+  .trend-chart-title{
+    font-size:12px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:6px;
+  }
+  #trendChart{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+  .trend-legend{
+    display:flex;
+    gap:14px;
+    margin-top:6px;
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+  .trend-legend .dot{
+    display:inline-block;
+    width:8px; height:8px;
+    border-radius:50%;
+    margin-right:4px;
+    vertical-align:middle;
+  }
+  .dot-win{ background:var(--navy); }
+  .dot-bet{ background:var(--accent); }
+
   .date-header{
     padding:14px 18px 6px;
     font-size:13px;
@@ -354,6 +389,12 @@
     line-height:1.7;
   }
 </style>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="競艇予想">
+<meta name="theme-color" content="#0E2436">
 </head>
 <body>
 
@@ -382,6 +423,15 @@
   <div class="summary-extra" id="summaryExtra"></div>
 
   <div class="period-switch" id="periodSwitch"></div>
+
+  <div class="trend-chart-wrap" id="trendChartWrap" style="display:none;">
+    <div class="trend-chart-title">日別の的中率の推移</div>
+    <svg id="trendChart" viewBox="0 0 340 150" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="trend-legend">
+      <span><i class="dot dot-win"></i>◎単勝的中率</span>
+      <span><i class="dot dot-bet"></i>推奨3連単的中率</span>
+    </div>
+  </div>
 
   <div id="listArea"><div class="loading-note">読み込み中...</div></div>
 
@@ -503,7 +553,71 @@ function applyPeriod(){
   const periodEnd = races.length ? races[0].date : RAW_DATA.periodEnd;
   renderPeriodSwitch();
   renderSummary({ periodStart, periodEnd, summary });
+  renderTrendChart(races);
   renderList({ races });
+}
+
+// 日ごとに◎単勝的中率・推奨3連単的中率(本命1点)を集計して折れ線グラフを描く
+function renderTrendChart(races){
+  const wrap = document.getElementById("trendChartWrap");
+  const svg = document.getElementById("trendChart");
+
+  // 日付ごとにグループ化(races は新しい順なので、グラフ表示用に古い順へ並べ替える)
+  const byDate = new Map();
+  for (const race of races){
+    if (!byDate.has(race.date)) byDate.set(race.date, { win: 0, bet: 0, total: 0 });
+    const d = byDate.get(race.date);
+    d.total++;
+    if (race.winHit) d.win++;
+    if (race.betHit) d.bet++;
+  }
+  const dates = Array.from(byDate.keys()).sort(); // 古い順
+
+  if (dates.length < 2){
+    wrap.style.display = "none";
+    return;
+  }
+  wrap.style.display = "";
+
+  const W = 340, H = 150;
+  const padL = 28, padR = 8, padT = 10, padB = 20;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  const xAt = (i)=> padL + (dates.length === 1 ? 0 : (i / (dates.length - 1)) * plotW);
+  const yAt = (pct)=> padT + plotH - (pct / 100) * plotH;
+
+  const winPts = dates.map((d, i)=> [xAt(i), yAt((byDate.get(d).win / byDate.get(d).total) * 100)]);
+  const betPts = dates.map((d, i)=> [xAt(i), yAt((byDate.get(d).bet / byDate.get(d).total) * 100)]);
+
+  const toPath = (pts)=> pts.map((p,i)=> `${i===0?"M":"L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+
+  // Y軸の目盛り(0/50/100%)とグリッド線
+  let gridSvg = "";
+  [0, 50, 100].forEach(pct=>{
+    const y = yAt(pct);
+    gridSvg += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#E4E8E7" stroke-width="1"/>`;
+    gridSvg += `<text x="${padL-4}" y="${y+3}" text-anchor="end" font-size="8" fill="#8A99A0">${pct}</text>`;
+  });
+
+  // X軸ラベルは詰まりすぎないよう、最初・中間・最後の日付だけ表示する
+  let xLabelsSvg = "";
+  const labelIdxs = dates.length <= 3
+    ? dates.map((_, i)=>i)
+    : [0, Math.floor((dates.length-1)/2), dates.length-1];
+  labelIdxs.forEach(i=>{
+    const shortDate = dates[i].slice(5).replace("-", "/"); // "MM/DD"
+    xLabelsSvg += `<text x="${xAt(i)}" y="${H-4}" text-anchor="middle" font-size="8" fill="#8A99A0">${shortDate}</text>`;
+  });
+
+  svg.innerHTML = `
+    ${gridSvg}
+    ${xLabelsSvg}
+    <path d="${toPath(winPts)}" fill="none" stroke="#0E2436" stroke-width="2"/>
+    <path d="${toPath(betPts)}" fill="none" stroke="#16786B" stroke-width="2"/>
+    ${winPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#0E2436"/>`).join("")}
+    ${betPts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.2" fill="#16786B"/>`).join("")}
+  `;
 }
 
 function fmtPct(v){
