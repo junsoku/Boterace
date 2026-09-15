@@ -372,6 +372,7 @@
         <button class="star-tag" id="confidenceBadgeExacta" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('exacta')">★ 2連単 自信あり ⓘ</button>
       </div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
+      <div class="appbar-sub" id="predictionStatusLabel"></div>
     </div>
   </div>
 
@@ -474,6 +475,63 @@ function toggleConfidenceDetail(kind){
 // URLの ?stadium=桐生&race=3 を読み取り、data/today.json から該当レースを探す
 let CURRENT_RACE = { date: null, stadium: null, raceNumber: null }; // 購入記録のキーに使う
 
+// update-data.yml のスケジュール(JST 7:00〜22:30の間、30分おき)に基づいて、
+// 次回の自動更新予定時刻を計算する。デバイスの時計が日本時間である前提。
+function computeNextUpdateTime(now){
+  const startMinutes = 7 * 60;        // 07:00
+  const endMinutes = 22 * 60 + 30;    // 22:30
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  let targetMinutes;
+  let dayOffset = 0;
+  if (nowMinutes < startMinutes){
+    targetMinutes = startMinutes;
+  }else if (nowMinutes >= endMinutes){
+    targetMinutes = startMinutes;
+    dayOffset = 1;
+  }else{
+    targetMinutes = Math.ceil((nowMinutes + 1) / 30) * 30;
+    if (targetMinutes > endMinutes){
+      targetMinutes = startMinutes;
+      dayOffset = 1;
+    }
+  }
+  const next = new Date(now);
+  next.setDate(next.getDate() + dayOffset);
+  next.setHours(Math.floor(targetMinutes / 60), targetMinutes % 60, 0, 0);
+  return next;
+}
+
+function fmtHHMM(d){
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+// 締切までに次の自動更新が来るかどうかで「予想確定」/「暫定」を判定する
+function renderPredictionStatus(race){
+  const el = document.getElementById("predictionStatusLabel");
+  if (!el) return;
+  if (race.isFinished){
+    el.textContent = ""; // レースが既に終わっている場合は予想確定/暫定の表示自体が無意味
+    return;
+  }
+  if (!race.close){
+    el.textContent = "";
+    return;
+  }
+  const closeDate = new Date(race.close.replace(" ", "T"));
+  if (isNaN(closeDate.getTime())){
+    el.textContent = "";
+    return;
+  }
+  const now = new Date();
+  const nextUpdate = computeNextUpdateTime(now);
+  if (nextUpdate >= closeDate){
+    el.textContent = "✓ 予想確定(締切までに次の更新はありません)";
+  }else{
+    el.textContent = `暫定の予想です(次回更新 ${fmtHHMM(nextUpdate)} 予定・締切までに反映されます)`;
+  }
+}
+
 async function loadRealData(){
   const params = new URLSearchParams(location.search);
   const stadiumParam = params.get("stadium");
@@ -512,6 +570,7 @@ async function loadRealData(){
       (race.weather ? ` ・ ${race.weather}` : "") +
       (race.windSpeed != null ? ` ・ 風${race.windSpeed}m` : "") +
       (race.waveHeight != null ? ` ・ 波${race.waveHeight}cm` : "");
+    renderPredictionStatus(race);
     usingReal = true;
   }catch(e){
     // stadium/raceパラメータがあればタイトルだけ反映してサンプルデータを使う

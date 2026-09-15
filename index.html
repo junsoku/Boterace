@@ -132,6 +132,22 @@
     background:#E4E8EC;
     color:#3A4750;
   }
+  .predicted-final-tag{
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .predicted-pending-tag{
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    background:#F5F7F6;
+    color:var(--ink-soft);
+  }
   .race-card.finished{
     opacity:.7;
   }
@@ -341,6 +357,7 @@
       </div>
     </div>
     <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
+    <div class="appbar-sub" id="updateTimeLabel"></div>
   </div>
 
   <div class="stadium-scroll" id="stadiumScroll"></div>
@@ -451,11 +468,13 @@ let activeIndex = 0;
 // export_today.py が出力した data/today.json を読み込む。
 // 取得できない(まだ生成していない/オフライン)場合はサンプルデータのまま表示を続ける。
 async function loadRealData(){
+  let generatedAt = null;
   try{
     const res = await fetch("./data/today.json", {cache:"no-store"});
     if(!res.ok) throw new Error("no data file");
     const json = await res.json();
     if(!json.stadiums || json.stadiums.length === 0) throw new Error("empty");
+    generatedAt = json.generated_at || null;
 
     STADIUMS = json.stadiums.map(st => ({
       name: st.name,
@@ -485,10 +504,58 @@ async function loadRealData(){
       : "現在はサンプルデータを表示しています。data/today.json を生成すると実データに切り替わります。";
   }
   document.getElementById("openCountLabel").textContent = `本日 ${STADIUMS.length}場開催中`;
+  renderUpdateTimeLabel(generatedAt);
   activeIndex = 0;
   renderAll();
   positionStadiumScroll(); // appbar-subのテキストが変わり高さが変化する場合があるため再計算
 }
+
+function fmtHHMM(d){
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+// update-data.yml のスケジュール(JST 7:00〜22:30の間、30分おき)に基づいて、
+// 次回の自動更新予定時刻を計算する。デバイスの時計が日本時間である前提。
+function computeNextUpdateTime(now){
+  const startMinutes = 7 * 60;        // 07:00
+  const endMinutes = 22 * 60 + 30;    // 22:30
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  let targetMinutes;
+  let dayOffset = 0;
+  if (nowMinutes < startMinutes){
+    targetMinutes = startMinutes;
+  }else if (nowMinutes >= endMinutes){
+    targetMinutes = startMinutes;
+    dayOffset = 1;
+  }else{
+    targetMinutes = Math.ceil((nowMinutes + 1) / 30) * 30; // 次の00分/30分に切り上げ
+    if (targetMinutes > endMinutes){
+      targetMinutes = startMinutes;
+      dayOffset = 1;
+    }
+  }
+  const next = new Date(now);
+  next.setDate(next.getDate() + dayOffset);
+  next.setHours(Math.floor(targetMinutes / 60), targetMinutes % 60, 0, 0);
+  return next;
+}
+
+function renderUpdateTimeLabel(generatedAt){
+  const el = document.getElementById("updateTimeLabel");
+  if (!el) return;
+  const now = new Date();
+  const parts = [];
+  if (generatedAt){
+    const gd = new Date(generatedAt);
+    if (!isNaN(gd.getTime())){
+      parts.push(`最終更新 ${fmtHHMM(gd)}`);
+    }
+  }
+  parts.push(`次回更新予定 ${fmtHHMM(computeNextUpdateTime(now))}`);
+  el.textContent = parts.join(" ・ ");
+}
+
 
 function renderStadiumChips(){
   const wrap = document.getElementById("stadiumScroll");
@@ -563,12 +630,25 @@ function renderRaces(){
     const betConfident = race.confBet && race.confBet.isConfident;
     const exactaConfident = race.confExacta && race.confExacta.isConfident;
 
+    // 締切までに次の自動更新が来るかどうかで「予想確定」/「暫定」を判定する
+    let predictionStatusTag = "";
+    if (!race.isFinished && race.close){
+      const closeDate = new Date(race.close.replace(" ", "T"));
+      if (!isNaN(closeDate.getTime())){
+        const nextUpdate = computeNextUpdateTime(new Date());
+        predictionStatusTag = nextUpdate >= closeDate
+          ? `<div class="predicted-final-tag">✓ 予想確定</div>`
+          : `<div class="predicted-pending-tag">暫定(${fmtHHMM(nextUpdate)}更新予定)</div>`;
+      }
+    }
+
     card.innerHTML = `
       <div class="race-num">${race.number}<sub-r>R</sub-r></div>
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
           ${race.isFinished ? `<div class="result-tag">結果あり${race.actualCombo ? "・" + escapeHtml(race.actualCombo) : ""}</div>` : ""}
+          ${predictionStatusTag}
           ${winConfident ? `
             <button type="button" class="star-tag" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">★ ◎単勝 自信あり ⓘ</button>
             <div class="confidence-detail">${confidenceDetailText("win", race.confWin)}</div>
