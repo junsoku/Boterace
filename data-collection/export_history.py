@@ -26,12 +26,18 @@ def _parse_dt(s):
     if not s:
         return None
     try:
-        return datetime.fromisoformat(s)
+        dt = datetime.fromisoformat(s)
     except ValueError:
         try:
-            return datetime.fromisoformat(s.replace(" ", "T"))
+            dt = datetime.fromisoformat(s.replace(" ", "T"))
         except ValueError:
             return None
+    # computed_at(prediction_log)はタイムゾーン付き(例: +09:00)で記録されているが、
+    # close_at(APIの締切時刻)はタイムゾーン無しの日本時間文字列。
+    # 比較のため、両方とも「タイムゾーン無しの日本時間」に揃える。
+    if dt.tzinfo is not None:
+        dt = dt.replace(tzinfo=None)
+    return dt
 
 
 def choose_snapshot(snapshots: list, close_at: str) -> tuple:
