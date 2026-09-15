@@ -16,6 +16,7 @@ import argparse
 import json
 import sqlite3
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
@@ -504,7 +505,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
                    (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident,
                     top_bets_json, bet_is_confident)
                VALUES (?,?,?,?,?,?,?,?)""",
-            (race_id, datetime.now().isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
+            (race_id, datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
              top_bet_combo, int(confidence["isConfident"]), top_bets_json,
              int(bet_confidence["isConfident"]) if bet_confidence else None),
         )
@@ -517,7 +518,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
 
     return {
         "date": target_date.isoformat(),
-        "generated_at": date.today().isoformat(),
+        "generated_at": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(),
         "using_ml_model": model is not None,
         "stadiums": list(stadium_map.values()),
         "course_stats_by_stadium": {

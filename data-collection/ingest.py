@@ -16,6 +16,7 @@ import argparse
 import json
 import sqlite3
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Optional
 
@@ -71,7 +72,7 @@ def save_raw(conn: sqlite3.Connection, race_date: date, payload: Optional[dict])
            VALUES (?, 'unified', ?, ?)
            ON CONFLICT(race_date, kind) DO UPDATE SET
              fetched_at=excluded.fetched_at, payload=excluded.payload""",
-        (race_date.isoformat(), datetime.now().isoformat(), json.dumps(payload, ensure_ascii=False)),
+        (race_date.isoformat(), datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), json.dumps(payload, ensure_ascii=False)),
     )
 
 
