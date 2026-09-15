@@ -525,7 +525,11 @@ function renderPredictionStatus(race){
   }
   const now = new Date();
   const nextUpdate = computeNextUpdateTime(now);
-  if (nextUpdate >= closeDate){
+  // update-data.yml の実行自体に数分かかることや、GitHub Actionsのスケジュール実行が
+  // 数分遅れることがあるため、10分のバッファを見て「更新が間に合うか」を判定する。
+  const UPDATE_BUFFER_MINUTES = 10;
+  const nextUpdateWithBuffer = new Date(nextUpdate.getTime() + UPDATE_BUFFER_MINUTES * 60000);
+  if (nextUpdateWithBuffer >= closeDate){
     el.textContent = "✓ 予想確定(締切までに次の更新はありません)";
   }else{
     el.textContent = `暫定の予想です(次回更新 ${fmtHHMM(nextUpdate)} 予定・締切までに反映されます)`;

@@ -630,13 +630,17 @@ function renderRaces(){
     const betConfident = race.confBet && race.confBet.isConfident;
     const exactaConfident = race.confExacta && race.confExacta.isConfident;
 
-    // 締切までに次の自動更新が来るかどうかで「予想確定」/「暫定」を判定する
+    // 締切までに次の自動更新が来るかどうかで「予想確定」/「暫定」を判定する。
+    // update-data.yml の実行自体に数分かかることや、GitHub Actionsのスケジュール実行が
+    // 数分遅れることがあるため、10分のバッファを見て「更新が間に合うか」を判定する。
+    const UPDATE_BUFFER_MINUTES = 10;
     let predictionStatusTag = "";
     if (!race.isFinished && race.close){
       const closeDate = new Date(race.close.replace(" ", "T"));
       if (!isNaN(closeDate.getTime())){
         const nextUpdate = computeNextUpdateTime(new Date());
-        predictionStatusTag = nextUpdate >= closeDate
+        const nextUpdateWithBuffer = new Date(nextUpdate.getTime() + UPDATE_BUFFER_MINUTES * 60000);
+        predictionStatusTag = nextUpdateWithBuffer >= closeDate
           ? `<div class="predicted-final-tag">✓ 予想確定</div>`
           : `<div class="predicted-pending-tag">暫定(${fmtHHMM(nextUpdate)}更新予定)</div>`;
       }
