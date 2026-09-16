@@ -50,11 +50,11 @@
     flex:0 0 auto;
   }
   .refresh-btn{
-    font-size:16px;
+    font-size:24px;
     color:#CBD9DE;
     background:none;
     border:none;
-    padding:4px 6px;
+    padding:6px 8px;
     line-height:1;
     font-family:inherit;
     -webkit-tap-highlight-color:transparent;
@@ -370,8 +370,7 @@
         <button class="history-link" onclick="location.href='history.html'">履歴</button>
       </div>
     </div>
-    <div class="appbar-sub">本日の開催</div>
-    <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
+    <div class="appbar-sub" id="openCountLabel">本日の開催 ・ 6場開催中</div>
     <div class="appbar-sub" id="updateTimeLabel"></div>
   </div>
 
@@ -526,7 +525,7 @@ async function loadRealData(){
       ? "実データを表示しています(export_today.pyの出力より)。"
       : "現在はサンプルデータを表示しています。data/today.json を生成すると実データに切り替わります。";
   }
-  document.getElementById("openCountLabel").textContent = `本日 ${STADIUMS.length}場開催中`;
+  document.getElementById("openCountLabel").textContent = `本日の開催 ・ ${STADIUMS.length}場開催中`;
   renderUpdateTimeLabel(generatedAt);
   activeIndex = 0;
   renderAll();
@@ -537,11 +536,11 @@ function fmtHHMM(d){
   return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
 
-// update-data.yml のスケジュール(JST 7:00〜22:30の間、30分おき)に基づいて、
+// update-data.yml のスケジュール(JST 8:00〜21:30の間、30分おき)に基づいて、
 // 次回の自動更新予定時刻を計算する。デバイスの時計が日本時間である前提。
 function computeNextUpdateTime(now){
-  const startMinutes = 7 * 60;        // 07:00
-  const endMinutes = 22 * 60 + 30;    // 22:30
+  const startMinutes = 8 * 60;        // 08:00
+  const endMinutes = 21 * 60 + 30;    // 21:30
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   let targetMinutes;
