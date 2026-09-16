@@ -40,7 +40,8 @@
     position:sticky; top:0; z-index:10;
   }
   .appbar-top{
-    display:flex; align-items:baseline; justify-content:space-between;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px;
   }
   .header-links{
     display:flex;
@@ -81,13 +82,7 @@
     font-weight:700;
     font-size:22px;
     letter-spacing:.02em;
-  }
-  .appbar-date span{
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:13px;
-    color:#9FB3BE;
-    margin-left:8px;
-    font-weight:500;
+    white-space:nowrap;
   }
   .appbar-sub{
     font-size:12px;
@@ -368,13 +363,14 @@
 
   <div class="appbar">
     <div class="appbar-top">
-      <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
+      <div class="appbar-date" id="todayLabel">9月7日(月)</div>
       <div class="header-links">
         <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()" aria-label="最新データに更新">⟳</button>
         <button class="history-link" onclick="location.href='mybets.html'">購入記録</button>
         <button class="history-link" onclick="location.href='history.html'">履歴</button>
       </div>
     </div>
+    <div class="appbar-sub">本日の開催</div>
     <div class="appbar-sub" id="openCountLabel">本日 6場開催中</div>
     <div class="appbar-sub" id="updateTimeLabel"></div>
   </div>
@@ -777,8 +773,8 @@ window.addEventListener("resize", positionStadiumScroll);
 // 今日の日付表示
 const today = new Date();
 const days = ["日","月","火","水","木","金","土"];
-document.getElementById("todayLabel").innerHTML =
-  `${today.getMonth()+1}月${today.getDate()}日(${days[today.getDay()]})<span>本日の開催</span>`;
+document.getElementById("todayLabel").textContent =
+  `${today.getMonth()+1}月${today.getDate()}日(${days[today.getDay()]})`;
 positionStadiumScroll();
 loadRealData();
 </script>
