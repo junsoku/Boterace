@@ -53,6 +53,25 @@
     font-family:inherit;
     -webkit-tap-highlight-color:transparent;
   }
+  .refresh-btn{
+    font-size:18px;
+    color:#CBD9DE;
+    background:none;
+    border:none;
+    padding:4px 2px;
+    line-height:1;
+    font-family:inherit;
+    flex:0 0 auto;
+    align-self:flex-start;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .refresh-btn.spinning{
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
   .appbar-title{
     font-family:'Shippori Mincho', serif;
     font-size:19px;
@@ -364,7 +383,7 @@
 
   <div class="appbar">
     <button class="back" onclick="history.back()">‹</button>
-    <div>
+    <div style="flex:1 1 auto; min-width:0;">
       <div class="appbar-title">
         <span id="titleText">桐生 3R 予想</span>
         <button class="star-tag" id="confidenceBadgeWin" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('win')">★ ◎単勝 自信あり ⓘ</button>
@@ -374,6 +393,7 @@
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
       <div class="appbar-sub" id="predictionStatusLabel"></div>
     </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()" aria-label="最新データに更新">⟳</button>
   </div>
 
   <div class="confidence-detail" id="confidenceDetailWin"></div>
@@ -534,6 +554,14 @@ function renderPredictionStatus(race){
   }else{
     el.textContent = `暫定の予想です(次回更新 ${fmtHHMM(nextUpdate)} 予定・締切までに反映されます)`;
   }
+}
+
+// 更新ボタン用: data/today.json をキャッシュを無視して再取得し、画面を更新する
+async function handleRefresh(){
+  const btn = document.getElementById("refreshBtn");
+  if (btn) btn.classList.add("spinning");
+  await loadRealData();
+  if (btn) btn.classList.remove("spinning");
 }
 
 async function loadRealData(){

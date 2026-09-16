@@ -44,8 +44,26 @@
   }
   .header-links{
     display:flex;
+    align-items:center;
     gap:6px;
     flex:0 0 auto;
+  }
+  .refresh-btn{
+    font-size:16px;
+    color:#CBD9DE;
+    background:none;
+    border:none;
+    padding:4px 6px;
+    line-height:1;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .refresh-btn.spinning{
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
   }
   .history-link{
     font-size:12px;
@@ -352,6 +370,7 @@
     <div class="appbar-top">
       <div class="appbar-date" id="todayLabel">9月7日(月)<span>本日の開催</span></div>
       <div class="header-links">
+        <button class="refresh-btn" id="refreshBtn" onclick="handleRefresh()" aria-label="最新データに更新">⟳</button>
         <button class="history-link" onclick="location.href='mybets.html'">購入記録</button>
         <button class="history-link" onclick="location.href='history.html'">履歴</button>
       </div>
@@ -467,6 +486,14 @@ let activeIndex = 0;
 
 // export_today.py が出力した data/today.json を読み込む。
 // 取得できない(まだ生成していない/オフライン)場合はサンプルデータのまま表示を続ける。
+// 更新ボタン用: data/today.json をキャッシュを無視して再取得し、画面を更新する
+async function handleRefresh(){
+  const btn = document.getElementById("refreshBtn");
+  if (btn) btn.classList.add("spinning");
+  await loadRealData();
+  if (btn) btn.classList.remove("spinning");
+}
+
 async function loadRealData(){
   let generatedAt = null;
   try{
