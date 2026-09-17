@@ -495,11 +495,11 @@ function toggleConfidenceDetail(kind){
 // URLの ?stadium=桐生&race=3 を読み取り、data/today.json から該当レースを探す
 let CURRENT_RACE = { date: null, stadium: null, raceNumber: null }; // 購入記録のキーに使う
 
-// update-data.yml のスケジュール(JST 8:00〜21:30の間、30分おき)に基づいて、
+// update-data.yml のスケジュール(JST 8:00〜23:00の間、30分おき)に基づいて、
 // 次回の自動更新予定時刻を計算する。デバイスの時計が日本時間である前提。
 function computeNextUpdateTime(now){
   const startMinutes = 8 * 60;        // 08:00
-  const endMinutes = 21 * 60 + 30;    // 21:30
+  const endMinutes = 23 * 60;         // 23:00
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   let targetMinutes;
