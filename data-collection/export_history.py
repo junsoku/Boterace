@@ -192,7 +192,9 @@ def main():
     ap.add_argument("--db", default="boatrace.db")
     ap.add_argument("--days", type=int, default=90,
                      help="何日分さかのぼって出力するか(history.html側で7/14/30/90日/全期間の切り替えUIがあるため、余裕を持って90日を既定値にしている)")
-    ap.add_argument("--limit", type=int, default=1000, help="出力する最大レース数(新しい順)")
+    ap.add_argument("--limit", type=int, default=15000,
+                     help="出力する最大レース数(新しい順)。90日分を1日100レース超として"
+                          "余裕を持ってカバーできる件数にしている。")
     ap.add_argument("--out", default="data/history.json")
     args = ap.parse_args()
 
