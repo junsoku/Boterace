@@ -43,6 +43,9 @@ FEATURE_COLS = [
     "tilt_angle",
     "wind_speed_m",
     "wave_height_cm",
+    "course_nige_rate",
+    "course_sashi_rate",
+    "course_makuri_rate",
 ]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
@@ -138,7 +141,8 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
     race_context = race_context or {}
     rows = []
     for e in entries:
-        course_win_rate = course_stats.get(e["boat_number"], {}).get("win_rate") if course_stats else None
+        stat = course_stats.get(e["boat_number"], {}) if course_stats else {}
+        course_win_rate = stat.get("win_rate")
         rows.append({
             "boat_number": e["boat_number"],
             "national_win_rate": e.get("national_win_rate") or 4.0,
@@ -156,6 +160,9 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "tilt_angle": e.get("tilt_angle") if e.get("tilt_angle") is not None else 0.0,
             "wind_speed_m": race_context.get("wind_speed_m") or 0.0,
             "wave_height_cm": race_context.get("wave_height_cm") or 0.0,
+            "course_nige_rate": stat.get("逃げ") if stat.get("逃げ") is not None else 0.1,
+            "course_sashi_rate": stat.get("差し") if stat.get("差し") is not None else 0.05,
+            "course_makuri_rate": stat.get("まくり") if stat.get("まくり") is not None else 0.03,
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]

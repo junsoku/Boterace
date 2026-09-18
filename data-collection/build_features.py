@@ -41,6 +41,10 @@ FEATURE_COLS = [
     "tilt_angle",
     "wind_speed_m",
     "wave_height_cm",
+    # コース別の決まり手発生率(technique_stats.py の compute_course_technique_rates を利用)
+    "course_nige_rate",
+    "course_sashi_rate",
+    "course_makuri_rate",
 ]
 
 
@@ -74,13 +78,16 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
         for sn in df["stadium_number"].unique()
     }
 
-    def course_win_rate(row):
+    def course_stat_lookup(row, key):
         stats = course_stats_cache.get(int(row["stadium_number"]))
         if not stats:
             return None
-        return stats.get(int(row["boat_number"]), {}).get("win_rate")
+        return stats.get(int(row["boat_number"]), {}).get(key)
 
-    df["course_win_rate"] = df.apply(course_win_rate, axis=1)
+    df["course_win_rate"] = df.apply(lambda row: course_stat_lookup(row, "win_rate"), axis=1)
+    df["course_nige_rate"] = df.apply(lambda row: course_stat_lookup(row, "逃げ"), axis=1)
+    df["course_sashi_rate"] = df.apply(lambda row: course_stat_lookup(row, "差し"), axis=1)
+    df["course_makuri_rate"] = df.apply(lambda row: course_stat_lookup(row, "まくり"), axis=1)
     df["is_winner"] = (df["arrival_order"] == 1).astype(int)
     df["is_second"] = (df["arrival_order"] == 2).astype(int)  # 2着モデル用(1着だった艇を除いた中で学習)
     df["is_third"] = (df["arrival_order"] == 3).astype(int)   # 3着モデル用(1・2着だった艇を除いた中で学習)
