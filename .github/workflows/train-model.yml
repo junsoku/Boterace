@@ -42,11 +42,13 @@ jobs:
             --min-races ${{ github.event.inputs.min_races || '300' }}
         # schedule実行時は github.event.inputs.min_races が空になるため、
         # その場合はデフォルト値 300 にフォールバックする。
+        # ランク学習化により model_2nd.txt / model_3rd.txt は生成されなくなった
+        # (model.txt 1つで1着〜6着すべての着順スコアを表現する)。
 
       - name: モデルをコミットしてpush
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data-collection/model.txt data-collection/model_2nd.txt data-collection/model_3rd.txt
+          git add data-collection/model.txt
           git diff --cached --quiet || git commit -m "MLモデルを学習・更新"
           git push
