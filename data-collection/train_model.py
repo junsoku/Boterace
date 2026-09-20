@@ -23,10 +23,20 @@ build_features.py が出力した特徴量CSVから、LightGBMのランク学習
     ランク学習の評価指標としては ndcg を使うが、直感的にわかりやすいよう
     「予測1位に選んだ艇が実際に1着だった割合」(的中率)も併せて出す。
 
+学習結果の記録:
+    学習のたびに、交差検証の的中率・ndcg@1・データ件数などを --history で指定した
+    CSVに1行追記する(デフォルト: --out と同じディレクトリの training_history.csv)。
+    「データを増やしていくと的中率がどう変わるか」を後から時系列で追えるようにするため。
+    末尾を確認したい場合は `tail data-collection/training_history.csv` などで見られる。
+
 使い方:
     python train_model.py --features features.csv --out model.txt
 """
 import argparse
+import csv
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -35,6 +45,23 @@ from build_features import FEATURE_COLS
 
 N_FOLDS = 5
 MAX_RELEVANCE = 6  # 6艇立てを想定(relevance = MAX_RELEVANCE - arrival_order + 1)
+HISTORY_COLUMNS = [
+    "run_at", "n_rows", "n_races", "n_folds",
+    "mean_ndcg1", "std_ndcg1", "mean_hit_rate", "std_hit_rate", "final_num_round",
+]
+
+
+def _append_history(history_path: str, row: dict) -> None:
+    """学習結果を training_history.csv に1行追記する(ファイルが無ければヘッダーから作成)。"""
+    path = Path(history_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    file_exists = path.exists()
+    with path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=HISTORY_COLUMNS)
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(row)
+    print(f"学習履歴を記録しました: {history_path}")
 
 
 def _add_relevance(df: pd.DataFrame) -> pd.DataFrame:
@@ -58,7 +85,9 @@ def _hit_rate(df: pd.DataFrame, preds: np.ndarray) -> float:
     return float((top_pick["arrival_order"] == 1).mean())
 
 
-def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> None:
+def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None:
+    """モデルを学習・保存し、training_history.csv に追記するための結果サマリを返す
+    (交差検証できず学習をスキップした場合は None を返す)。"""
     df = df.dropna(subset=FEATURE_COLS + ["arrival_order", "race_id"]).reset_index(drop=True)
     df = _add_relevance(df)
 
@@ -66,7 +95,7 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> None:
     n_folds = min(N_FOLDS, n_races)
     if n_folds < 2:
         print("レース数が少なすぎて交差検証できないためスキップしました。")
-        return
+        return None
 
     params = {
         "objective": "lambdarank",
@@ -147,11 +176,25 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> None:
     final_model.save_model(out_path)
     print(f"モデルを保存しました: {out_path}")
 
+    return {
+        "run_at": datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(),
+        "n_rows": len(df),
+        "n_races": n_races,
+        "n_folds": n_folds,
+        "mean_ndcg1": round(mean_ndcg, 4),
+        "std_ndcg1": round(std_ndcg, 4),
+        "mean_hit_rate": round(mean_hit, 4),
+        "std_hit_rate": round(std_hit, 4),
+        "final_num_round": final_num_round,
+    }
+
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--features", default="features.csv")
     ap.add_argument("--out", default="model.txt")
+    ap.add_argument("--history", default=None,
+                     help="学習結果を記録するCSVのパス(省略時は--outと同じディレクトリのtraining_history.csv)")
     ap.add_argument("--min-races", type=int, default=300,
                      help="このレース数未満なら学習を中止する(過学習・不安定なモデルを防ぐため)")
     args = ap.parse_args()
@@ -176,7 +219,10 @@ def main():
             "(ingest.py を毎日実行して結果データを蓄積し続けてください)"
         )
 
-    train_model(df, args.out, lgb, GroupKFold)
+    history_path = args.history or str(Path(args.out).with_name("training_history.csv"))
+    summary = train_model(df, args.out, lgb, GroupKFold)
+    if summary is not None:
+        _append_history(history_path, summary)
 
 
 if __name__ == "__main__":
