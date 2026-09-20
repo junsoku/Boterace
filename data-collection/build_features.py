@@ -45,6 +45,9 @@ FEATURE_COLS = [
     "course_nige_rate",
     "course_sashi_rate",
     "course_makuri_rate",
+    # ここから直前情報の取りこぼし分
+    "weight_adjustment_kg",
+    "start_timing_preview",
 ]
 
 
@@ -60,6 +63,7 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
             e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
             e.flying_count, e.late_count,
             p.exhibition_time, p.tilt_angle,
+            p.weight_adjustment_kg, p.start_timing_preview,
             r.arrival_order
         FROM entries e
         JOIN races ON races.race_id = e.race_id
