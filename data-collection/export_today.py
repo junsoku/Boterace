@@ -3,10 +3,16 @@ DBから本日(または指定日)のレースを取り出し、フロントエ�
 そのまま読み込めるJSON(today.json)を出力するスクリプト。
 
 暫定スコアリング:
-    train_model.py で学習したMLモデル(model.txt)があれば predict_with_model() で
-    それを使う。無い場合(--model未指定、またはファイルが見つからない場合)のみ、
-    全国勝率・当地勝率・コース(号艇)有利さの加重平均によるヒューリスティック
-    (score_boat())にフォールバックする。
+    train_model.py で学習したMLモデル(model.txt、ランク学習/lambdarank)があれば
+    predict_with_model() でそれを使う。無い場合(--model未指定、またはファイルが
+    見つからない場合)のみ、全国勝率・当地勝率・コース(号艇)有利さの加重平均による
+    ヒューリスティック(score_boat())にフォールバックする。
+
+    model.txt は「1着/2着/3着...を直接学習したランク学習モデル」で、各艇に
+    「強さスコア」を1つ返す。1着・2着・3着それぞれの確率は、このスコアを
+    Plackett-Luceモデル(softmaxで正規化→上位候補を除いて残りを再度softmax、を
+    繰り返す)で導出する。以前のように model_2nd.txt / model_3rd.txt を別途
+    学習・読み込みする必要はない。
 
 使い方:
     python export_today.py --db boatrace.db --date 2026-09-07 --out data/today.json
@@ -14,6 +20,7 @@ DBから本日(または指定日)のレースを取り出し、フロントエ�
 """
 import argparse
 import json
+import math
 import sqlite3
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
@@ -46,6 +53,8 @@ FEATURE_COLS = [
     "course_nige_rate",
     "course_sashi_rate",
     "course_makuri_rate",
+    "weight_adjustment_kg",
+    "start_timing_preview",
 ]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
@@ -134,8 +143,9 @@ def score_boat(entry: dict, course_stats: dict, race_context: dict = None) -> fl
 
 
 def predict_with_model(entries: list, course_stats: dict, model, race_context: dict = None) -> list:
-    """train_model.py で学習したLightGBMモデルで各艇の勝利確率を予測する。
+    """train_model.py で学習したLightGBMのランク学習モデルで、各艇の「強さスコア」を予測する。
     build_features.py の FEATURE_COLS と同じ並び・同じ特徴量になるよう揃えている。
+    戻り値は0〜1の確率ではなく上下無制限のスコア(Plackett-Luceモデルの強さパラメータ相当)。
     race_context: {"wind_speed_m":.., "wave_height_cm":..} (レース単位の値なので全艇共通)
     """
     race_context = race_context or {}
@@ -163,6 +173,8 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "course_nige_rate": stat.get("逃げ") if stat.get("逃げ") is not None else 0.1,
             "course_sashi_rate": stat.get("差し") if stat.get("差し") is not None else 0.05,
             "course_makuri_rate": stat.get("まくり") if stat.get("まくり") is not None else 0.03,
+            "weight_adjustment_kg": e.get("weight_adjustment_kg") or 0.0,
+            "start_timing_preview": e.get("start_timing_preview") or 0.17,
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]
@@ -170,11 +182,10 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
 
 
 def normalize_to_pct(values: list, use_softmax: bool) -> list:
-    """スコア(またはモデルが出した確率)をパーセント表示用の整数配列(合計100)にする。
-    ヒューリスティックスコアは値のスケールがまちまちなのでsoftmaxで正規化し、
-    モデルの予測確率(0〜1)はすでに比較可能な値なので単純合計で正規化する。
+    """スコア(またはモデルが出した強さスコア)をパーセント表示用の整数配列(合計100)にする。
+    ヒューリスティックスコア・ランク学習モデルのスコアはどちらも値のスケールが決まっていない
+    (0〜1に収まらない)ため、どちらもsoftmaxで正規化する(Plackett-Luceモデルの1着確率と一致)。
     """
-    import math
     if use_softmax:
         weights = [math.exp(v) for v in values]
     else:
@@ -190,7 +201,7 @@ def normalize_to_pct(values: list, use_softmax: bool) -> list:
 
 def estimate_exacta_bets(boats: list, top_n: int = 2) -> list:
     """
-    2連単(1着→2着)の確率をPlackett-Luceモデルで推定する。
+    2連単(1着→2着)の確率をPlackett-Luceモデルで推定する(ヒューリスティックスコア用)。
     P(a→b) = P(aが1着) × P(bが2着|aを除いた中で)
     estimate_bets() の3連単計算と同じ考え方で、2着までで打ち切った版。
     """
@@ -220,11 +231,9 @@ def estimate_exacta_bets(boats: list, top_n: int = 2) -> list:
 
 def estimate_bets(boats: list, top_n: int = 4) -> list:
     """
-    Plackett-Luceモデルで3連単(1着→2着→3着)の確率を推定する。
+    Plackett-Luceモデルで3連単(1着→2着→3着)の確率を推定する(ヒューリスティックスコア用)。
     P(a→b→c) = P(aが1着) × P(bが2着|aを除いた中で) × P(cが3着|a,bを除いた中で)
     強さには各艇の予想勝率(pct)をそのまま使う近似(完全に厳密ではないが実用上十分)。
-    ※ 掛け算の順序を無視していた旧実装のバグを修正(順序を入れ替えても同じ値になり、
-      本来上位に来るはずの組み合わせが漏れることがあった)。
     """
     strengths = {b["lane"]: max(b["pct"], 0.1) for b in boats}  # 0%だと計算できないので下駄を履かせる
     lanes = list(strengths.keys())
@@ -254,39 +263,34 @@ def estimate_bets(boats: list, top_n: int = 4) -> list:
     ]
 
 
-def estimate_bets_ml(boat_dicts: list, course_stats: dict, race_context: dict,
-                      p1_by_lane: dict, model_2nd, model_3rd, top_n: int = 4) -> list:
-    """
-    model_2nd・model_3rd を使って3連単(1着→2着→3着)の確率を推定する。
-    estimate_bets() との違い:「1着になれなかった艇の中で2着になりやすいか」
-    「1・2着になれなかった艇の中で3着になりやすいか」を、1着確率の単純な按分ではなく
-    それぞれ専用に学習したモデルで直接予測する(実際の着順の癖を反映できる)。
+def _pl_softmax(scores_by_lane: dict, lanes: list) -> dict:
+    """指定したlanesだけに絞ってPlackett-Luce用のsoftmax確率を計算する(内部ヘルパー)。"""
+    weights = {l: math.exp(scores_by_lane[l]) for l in lanes}
+    total = sum(weights.values())
+    return {l: w / total for l, w in weights.items()}
 
-    P(a→b→c) = P(aが1着) × P(bが2着|aを除いた5艇の中で,model_2ndによる)
-                × P(cが3着|a,bを除いた4艇の中で,model_3rdによる)
+
+def estimate_bets_ml(boat_dicts: list, scores_by_lane: dict, top_n: int = 4) -> list:
     """
+    ランク学習モデル(1つ)が出した生スコア(scores_by_lane)だけを使い、Plackett-Luceモデルで
+    3連単(1着→2着→3着)の確率を推定する。
+    P(a→b→c) = P(aが1着) × P(bが2着|aを除いた中でsoftmaxし直す)
+                × P(cが3着|a,bを除いた中でsoftmaxし直す)
+    以前のように2着・3着専用モデルを個別に呼び直す必要はない(モデルの予測は1レース1回だけ)。
+    """
+    lanes = list(scores_by_lane.keys())
     combos = []
-    for a_dict in boat_dicts:
-        a = a_dict["boat_number"]
-        p_a = p1_by_lane[a] / 100
-
-        remaining_after_a = [d for d in boat_dicts if d["boat_number"] != a]
-        scores_2nd = predict_with_model(remaining_after_a, course_stats, model_2nd, race_context)
-        p2_pcts = normalize_to_pct(scores_2nd, use_softmax=False)
-        p2_by_lane = {d["boat_number"]: p for d, p in zip(remaining_after_a, p2_pcts)}
-
-        for b_dict in remaining_after_a:
-            b = b_dict["boat_number"]
-            p_b = p2_by_lane[b] / 100
-
-            remaining_after_ab = [d for d in remaining_after_a if d["boat_number"] != b]
-            scores_3rd = predict_with_model(remaining_after_ab, course_stats, model_3rd, race_context)
-            p3_pcts = normalize_to_pct(scores_3rd, use_softmax=False)
-            p3_by_lane = {d["boat_number"]: p for d, p in zip(remaining_after_ab, p3_pcts)}
-
-            for c_dict in remaining_after_ab:
-                c = c_dict["boat_number"]
-                p_c = p3_by_lane[c] / 100
+    for a in lanes:
+        p_a_all = _pl_softmax(scores_by_lane, lanes)
+        p_a = p_a_all[a]
+        remaining_after_a = [l for l in lanes if l != a]
+        p_b_all = _pl_softmax(scores_by_lane, remaining_after_a)
+        for b in remaining_after_a:
+            p_b = p_b_all[b]
+            remaining_after_ab = [l for l in remaining_after_a if l != b]
+            p_c_all = _pl_softmax(scores_by_lane, remaining_after_ab)
+            for c in remaining_after_ab:
+                p_c = p_c_all[c]
                 combos.append({"combo": f"{a}-{b}-{c}", "raw_prob": p_a * p_b * p_c})
 
     combos.sort(key=lambda x: -x["raw_prob"])
@@ -294,37 +298,33 @@ def estimate_bets_ml(boat_dicts: list, course_stats: dict, race_context: dict,
     return [{"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'} for c in top]
 
 
-def estimate_exacta_bets_ml(boat_dicts: list, course_stats: dict, race_context: dict,
-                             p1_by_lane: dict, model_2nd, top_n: int = 2) -> list:
-    """model_2nd を使って2連単(1着→2着)の確率を推定する。estimate_bets_ml の2着までの版。"""
+def estimate_exacta_bets_ml(boat_dicts: list, scores_by_lane: dict, top_n: int = 2) -> list:
+    """ランク学習モデルの生スコアだけを使って2連単(1着→2着)の確率を推定する。
+    estimate_bets_ml の2着までの版。"""
+    lanes = list(scores_by_lane.keys())
+    p_a_all = _pl_softmax(scores_by_lane, lanes)
     combos = []
-    for a_dict in boat_dicts:
-        a = a_dict["boat_number"]
-        p_a = p1_by_lane[a] / 100
-
-        remaining_after_a = [d for d in boat_dicts if d["boat_number"] != a]
-        scores_2nd = predict_with_model(remaining_after_a, course_stats, model_2nd, race_context)
-        p2_pcts = normalize_to_pct(scores_2nd, use_softmax=False)
-
-        for b_dict, p_b_pct in zip(remaining_after_a, p2_pcts):
-            b = b_dict["boat_number"]
-            combos.append({"combo": f"{a}-{b}", "raw_prob": p_a * (p_b_pct / 100)})
+    for a in lanes:
+        p_a = p_a_all[a]
+        remaining_after_a = [l for l in lanes if l != a]
+        p_b_all = _pl_softmax(scores_by_lane, remaining_after_a)
+        for b in remaining_after_a:
+            combos.append({"combo": f"{a}-{b}", "raw_prob": p_a * p_b_all[b]})
 
     combos.sort(key=lambda x: -x["raw_prob"])
     top = combos[:top_n]
     return [{"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'} for c in top]
 
 
-def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
-                      model_2nd=None, model_3rd=None) -> dict:
+def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
     from confidence import (  # 遅延importで循環参照を回避
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
         compute_exacta_confidence_calibration, lookup_exacta_confidence,
     )
     calibration = compute_confidence_calibration(conn, model=model)
-    bet_calibration = compute_bet_confidence_calibration(conn, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
-    exacta_calibration = compute_exacta_confidence_calibration(conn, model=model, model_2nd=model_2nd)
+    bet_calibration = compute_bet_confidence_calibration(conn, model=model)
+    exacta_calibration = compute_exacta_confidence_calibration(conn, model=model)
 
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
@@ -345,7 +345,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率,
                       e.average_start_timing, p.exhibition_time, p.tilt_angle,
-                      e.flying_count, e.late_count
+                      e.flying_count, e.late_count, p.weight_adjustment_kg, p.start_timing_preview
                FROM entries e
                LEFT JOIN previews p ON p.entry_id = e.entry_id
                WHERE e.race_id = ? ORDER BY e.boat_number""",
@@ -387,7 +387,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
 
         boat_dicts = []
         for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
-             avg_st, exh_time, tilt_angle, flying_count, late_count) in entries:
+             avg_st, exh_time, tilt_angle, flying_count, late_count,
+             weight_adj, start_timing_prev) in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
@@ -403,6 +404,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
                 "tilt_angle": tilt_angle,
                 "flying_count": flying_count,
                 "late_count": late_count,
+                "weight_adjustment_kg": weight_adj,
+                "start_timing_preview": start_timing_prev,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -410,9 +413,11 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append(d)
 
+        scores_by_lane = None
         if model is not None:
             scores = predict_with_model(boat_dicts, course_stats, model, race_context)
-            pcts = normalize_to_pct(scores, use_softmax=False)
+            pcts = normalize_to_pct(scores, use_softmax=True)
+            scores_by_lane = {b["boat_number"]: s for b, s in zip(boat_dicts, scores)}
         else:
             scores = [score_boat(b, course_stats, race_context) for b in boat_dicts]
             pcts = normalize_to_pct(scores, use_softmax=True)
@@ -446,10 +451,9 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None,
             "bucket": confidence_raw["bucket"],
         }
 
-        p1_by_lane = {b["lane"]: b["pct"] for b in boats_out}
-        if model_2nd is not None and model_3rd is not None:
-            bets = estimate_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane, model_2nd, model_3rd)
-            exacta_bets = estimate_exacta_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane, model_2nd)
+        if scores_by_lane is not None:
+            bets = estimate_bets_ml(boat_dicts, scores_by_lane)
+            exacta_bets = estimate_exacta_bets_ml(boat_dicts, scores_by_lane)
         else:
             bets = estimate_bets(boats_out)
             exacta_bets = estimate_exacta_bets(boats_out)
@@ -546,32 +550,18 @@ def main():
     ap.add_argument("--model", default=None, help="train_model.py で作ったmodel.txtのパス(省略時はヒューリスティックで予想)")
     args = ap.parse_args()
 
-    model = model_2nd = model_3rd = None
+    model = None
     if args.model and Path(args.model).exists():
         import lightgbm as lgb
         model = lgb.Booster(model_file=args.model)
-        print(f"MLモデル(1着)を読み込みました: {args.model}")
-
-        # train_model.py が同じ場所に出力する model_2nd.txt / model_3rd.txt があれば、
-        # 3連単・2連単の予測にも使う(無ければ1着モデルのみで簡易的に按分する旧方式にフォールバック)。
-        base = Path(args.model)
-        path_2nd = base.with_name(f"{base.stem}_2nd{base.suffix}")
-        path_3rd = base.with_name(f"{base.stem}_3rd{base.suffix}")
-        if path_2nd.exists():
-            model_2nd = lgb.Booster(model_file=str(path_2nd))
-            print(f"MLモデル(2着)を読み込みました: {path_2nd}")
-        if path_3rd.exists():
-            model_3rd = lgb.Booster(model_file=str(path_3rd))
-            print(f"MLモデル(3着)を読み込みました: {path_3rd}")
-        if model_2nd is None or model_3rd is None:
-            print("⚠ 2着/3着モデルが見つからないため、3連単・2連単は1着確率の按分による簡易計算にフォールバックします。")
+        print(f"MLモデル(ランク学習)を読み込みました: {args.model}")
     elif args.model:
         print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで続行します)")
 
     target_date = date.fromisoformat(args.date) if args.date else date.today()
     from ingest import init_db  # schema.sql適用+マイグレーションを共通化するため再利用
     conn = init_db(args.db)
-    result = build_today_json(conn, target_date, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
+    result = build_today_json(conn, target_date, model=model)
     conn.close()
 
     out_path = Path(args.out)

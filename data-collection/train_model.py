@@ -1,32 +1,32 @@
 """
-build_features.py が出力した特徴量CSVから、3段階のLightGBMモデルを学習する。
+build_features.py が出力した特徴量CSVから、LightGBMのランク学習(lambdarank)で
+「1レース内の艇の着順」を直接学習するモデルを1つ作る。
 
-    model.txt      : 1着になる確率(全6艇が対象)
-    model_2nd.txt   : 2着になる確率(1着だった艇を除いた5艇が対象)
-    model_3rd.txt    : 3着になる確率(1・2着だった艇を除いた4艇が対象)
+    model.txt : 各艇の「強さ」スコアを出すモデル(スコアが高いほど上位に来やすい)
 
-3連単・2連単の予測時(export_today.py)は、この3つのモデルを順に使って
-「1着がaの時、残りの中でbが2着になる確率」「a,bが決まった時、残りの中でcが3着になる確率」
-を計算することで、以前の「1着確率をただ按分するだけ」の方式より実際の着順の癖
-(1号艇は2着になりにくい、差し・まくりが得意な艇は2〜3着に絡みやすい、等)を
-反映できるようにしている。
+旧方式(1着/2着/3着をそれぞれ別の二値分類モデルで学習し、予測時に条件付き確率を
+掛け合わせる方式)からの変更点:
+    旧方式では3つのモデルがそれぞれ独立に「1着かどうか」「(1着を除いた中で)2着かどうか」
+    を学習していたため、モデル間で一貫性がない(3着モデルが学習した艇の強さの序列と、
+    1着モデルが学習した序列が微妙にズレる)可能性があった。
+    ランク学習では「そのレースで実際にどの順で並んだか」を1つのモデルに直接学習させるため、
+    1つのスコアが「1着になりやすさ」「2着になりやすさ」...のすべてに一貫して使える
+    (Plackett-Luceモデルの考え方:スコアをsoftmaxで正規化すると1着確率になり、
+    1着候補を除いて残りをsoftmaxし直すと2着確率になる、を繰り返す)。
+    このため export_today.py 側も model_2nd / model_3rd を個別に読み込む必要がなくなる。
+
+関連度ラベル(relevance):
+    1着=6, 2着=5, 3着=4, 4着=3, 5着=2, 6着=1 (着順が良いほど高スコア)
 
 検証方法(交差検証):
-    1回だけのtrain/testスプリットだと、たまたま検証用に選ばれたレースの難易度次第で
-    logloss・的中率が大きくブレる(実際、日によって的中率が10pt以上動くことがあった)。
-    そこで GroupKFold で5分割し、5回の検証結果を平均することで、より安定した
-    (運に左右されにくい)評価値を出す。race_id単位でグループ化しているので、
-    同じレースの艇が学習用・検証用の両方に混ざることはない。
-
-    最終的にモデルファイルとして保存するのは、5分割の平均的な学習回数(best_iteration)を
-    使って全データで学習し直したもの(データを1点も捨てずに使うため)。
+    train_model.py(旧版)と同様、GroupKFoldでrace_id単位に5分割して評価する。
+    ランク学習の評価指標としては ndcg を使うが、直感的にわかりやすいよう
+    「予測1位に選んだ艇が実際に1着だった割合」(的中率)も併せて出す。
 
 使い方:
     python train_model.py --features features.csv --out model.txt
-    (--out で指定したファイル名から自動的に model_2nd.txt / model_3rd.txt も同じ場所に出力する)
 """
 import argparse
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -34,46 +34,67 @@ import pandas as pd
 from build_features import FEATURE_COLS
 
 N_FOLDS = 5
+MAX_RELEVANCE = 6  # 6艇立てを想定(relevance = MAX_RELEVANCE - arrival_order + 1)
 
 
-def _stage_path(base_out: str, suffix: str) -> str:
-    """model.txt -> model_2nd.txt のように、ベースのファイル名から段階別のパスを作る"""
-    p = Path(base_out)
-    return str(p.with_name(f"{p.stem}_{suffix}{p.suffix}"))
+def _add_relevance(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["relevance"] = (MAX_RELEVANCE - df["arrival_order"] + 1).clip(lower=0).astype(int)
+    return df
 
 
-def _train_one_stage(df: pd.DataFrame, label_col: str, out_path: str, stage_name: str,
-                      lgb, GroupKFold, log_loss) -> None:
-    """1つの段階(1着/2着/3着)のモデルを、交差検証で評価した上で全データで学習して保存する"""
-    df = df.dropna(subset=FEATURE_COLS + [label_col, "race_id"]).reset_index(drop=True)
-    if df.empty or df[label_col].nunique() < 2:
-        print(f"[{stage_name}] 学習データが不足しているためスキップしました。")
-        return
+def _group_sizes(df: pd.DataFrame) -> np.ndarray:
+    """lgb.Dataset の group 引数用に、race_idごとの行数をレース出現順に並べた配列を作る。
+    呼び出し側で df は事前に race_id でソート済みであること(同じレースの行が連続している必要がある)。
+    """
+    return df.groupby("race_id", sort=False).size().to_numpy()
+
+
+def _hit_rate(df: pd.DataFrame, preds: np.ndarray) -> float:
+    """レースごとに予測スコア最大の艇が、実際に1着だったかどうかの割合。"""
+    tmp = df.copy()
+    tmp["pred"] = preds
+    top_pick = tmp.loc[tmp.groupby("race_id")["pred"].idxmax()]
+    return float((top_pick["arrival_order"] == 1).mean())
+
+
+def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> None:
+    df = df.dropna(subset=FEATURE_COLS + ["arrival_order", "race_id"]).reset_index(drop=True)
+    df = _add_relevance(df)
 
     n_races = df["race_id"].nunique()
-    n_folds = min(N_FOLDS, n_races)  # レース数が極端に少ない場合の安全策
+    n_folds = min(N_FOLDS, n_races)
     if n_folds < 2:
-        print(f"[{stage_name}] レース数が少なすぎて交差検証できないためスキップしました。")
+        print("レース数が少なすぎて交差検証できないためスキップしました。")
         return
 
     params = {
-        "objective": "binary",
-        "metric": "binary_logloss",
+        "objective": "lambdarank",
+        "metric": "ndcg",
+        "ndcg_eval_at": [1, 3],
         "verbosity": -1,
         "learning_rate": 0.05,
         "num_leaves": 15,
     }
 
     gkf = GroupKFold(n_splits=n_folds)
-    fold_losses = []
+    fold_ndcg = []
     fold_hit_rates = []
     fold_best_iters = []
 
     for fold_i, (train_idx, test_idx) in enumerate(gkf.split(df, groups=df["race_id"]), start=1):
-        train_df, test_df = df.iloc[train_idx], df.iloc[test_idx]
+        # 同じレースの行が連続している必要があるので、race_idでソートしてから使う
+        train_df = df.iloc[train_idx].sort_values("race_id").reset_index(drop=True)
+        test_df = df.iloc[test_idx].sort_values("race_id").reset_index(drop=True)
 
-        train_set = lgb.Dataset(train_df[FEATURE_COLS], label=train_df[label_col])
-        valid_set = lgb.Dataset(test_df[FEATURE_COLS], label=test_df[label_col], reference=train_set)
+        train_set = lgb.Dataset(
+            train_df[FEATURE_COLS], label=train_df["relevance"],
+            group=_group_sizes(train_df),
+        )
+        valid_set = lgb.Dataset(
+            test_df[FEATURE_COLS], label=test_df["relevance"],
+            group=_group_sizes(test_df), reference=train_set,
+        )
 
         model = lgb.train(
             params,
@@ -84,48 +105,47 @@ def _train_one_stage(df: pd.DataFrame, label_col: str, out_path: str, stage_name
         )
 
         preds = model.predict(test_df[FEATURE_COLS])
-        loss = log_loss(test_df[label_col], preds)
+        hit_rate = _hit_rate(test_df, preds)
+        ndcg1 = model.best_score["valid_0"].get("ndcg@1")
 
-        test_df = test_df.copy()
-        test_df["pred"] = preds
-        hit_rate = test_df.loc[test_df.groupby("race_id")["pred"].idxmax(), label_col].mean()
-
-        fold_losses.append(loss)
+        fold_ndcg.append(ndcg1)
         fold_hit_rates.append(hit_rate)
         fold_best_iters.append(model.best_iteration or 500)
-        print(f"[{stage_name}] fold {fold_i}/{n_folds}: logloss={loss:.4f} 的中率={hit_rate:.1%} "
-              f"(反復{model.best_iteration})")
+        print(f"fold {fold_i}/{n_folds}: ndcg@1={ndcg1:.4f} 的中率={hit_rate:.1%} (反復{model.best_iteration})")
 
-    mean_loss = float(np.mean(fold_losses))
-    std_loss = float(np.std(fold_losses))
+    mean_ndcg = float(np.mean(fold_ndcg))
+    std_ndcg = float(np.std(fold_ndcg))
     mean_hit = float(np.mean(fold_hit_rates))
     std_hit = float(np.std(fold_hit_rates))
-    print(f"\n[{stage_name}] 交差検証({n_folds}分割)の平均: "
-          f"logloss={mean_loss:.4f}(±{std_loss:.4f}) 的中率={mean_hit:.1%}(±{std_hit*100:.1f}pt)")
+    print(f"\n交差検証({n_folds}分割)の平均: "
+          f"ndcg@1={mean_ndcg:.4f}(±{std_ndcg:.4f}) 的中率={mean_hit:.1%}(±{std_hit*100:.1f}pt)")
 
     # 最終モデルは、5分割の平均的な学習回数を使って全データで学習し直す
-    # (検証専用に取り分けていた分のデータも無駄にしないため)
     final_num_round = max(10, round(float(np.mean(fold_best_iters))))
-    full_set = lgb.Dataset(df[FEATURE_COLS], label=df[label_col])
+    full_df = df.sort_values("race_id").reset_index(drop=True)
+    full_set = lgb.Dataset(
+        full_df[FEATURE_COLS], label=full_df["relevance"],
+        group=_group_sizes(full_df),
+    )
     final_model = lgb.train(
         params,
         full_set,
         num_boost_round=final_num_round,
         callbacks=[lgb.log_evaluation(0)],
     )
-    print(f"[{stage_name}] 全データ({len(df)}行)で最終モデルを学習しました(反復{final_num_round}回)")
+    print(f"全データ({len(df)}行)で最終モデルを学習しました(反復{final_num_round}回)")
 
     importance = pd.DataFrame({
         "feature": FEATURE_COLS,
         "gain": final_model.feature_importance(importance_type="gain"),
     }).sort_values("gain", ascending=False)
     importance["gain_pct"] = (importance["gain"] / importance["gain"].sum() * 100).round(1)
-    print(f"[{stage_name}] 特徴量重要度(上位5件):")
+    print("特徴量重要度(上位5件):")
     for _, row in importance.head(5).iterrows():
         print(f"  {row['feature']:<22} {row['gain_pct']:>5.1f}%")
 
     final_model.save_model(out_path)
-    print(f"[{stage_name}] モデルを保存しました: {out_path}")
+    print(f"モデルを保存しました: {out_path}")
 
 
 def main():
@@ -139,7 +159,6 @@ def main():
     try:
         import lightgbm as lgb
         from sklearn.model_selection import GroupKFold
-        from sklearn.metrics import log_loss
     except ImportError as e:
         raise SystemExit(
             "lightgbm / scikit-learn が見つかりません。"
@@ -157,18 +176,7 @@ def main():
             "(ingest.py を毎日実行して結果データを蓄積し続けてください)"
         )
 
-    # ---- 1段階目: 1着モデル(全6艇が対象) ----
-    _train_one_stage(df, "is_winner", args.out, "1着", lgb, GroupKFold, log_loss)
-
-    # ---- 2段階目: 2着モデル(1着だった艇を除いた5艇が対象) ----
-    df_2nd = df[df["is_winner"] == 0]
-    _train_one_stage(df_2nd, "is_second", _stage_path(args.out, "2nd"), "2着",
-                      lgb, GroupKFold, log_loss)
-
-    # ---- 3段階目: 3着モデル(1・2着だった艇を除いた4艇が対象) ----
-    df_3rd = df[(df["is_winner"] == 0) & (df["is_second"] == 0)]
-    _train_one_stage(df_3rd, "is_third", _stage_path(args.out, "3rd"), "3着",
-                      lgb, GroupKFold, log_loss)
+    train_model(df, args.out, lgb, GroupKFold)
 
 
 if __name__ == "__main__":

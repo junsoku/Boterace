@@ -75,15 +75,16 @@ def _exacta_bucket_label(pct: float) -> str:
 
 
 def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=None):
-    """過去lookback_days日分の、結果が確定しているレースを1件ずつ再予想しながり返す共通処理。
+    """過去lookback_days日分の、結果が確定しているレースを1件ずつ再予想しながら返す共通処理。
     compute_confidence_calibration / compute_bet_confidence_calibration の両方から使う。
 
-    model が渡されていれば、本番(export_today.py)と同じ predict_with_model()(MLモデル)で
-    再予想する。model が None の場合のみ、旧来のヒューリスティック(score_boat)にフォールバックする。
+    model が渡されていれば、本番(export_today.py)と同じ predict_with_model()(ランク学習MLモデル)
+    で再予想する。model が None の場合のみ、旧来のヒューリスティック(score_boat)にフォールバックする。
     確信度の実績値は「本番で実際に使っている予想ロジック」と揃っていて初めて意味を持つため、
     model があるなら必ずそちらを使うべき。
 
-    yield: (boats[{"lane":.., "pct":..}], actual_order[boat_numberを着順順に並べたリスト])
+    yield: (boats[{"lane":.., "pct":..}], actual_order[boat_numberを着順順に並べたリスト],
+            boat_dicts, scores_by_lane または None)
     """
     end = date.today()
     start = end - timedelta(days=lookback_days)
@@ -102,7 +103,8 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
                       e.flying_count, e.late_count,
-                      p.exhibition_time, p.tilt_angle, r.arrival_order
+                      p.exhibition_time, p.tilt_angle, p.weight_adjustment_kg,
+                      p.start_timing_preview, r.arrival_order
                FROM entries e
                JOIN results r ON r.entry_id = e.entry_id
                LEFT JOIN previews p ON p.entry_id = e.entry_id
@@ -123,7 +125,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
 
         boat_dicts = []
         for (bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r, avg_st,
-             flying, late, exh, tilt_angle, arrival_order) in entries:
+             flying, late, exh, tilt_angle, weight_adj, start_timing_prev, arrival_order) in entries:
             d = {
                 "boat_number": bn, "racer_class": racer_class,
                 "national_win_rate": nat, "national_2連率": nat_2r,
@@ -132,6 +134,8 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                 "average_start_timing": avg_st,
                 "flying_count": flying, "late_count": late,
                 "exhibition_time": exh, "tilt_angle": tilt_angle,
+                "weight_adjustment_kg": weight_adj,
+                "start_timing_preview": start_timing_prev,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -139,9 +143,11 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append((d, arrival_order))
 
+        scores_by_lane = None
         if model is not None:
             scores = predict_with_model([d for d, _ in boat_dicts], course_stats, model, race_context)
-            pcts = normalize_to_pct(scores, use_softmax=False)
+            pcts = normalize_to_pct(scores, use_softmax=True)
+            scores_by_lane = {d["boat_number"]: s for (d, _), s in zip(boat_dicts, scores)}
         else:
             scores = [score_boat(d, course_stats, race_context) for d, _ in boat_dicts]
             pcts = normalize_to_pct(scores, use_softmax=True)
@@ -150,7 +156,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
         actual_order = [d["boat_number"] for (d, arrival) in
                          sorted(boat_dicts, key=lambda x: x[1])]
 
-        yield boats, actual_order, [d for d, _ in boat_dicts], course_stats, race_context
+        yield boats, actual_order, [d for d, _ in boat_dicts], scores_by_lane
 
 
 def compute_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None) -> dict:
@@ -161,7 +167,7 @@ def compute_confidence_calibration(conn: sqlite3.Connection, lookback_days: int 
     """
     buckets = {}  # label -> [hits, total]
 
-    for boats, actual_order, _boat_dicts, _course_stats, _race_context in _iter_calibration_races(conn, lookback_days, model):
+    for boats, actual_order, _boat_dicts, _scores_by_lane in _iter_calibration_races(conn, lookback_days, model):
         ranked = sorted(boats, key=lambda b: -b["pct"])
         top_boat = ranked[0]
         top_pct = top_boat["pct"]
@@ -179,24 +185,20 @@ def compute_confidence_calibration(conn: sqlite3.Connection, lookback_days: int 
     }
 
 
-def compute_bet_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None,
-                                        model_2nd=None, model_3rd=None) -> dict:
+def compute_bet_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None) -> dict:
     """
     過去lookback_days日分の結果確定レースを、現在のロジック(modelがあればMLモデル)で再予想し、
     推奨3連単(本命1点)の推定確率帯ごとに、実際にその組み合わせが的中していた割合を集計する。
     戻り値: {"10-14%": {"hit_rate":0.22,"sample_size":35}, ...}
 
-    model_2nd・model_3rd があれば、本番(export_today.py)と同じ estimate_bets_ml()(3段階モデル)
+    model があれば estimate_bets_ml()(ランク学習モデル1つのスコアによるPlackett-Luce計算)
     で3連単を推定する。無ければ旧来の estimate_bets()(1着確率の按分)にフォールバックする。
     """
     buckets = {}  # label -> [hits, total]
-    use_ml_bets = model_2nd is not None and model_3rd is not None
 
-    for boats, actual_order, boat_dicts, course_stats, race_context in _iter_calibration_races(conn, lookback_days, model):
-        if use_ml_bets:
-            p1_by_lane = {b["lane"]: b["pct"] for b in boats}
-            bets = estimate_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane,
-                                     model_2nd, model_3rd, top_n=1)
+    for boats, actual_order, boat_dicts, scores_by_lane in _iter_calibration_races(conn, lookback_days, model):
+        if scores_by_lane is not None:
+            bets = estimate_bets_ml(boat_dicts, scores_by_lane, top_n=1)
         else:
             bets = estimate_bets(boats, top_n=1)
         if not bets:
@@ -222,24 +224,20 @@ def compute_bet_confidence_calibration(conn: sqlite3.Connection, lookback_days: 
     }
 
 
-def compute_exacta_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None,
-                                           model_2nd=None) -> dict:
+def compute_exacta_confidence_calibration(conn: sqlite3.Connection, lookback_days: int = 90, model=None) -> dict:
     """
     過去lookback_days日分の結果確定レースを、現在のロジック(modelがあればMLモデル)で再予想し、
     推奨2連単(本命1点)の推定確率帯ごとに、実際にその組み合わせが的中していた割合を集計する。
     戻り値: {"15-19%": {"hit_rate":0.35,"sample_size":40}, ...}
 
-    model_2nd があれば estimate_exacta_bets_ml()(2段階モデル)で推定する。
-    無ければ旧来の estimate_exacta_bets()(1着確率の按分)にフォールバックする。
+    model があれば estimate_exacta_bets_ml()(ランク学習モデルのスコアによるPlackett-Luce計算)
+    で推定する。無ければ旧来の estimate_exacta_bets()(1着確率の按分)にフォールバックする。
     """
     buckets = {}  # label -> [hits, total]
-    use_ml_bets = model_2nd is not None
 
-    for boats, actual_order, boat_dicts, course_stats, race_context in _iter_calibration_races(conn, lookback_days, model):
-        if use_ml_bets:
-            p1_by_lane = {b["lane"]: b["pct"] for b in boats}
-            bets = estimate_exacta_bets_ml(boat_dicts, course_stats, race_context, p1_by_lane,
-                                            model_2nd, top_n=1)
+    for boats, actual_order, boat_dicts, scores_by_lane in _iter_calibration_races(conn, lookback_days, model):
+        if scores_by_lane is not None:
+            bets = estimate_exacta_bets_ml(boat_dicts, scores_by_lane, top_n=1)
         else:
             bets = estimate_exacta_bets(boats, top_n=1)
         if not bets:
