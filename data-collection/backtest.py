@@ -13,12 +13,11 @@
   条件が変わっている場合がある。とはいえ、今のロジックの妥当性を見る目安にはなる。
 - サンプル数が少ないうちは参考程度。目安として最低30〜50レース以上で見たい。
 - --model を指定しない場合はヒューリスティック(score_boat)で検証する。本番と同じ条件で
-  検証したい場合は、必ず --model data-collection/model.txt のように指定すること
-  (model_2nd.txt・model_3rd.txt が同じ場所にあれば自動的に使われる)。
+  検証したい場合は、必ず --model data-collection/model.txt のように指定すること。
 
 使い方:
     python backtest.py --db boatrace.db --days 1                       # ヒューリスティックで検証
-    python backtest.py --db boatrace.db --days 7 --model model.txt     # MLモデル(3段階)で検証
+    python backtest.py --db boatrace.db --days 7 --model model.txt     # MLモデル(ランク学習)で検証
     python backtest.py --db boatrace.db --start 2026-09-01 --end 2026-09-08
 """
 import argparse
@@ -33,10 +32,8 @@ from technique_stats import compute_course_technique_rates, compute_racer_nigash
 from ingest import _migrate_add_missing_columns
 
 
-def backtest(conn: sqlite3.Connection, start: date, end: date,
-             model=None, model_2nd=None, model_3rd=None) -> dict:
+def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> dict:
     use_ml = model is not None
-    use_ml_bets = model_2nd is not None and model_3rd is not None
 
     races = conn.execute(
         """SELECT race_id, race_date, stadium_number, race_number, race_grade,
@@ -69,7 +66,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
                       e.flying_count, e.late_count,
-                      p.exhibition_time, p.tilt_angle,
+                      p.exhibition_time, p.tilt_angle, p.weight_adjustment_kg, p.start_timing_preview,
                       r.arrival_order
                FROM entries e
                JOIN results r ON r.entry_id = e.entry_id
@@ -92,7 +89,8 @@ def backtest(conn: sqlite3.Connection, start: date, end: date,
 
         boat_dicts = []
         for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
-             avg_st, flying, late, exh, tilt_angle, arrival_order) in entries:
+             avg_st, flying, late, exh, tilt_angle, weight_adj, start_timing_prev,
+             arrival_order) in entries:
             d = {
                 "boat_number": bn, "racer_class": racer_class,
                 "national_win_rate": nat, "national_2連率": nat_2r,
@@ -101,6 +99,8 @@ def backtest(conn: sqlite3.Connection, start: date, end: date,
                 "average_start_timing": avg_st,
                 "flying_count": flying, "late_count": late,
                 "exhibition_time": exh, "tilt_angle": tilt_angle,
+                "weight_adjustment_kg": weight_adj,
+                "start_timing_preview": start_timing_prev,
             }
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
@@ -108,9 +108,11 @@ def backtest(conn: sqlite3.Connection, start: date, end: date,
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append((d, arrival_order))
 
+        scores_by_lane = None
         if use_ml:
             scores = predict_with_model([d for d, _ in boat_dicts], course_stats, model, race_context)
-            pcts = normalize_to_pct(scores, use_softmax=False)
+            pcts = normalize_to_pct(scores, use_softmax=True)
+            scores_by_lane = {d["boat_number"]: s for (d, _), s in zip(boat_dicts, scores)}
         else:
             scores = [score_boat(d, course_stats, race_context) for d, _ in boat_dicts]
             pcts = normalize_to_pct(scores, use_softmax=True)
@@ -120,10 +122,8 @@ def backtest(conn: sqlite3.Connection, start: date, end: date,
             for (d, _), pct in zip(boat_dicts, pcts)
         ]
 
-        if use_ml_bets:
-            p1_by_lane = {b["lane"]: b["pct"] for b in boats_for_bets}
-            bet_list = estimate_bets_ml([d for d, _ in boat_dicts], course_stats, race_context,
-                                         p1_by_lane, model_2nd, model_3rd, top_n=6)
+        if scores_by_lane is not None:
+            bet_list = estimate_bets_ml([d for d, _ in boat_dicts], scores_by_lane, top_n=6)
         else:
             bet_list = estimate_bets(boats_for_bets, top_n=6)
         predicted_bets = {b["combo"] for b in bet_list}
@@ -188,27 +188,14 @@ def main():
     ap.add_argument("--end", default=None, help="YYYY-MM-DD")
     ap.add_argument("--days", type=int, default=1, help="--start/--end を省略した場合、直近何日分を検証するか")
     ap.add_argument("--model", default=None,
-                     help="train_model.py で作ったmodel.txtのパス(省略時はヒューリスティックで検証)。"
-                          "同じ場所に model_2nd.txt / model_3rd.txt があれば3連単の検証にも使う。")
+                     help="train_model.py で作ったmodel.txt(ランク学習)のパス(省略時はヒューリスティックで検証)。")
     args = ap.parse_args()
 
-    model = model_2nd = model_3rd = None
+    model = None
     if args.model and Path(args.model).exists():
         import lightgbm as lgb
         model = lgb.Booster(model_file=args.model)
-        print(f"MLモデル(1着)を読み込みました: {args.model}")
-
-        base = Path(args.model)
-        path_2nd = base.with_name(f"{base.stem}_2nd{base.suffix}")
-        path_3rd = base.with_name(f"{base.stem}_3rd{base.suffix}")
-        if path_2nd.exists():
-            model_2nd = lgb.Booster(model_file=str(path_2nd))
-            print(f"MLモデル(2着)を読み込みました: {path_2nd}")
-        if path_3rd.exists():
-            model_3rd = lgb.Booster(model_file=str(path_3rd))
-            print(f"MLモデル(3着)を読み込みました: {path_3rd}")
-        if model_2nd is None or model_3rd is None:
-            print("⚠ 2着/3着モデルが見つからないため、3連単の検証は1着確率の按分による簡易計算になります。")
+        print(f"MLモデル(ランク学習)を読み込みました: {args.model}")
     elif args.model:
         print(f"⚠ 指定されたモデルファイルが見つかりません: {args.model}(ヒューリスティックで検証します)")
     else:
@@ -223,7 +210,7 @@ def main():
 
     conn = sqlite3.connect(args.db)
     _migrate_add_missing_columns(conn)  # flying_count等の列がまだなければここで追加する
-    result = backtest(conn, start, end, model=model, model_2nd=model_2nd, model_3rd=model_3rd)
+    result = backtest(conn, start, end, model=model)
     conn.close()
 
     print(f"\n検証期間: {start} 〜 {end}")
