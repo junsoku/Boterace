@@ -101,6 +101,26 @@
     line-height:1.6;
   }
 
+  .delete-all-row{
+    display:flex;
+    justify-content:flex-end;
+    padding:0 16px 12px;
+  }
+  .delete-all-btn{
+    background:var(--miss-soft);
+    border:1px solid var(--miss);
+    color:var(--miss);
+    font-size:12px;
+    font-weight:700;
+    padding:7px 14px;
+    border-radius:8px;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .delete-all-btn:disabled{
+    opacity:0.4;
+  }
+
   .date-header{
     padding:14px 18px 6px;
     font-size:13px;
@@ -211,6 +231,10 @@
     この記録はこの端末のブラウザ内(localStorage)だけに保存されています。他の端末やブラウザには引き継がれません。予想画面(予想結果ページ)の「購入した」ボタンから記録できます。
   </div>
 
+  <div class="delete-all-row">
+    <button class="delete-all-btn" id="deleteAllBtn" onclick="deleteAllRecords()">全件削除</button>
+  </div>
+
   <div id="listArea"></div>
 
 <script>
@@ -253,6 +277,17 @@ function deleteRecord(id){
   render();
 }
 
+// 全件削除: 件数が多いと1件ずつの削除が現実的でないため、確認ダイアログを2段階にして
+// 誤タップでの全消去を防ぐ(取り消せない操作なので慎重に)。
+function deleteAllRecords(){
+  const records = loadMyBets();
+  if (records.length === 0) return;
+  if (!confirm(`購入記録を全件(${records.length}件)削除します。この操作は取り消せません。よろしいですか?`)) return;
+  if (!confirm("本当に削除しますか?もう一度確認します。")) return;
+  saveMyBets([]);
+  render();
+}
+
 // data/history.json(実際にその時点で表示していた予想の履歴)から、
 // 同じ日付・場・レース番号の実際の結果を探して突き合わせる。
 async function fetchHistoryResults(){
@@ -275,6 +310,9 @@ function matchResult(record, historyRaces){
 async function render(){
   const records = loadMyBets().sort((a,b)=> (b.date+b.stadium+b.raceNumber).localeCompare(a.date+a.stadium+a.raceNumber) || b.recordedAt.localeCompare(a.recordedAt));
   const historyRaces = await fetchHistoryResults();
+
+  const deleteAllBtn = document.getElementById("deleteAllBtn");
+  if (deleteAllBtn) deleteAllBtn.disabled = records.length === 0;
 
   // 集計(結果が確定しているレコードのみ対象)
   let evaluated = 0, hits = 0, stake = 0, returnYen = 0;
