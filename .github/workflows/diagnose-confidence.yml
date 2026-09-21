@@ -1,0 +1,26 @@
+name: Diagnose confidence buckets
+
+on:
+  workflow_dispatch:  # 手動実行のみ(使い捨ての診断)
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r data-collection/requirements.txt
+
+      - name: 確信度バケットを診断
+        run: |
+          python data-collection/diagnose_confidence.py \
+            --db data-collection/boatrace.db \
+            --model data-collection/model.txt
+        # git commit/pushは一切しない(読み取り専用の診断)
