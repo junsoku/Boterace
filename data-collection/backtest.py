@@ -145,9 +145,12 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
         if actual_combo in predicted_bets:
             trifecta_hits += 1
 
-        # 実際の3連単払戻金額を取得(この組み合わせの払戻が見つかった場合のみ回収率の計算対象にする)
+        # 実際の3連単払戻金額を取得(この組み合わせの払戻が見つかった場合のみ回収率の計算対象にする)。
+        # payoutsは(race_id, bet_type, combination)でユニークなので、bet_type='trifecta'を
+        # 指定しないと同じcombination文字列を持つ他の賭式(3連複等)の払戻を誤って拾う恐れがある。
         payout_row = conn.execute(
-            "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
+            """SELECT payout_yen FROM payouts
+               WHERE race_id=? AND bet_type='trifecta' AND combination=? AND payout_yen IS NOT NULL""",
             (race_id, actual_combo),
         ).fetchone()
         if payout_row:

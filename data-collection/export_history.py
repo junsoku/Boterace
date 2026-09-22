@@ -129,8 +129,12 @@ def build_history(conn: sqlite3.Connection, start: date, end: date, limit: int) 
         if any(c["hit"] for c in predicted_bet_combos):
             bet_hits_all += 1
 
+        # payoutsは(race_id, bet_type, combination)の組でユニークなテーブル。bet_type='trifecta'を
+        # 指定しないと、同じcombination文字列を持つ他の賭式(3連複=trio等。着順がそのまま号艇の
+        # 若い順だった場合などに起こる)の払戻を誤って拾う可能性があるため、明示的に絞り込む。
         payout_row = conn.execute(
-            "SELECT payout_yen FROM payouts WHERE race_id=? AND combination=? AND payout_yen IS NOT NULL",
+            """SELECT payout_yen FROM payouts
+               WHERE race_id=? AND bet_type='trifecta' AND combination=? AND payout_yen IS NOT NULL""",
             (race_id, actual_combo),
         ).fetchone()
         race_payout = payout_row[0] if payout_row else None
