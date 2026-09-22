@@ -1,6 +1,6 @@
 {
   "date": "2026-09-22",
-  "generated_at": "2026-09-22T15:44:25.785620+09:00",
+  "generated_at": "2026-09-22T16:10:32.734472+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -232,20 +232,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -479,36 +479,39 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "大廣 咲季"
+          },
+          "actualCombo": "1-2-4"
         },
         {
           "number": 3,
           "close": "2026-09-22 16:15:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "8",
+          "windSpeed": 3.0,
+          "waveHeight": 2.0,
+          "temperature": 27.0,
+          "waterTemperature": 23.0,
           "boats": [
             {
               "lane": 1,
@@ -519,7 +522,7 @@
               "localWin": 4.39,
               "natPlace": 6.25,
               "localPlace": 30.3,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 38.86,
               "flying": 1,
               "late": 0,
@@ -529,12 +532,12 @@
               "lane": 2,
               "name": "奈須 啓太",
               "class": "A2",
-              "pct": 26,
+              "pct": 25,
               "natWin": 6.12,
               "localWin": 6.82,
               "natPlace": 44.35,
               "localPlace": 45.45,
-              "exh": null,
+              "exh": 6.68,
               "motor2r": 50.59,
               "flying": 0,
               "late": 0,
@@ -544,16 +547,16 @@
               "lane": 3,
               "name": "岡村 仁",
               "class": "A1",
-              "pct": 23,
+              "pct": 24,
               "natWin": 6.34,
               "localWin": 6.81,
               "natPlace": 50.49,
               "localPlace": 44.44,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 34.41,
               "flying": 1,
               "late": 0,
-              "mark": "▲"
+              "mark": "○"
             },
             {
               "lane": 4,
@@ -564,11 +567,11 @@
               "localWin": 6.21,
               "natPlace": 47.69,
               "localPlace": 41.38,
-              "exh": null,
+              "exh": 6.71,
               "motor2r": 33.67,
               "flying": 0,
               "late": 0,
-              "mark": "○"
+              "mark": "▲"
             },
             {
               "lane": 5,
@@ -579,7 +582,7 @@
               "localWin": 6.0,
               "natPlace": 35.71,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 39.41,
               "flying": 1,
               "late": 0,
@@ -594,7 +597,7 @@
               "localWin": 6.85,
               "natPlace": 27.84,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 37.88,
               "flying": 1,
               "late": 0,
@@ -606,16 +609,31 @@
               "lane": 2,
               "name": "奈須 啓太",
               "class": "A2",
-              "pct": 26,
+              "pct": 25,
               "natWin": 6.12,
               "localWin": 6.82,
               "natPlace": 44.35,
               "localPlace": 45.45,
-              "exh": null,
+              "exh": 6.68,
               "motor2r": 50.59,
               "flying": 0,
               "late": 0,
               "mark": "◎"
+            },
+            {
+              "lane": 3,
+              "name": "岡村 仁",
+              "class": "A1",
+              "pct": 24,
+              "natWin": 6.34,
+              "localWin": 6.81,
+              "natPlace": 50.49,
+              "localPlace": 44.44,
+              "exh": 6.72,
+              "motor2r": 34.41,
+              "flying": 1,
+              "late": 0,
+              "mark": "○"
             },
             {
               "lane": 4,
@@ -626,24 +644,9 @@
               "localWin": 6.21,
               "natPlace": 47.69,
               "localPlace": 41.38,
-              "exh": null,
+              "exh": 6.71,
               "motor2r": 33.67,
               "flying": 0,
-              "late": 0,
-              "mark": "○"
-            },
-            {
-              "lane": 3,
-              "name": "岡村 仁",
-              "class": "A1",
-              "pct": 23,
-              "natWin": 6.34,
-              "localWin": 6.81,
-              "natPlace": 50.49,
-              "localPlace": 44.44,
-              "exh": null,
-              "motor2r": 34.41,
-              "flying": 1,
               "late": 0,
               "mark": "▲"
             },
@@ -656,7 +659,7 @@
               "localWin": 4.39,
               "natPlace": 6.25,
               "localPlace": 30.3,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 38.86,
               "flying": 1,
               "late": 0,
@@ -671,7 +674,7 @@
               "localWin": 6.0,
               "natPlace": 35.71,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 39.41,
               "flying": 1,
               "late": 0,
@@ -686,7 +689,7 @@
               "localWin": 6.85,
               "natPlace": 27.84,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 37.88,
               "flying": 1,
               "late": 0,
@@ -708,16 +711,16 @@
             },
             {
               "combo": "3-2-4",
-              "prob": "3.6%"
+              "prob": "3.7%"
             }
           ],
           "exactaBets": [
             {
               "combo": "2-4",
-              "prob": "8.3%"
+              "prob": "8.2%"
             },
             {
-              "combo": "4-2",
+              "combo": "2-3",
               "prob": "8.1%"
             }
           ],
@@ -729,14 +732,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": false,
@@ -967,20 +970,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -1211,14 +1214,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -1461,14 +1464,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -1705,14 +1708,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -1943,14 +1946,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -2187,20 +2190,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -2431,20 +2434,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -2675,14 +2678,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -2919,14 +2922,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -3170,20 +3173,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -3423,8 +3426,8 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -3664,14 +3667,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -3911,14 +3914,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -4158,20 +4161,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -4405,14 +4408,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -4652,20 +4655,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -4905,14 +4908,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -5146,20 +5149,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -5393,20 +5396,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -5646,14 +5649,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -5664,12 +5667,12 @@
           "number": 12,
           "close": "2026-09-22 16:35:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "6",
+          "windSpeed": 1.0,
+          "waveHeight": 1.0,
+          "temperature": 30.0,
+          "waterTemperature": 24.0,
           "boats": [
             {
               "lane": 1,
@@ -5884,20 +5887,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -6135,14 +6138,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -6388,14 +6391,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -6635,14 +6638,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -6876,20 +6879,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -7129,8 +7132,8 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -7864,20 +7867,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -8111,8 +8114,8 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
@@ -8123,8 +8126,8 @@
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -8364,14 +8367,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -8605,20 +8608,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -8629,23 +8632,23 @@
           "number": 12,
           "close": "2026-09-22 16:25:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "2",
+          "windSpeed": 4.0,
+          "waveHeight": 5.0,
+          "temperature": 28.0,
+          "waterTemperature": 24.0,
           "boats": [
             {
               "lane": 1,
               "name": "山口 達也",
               "class": "A1",
-              "pct": 60,
+              "pct": 57,
               "natWin": 6.79,
               "localWin": 7.28,
               "natPlace": 56.18,
               "localPlace": 56.0,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 46.48,
               "flying": 0,
               "late": 0,
@@ -8655,12 +8658,12 @@
               "lane": 2,
               "name": "丸岡 正典",
               "class": "A2",
-              "pct": 13,
+              "pct": 14,
               "natWin": 6.81,
               "localWin": 5.8,
               "natPlace": 48.51,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 20.0,
               "flying": 1,
               "late": 0,
@@ -8670,12 +8673,12 @@
               "lane": 3,
               "name": "豊田 祥生",
               "class": "B1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 3.61,
               "localWin": 3.09,
               "natPlace": 17.07,
               "localPlace": 5.88,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 31.43,
               "flying": 0,
               "late": 0,
@@ -8690,7 +8693,7 @@
               "localWin": 4.2,
               "natPlace": 29.07,
               "localPlace": 20.0,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 23.53,
               "flying": 1,
               "late": 0,
@@ -8705,7 +8708,7 @@
               "localWin": 6.63,
               "natPlace": 50.0,
               "localPlace": 55.56,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 36.23,
               "flying": 0,
               "late": 0,
@@ -8715,12 +8718,12 @@
               "lane": 6,
               "name": "平見 真彦",
               "class": "A2",
-              "pct": 6,
+              "pct": 7,
               "natWin": 6.27,
               "localWin": 6.95,
               "natPlace": 43.33,
               "localPlace": 51.22,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 19.4,
               "flying": 0,
               "late": 0,
@@ -8732,12 +8735,12 @@
               "lane": 1,
               "name": "山口 達也",
               "class": "A1",
-              "pct": 60,
+              "pct": 57,
               "natWin": 6.79,
               "localWin": 7.28,
               "natPlace": 56.18,
               "localPlace": 56.0,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 46.48,
               "flying": 0,
               "late": 0,
@@ -8747,12 +8750,12 @@
               "lane": 2,
               "name": "丸岡 正典",
               "class": "A2",
-              "pct": 13,
+              "pct": 14,
               "natWin": 6.81,
               "localWin": 5.8,
               "natPlace": 48.51,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 20.0,
               "flying": 1,
               "late": 0,
@@ -8767,7 +8770,7 @@
               "localWin": 6.63,
               "natPlace": 50.0,
               "localPlace": 55.56,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 36.23,
               "flying": 0,
               "late": 0,
@@ -8782,7 +8785,7 @@
               "localWin": 4.2,
               "natPlace": 29.07,
               "localPlace": 20.0,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 23.53,
               "flying": 1,
               "late": 0,
@@ -8792,12 +8795,12 @@
               "lane": 6,
               "name": "平見 真彦",
               "class": "A2",
-              "pct": 6,
+              "pct": 7,
               "natWin": 6.27,
               "localWin": 6.95,
               "natPlace": 43.33,
               "localPlace": 51.22,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 19.4,
               "flying": 0,
               "late": 0,
@@ -8807,12 +8810,12 @@
               "lane": 3,
               "name": "豊田 祥生",
               "class": "B1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 3.61,
               "localWin": 3.09,
               "natPlace": 17.07,
               "localPlace": 5.88,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 31.43,
               "flying": 0,
               "late": 0,
@@ -8822,47 +8825,47 @@
           "bets": [
             {
               "combo": "1-2-5",
-              "prob": "6.3%"
+              "prob": "6.1%"
             },
             {
               "combo": "1-5-2",
-              "prob": "5.4%"
-            },
-            {
-              "combo": "1-2-4",
               "prob": "5.1%"
             },
             {
+              "combo": "1-2-4",
+              "prob": "4.7%"
+            },
+            {
               "combo": "1-2-6",
-              "prob": "4.3%"
+              "prob": "4.7%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "19.7%"
+              "prob": "19.4%"
             },
             {
               "combo": "1-5",
-              "prob": "12.9%"
+              "prob": "12.4%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.7630853994490359,
-            "sampleSize": 363,
-            "bucket": "60-69%"
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
+            "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -9100,14 +9103,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -9353,14 +9356,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -9600,14 +9603,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -9847,14 +9850,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -10094,14 +10097,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -10335,20 +10338,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -10588,14 +10591,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -10835,14 +10838,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -11076,25 +11079,28 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "橋本 久和"
+          },
+          "actualCombo": "1-5-2"
         },
         {
           "number": 10,
@@ -11104,19 +11110,19 @@
           "windDirection": "13",
           "windSpeed": 3.0,
           "waveHeight": 1.0,
-          "temperature": 30.0,
+          "temperature": 29.0,
           "waterTemperature": 27.0,
           "boats": [
             {
               "lane": 1,
               "name": "荒川 健太",
               "class": "A2",
-              "pct": 56,
+              "pct": 55,
               "natWin": 6.02,
               "localWin": 6.47,
               "natPlace": 39.5,
               "localPlace": 43.75,
-              "exh": null,
+              "exh": 6.7,
               "motor2r": 22.89,
               "flying": 0,
               "late": 0,
@@ -11131,7 +11137,7 @@
               "localWin": 0.0,
               "natPlace": 22.73,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 48.04,
               "flying": 0,
               "late": 0,
@@ -11146,7 +11152,7 @@
               "localWin": 5.87,
               "natPlace": 31.93,
               "localPlace": 34.78,
-              "exh": null,
+              "exh": 6.74,
               "motor2r": 33.91,
               "flying": 1,
               "late": 0,
@@ -11161,7 +11167,7 @@
               "localWin": 5.13,
               "natPlace": 39.0,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.69,
               "motor2r": 30.21,
               "flying": 0,
               "late": 0,
@@ -11176,7 +11182,7 @@
               "localWin": 4.4,
               "natPlace": 17.05,
               "localPlace": 20.0,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 19.72,
               "flying": 0,
               "late": 0,
@@ -11186,12 +11192,12 @@
               "lane": 6,
               "name": "安達 裕樹",
               "class": "A2",
-              "pct": 6,
+              "pct": 7,
               "natWin": 5.94,
               "localWin": 4.0,
               "natPlace": 34.62,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.69,
               "motor2r": 14.06,
               "flying": 1,
               "late": 0,
@@ -11203,12 +11209,12 @@
               "lane": 1,
               "name": "荒川 健太",
               "class": "A2",
-              "pct": 56,
+              "pct": 55,
               "natWin": 6.02,
               "localWin": 6.47,
               "natPlace": 39.5,
               "localPlace": 43.75,
-              "exh": null,
+              "exh": 6.7,
               "motor2r": 22.89,
               "flying": 0,
               "late": 0,
@@ -11223,7 +11229,7 @@
               "localWin": 5.87,
               "natPlace": 31.93,
               "localPlace": 34.78,
-              "exh": null,
+              "exh": 6.74,
               "motor2r": 33.91,
               "flying": 1,
               "late": 0,
@@ -11238,7 +11244,7 @@
               "localWin": 5.13,
               "natPlace": 39.0,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.69,
               "motor2r": 30.21,
               "flying": 0,
               "late": 0,
@@ -11253,7 +11259,7 @@
               "localWin": 0.0,
               "natPlace": 22.73,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 48.04,
               "flying": 0,
               "late": 0,
@@ -11263,12 +11269,12 @@
               "lane": 6,
               "name": "安達 裕樹",
               "class": "A2",
-              "pct": 6,
+              "pct": 7,
               "natWin": 5.94,
               "localWin": 4.0,
               "natPlace": 34.62,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.69,
               "motor2r": 14.06,
               "flying": 1,
               "late": 0,
@@ -11283,7 +11289,7 @@
               "localWin": 4.4,
               "natPlace": 17.05,
               "localPlace": 20.0,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 19.72,
               "flying": 0,
               "late": 0,
@@ -11293,47 +11299,47 @@
           "bets": [
             {
               "combo": "1-3-4",
-              "prob": "6.4%"
+              "prob": "6.2%"
             },
             {
               "combo": "1-4-3",
-              "prob": "5.7%"
+              "prob": "5.6%"
             },
             {
               "combo": "1-3-2",
-              "prob": "4.9%"
+              "prob": "4.6%"
             },
             {
-              "combo": "1-2-3",
-              "prob": "4.1%"
+              "combo": "1-3-6",
+              "prob": "4.0%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-3",
-              "prob": "17.9%"
+              "prob": "17.6%"
             },
             {
               "combo": "1-4",
-              "prob": "13.3%"
+              "prob": "13.7%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -11344,12 +11350,12 @@
           "number": 11,
           "close": "2026-09-22 16:30:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "13",
+          "windSpeed": 3.0,
+          "waveHeight": 1.0,
+          "temperature": 29.0,
+          "waterTemperature": 27.0,
           "boats": [
             {
               "lane": 1,
@@ -11570,14 +11576,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -11808,14 +11814,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -12065,14 +12071,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -12306,20 +12312,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -12559,14 +12565,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -12806,14 +12812,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -13047,20 +13053,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -13300,14 +13306,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -13541,20 +13547,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -13788,14 +13794,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -14041,14 +14047,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -14282,20 +14288,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -14529,47 +14535,50 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 2,
+            "name": "入海 馨"
+          },
+          "actualCombo": "2-1-5"
         },
         {
           "number": 12,
           "close": "2026-09-22 16:11:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "11",
+          "windSpeed": 5.0,
+          "waveHeight": 3.0,
+          "temperature": 29.0,
+          "waterTemperature": 28.0,
           "boats": [
             {
               "lane": 1,
               "name": "秋元 哲",
               "class": "A1",
-              "pct": 50,
+              "pct": 47,
               "natWin": 6.96,
               "localWin": 7.58,
               "natPlace": 56.7,
               "localPlace": 68.42,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 42.74,
               "flying": 1,
               "late": 0,
@@ -14584,7 +14593,7 @@
               "localWin": 6.36,
               "natPlace": 45.77,
               "localPlace": 45.74,
-              "exh": null,
+              "exh": 6.66,
               "motor2r": 34.54,
               "flying": 0,
               "late": 0,
@@ -14599,7 +14608,7 @@
               "localWin": 4.96,
               "natPlace": 42.42,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.65,
               "motor2r": 34.65,
               "flying": 0,
               "late": 0,
@@ -14609,12 +14618,12 @@
               "lane": 4,
               "name": "佐藤 博亮",
               "class": "A1",
-              "pct": 13,
+              "pct": 14,
               "natWin": 6.69,
               "localWin": 6.52,
               "natPlace": 55.97,
               "localPlace": 43.1,
-              "exh": null,
+              "exh": 6.58,
               "motor2r": 30.0,
               "flying": 1,
               "late": 0,
@@ -14624,12 +14633,12 @@
               "lane": 5,
               "name": "和田 拓也",
               "class": "A1",
-              "pct": 9,
+              "pct": 10,
               "natWin": 7.11,
               "localWin": 6.66,
               "natPlace": 59.34,
               "localPlace": 46.88,
-              "exh": null,
+              "exh": 6.62,
               "motor2r": 39.08,
               "flying": 0,
               "late": 0,
@@ -14639,12 +14648,12 @@
               "lane": 6,
               "name": "高岡 竜也",
               "class": "A1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 6.1,
               "localWin": 6.23,
               "natPlace": 45.6,
               "localPlace": 46.15,
-              "exh": null,
+              "exh": 6.61,
               "motor2r": 39.65,
               "flying": 0,
               "late": 0,
@@ -14656,12 +14665,12 @@
               "lane": 1,
               "name": "秋元 哲",
               "class": "A1",
-              "pct": 50,
+              "pct": 47,
               "natWin": 6.96,
               "localWin": 7.58,
               "natPlace": 56.7,
               "localPlace": 68.42,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 42.74,
               "flying": 1,
               "late": 0,
@@ -14671,12 +14680,12 @@
               "lane": 4,
               "name": "佐藤 博亮",
               "class": "A1",
-              "pct": 13,
+              "pct": 14,
               "natWin": 6.69,
               "localWin": 6.52,
               "natPlace": 55.97,
               "localPlace": 43.1,
-              "exh": null,
+              "exh": 6.58,
               "motor2r": 30.0,
               "flying": 1,
               "late": 0,
@@ -14691,7 +14700,7 @@
               "localWin": 6.36,
               "natPlace": 45.77,
               "localPlace": 45.74,
-              "exh": null,
+              "exh": 6.66,
               "motor2r": 34.54,
               "flying": 0,
               "late": 0,
@@ -14706,7 +14715,7 @@
               "localWin": 4.96,
               "natPlace": 42.42,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.65,
               "motor2r": 34.65,
               "flying": 0,
               "late": 0,
@@ -14716,12 +14725,12 @@
               "lane": 5,
               "name": "和田 拓也",
               "class": "A1",
-              "pct": 9,
+              "pct": 10,
               "natWin": 7.11,
               "localWin": 6.66,
               "natPlace": 59.34,
               "localPlace": 46.88,
-              "exh": null,
+              "exh": 6.62,
               "motor2r": 39.08,
               "flying": 0,
               "late": 0,
@@ -14731,12 +14740,12 @@
               "lane": 6,
               "name": "高岡 竜也",
               "class": "A1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 6.1,
               "localWin": 6.23,
               "natPlace": 45.6,
               "localPlace": 46.15,
-              "exh": null,
+              "exh": 6.61,
               "motor2r": 39.65,
               "flying": 0,
               "late": 0,
@@ -14750,37 +14759,37 @@
             },
             {
               "combo": "1-2-4",
-              "prob": "3.8%"
-            },
-            {
-              "combo": "1-4-3",
               "prob": "3.7%"
             },
             {
-              "combo": "1-3-4",
+              "combo": "1-4-3",
               "prob": "3.6%"
+            },
+            {
+              "combo": "1-3-4",
+              "prob": "3.4%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-4",
-              "prob": "12.3%"
+              "prob": "12.6%"
             },
             {
               "combo": "1-2",
-              "prob": "11.6%"
+              "prob": "10.9%"
             }
           ],
           "confidence": {
-            "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
-            "bucket": "50-59%"
+            "isConfident": false,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
+            "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -15030,14 +15039,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -15268,20 +15277,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": false,
@@ -15518,14 +15527,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": false,
@@ -15762,8 +15771,8 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -16006,14 +16015,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -16244,20 +16253,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -16494,14 +16503,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": false,
@@ -16738,14 +16747,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -16976,20 +16985,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -17220,20 +17229,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -17470,14 +17479,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": false,
@@ -17488,7 +17497,7 @@
           "number": 12,
           "close": "2026-09-22 16:20:00",
           "grade": "ippan",
-          "weather": null,
+          "weather": "晴",
           "windDirection": null,
           "windSpeed": null,
           "waveHeight": null,
@@ -17708,20 +17717,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -17965,14 +17974,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -18206,20 +18215,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -18453,20 +18462,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -18700,20 +18709,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -18953,8 +18962,8 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -19194,14 +19203,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -19447,14 +19456,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -19694,14 +19703,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -19935,20 +19944,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -20188,14 +20197,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -20429,14 +20438,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -20676,20 +20685,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -20930,20 +20939,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -21183,14 +21192,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -21424,20 +21433,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -21671,14 +21680,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -21924,14 +21933,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -22171,14 +22180,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -22418,14 +22427,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -22665,14 +22674,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -22906,20 +22915,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -23153,20 +23162,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -23400,47 +23409,50 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "石倉 洋行"
+          },
+          "actualCombo": "1-3-5"
         },
         {
           "number": 12,
           "close": "2026-09-22 16:13:00",
           "grade": "G3b",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "7",
+          "windSpeed": 5.0,
+          "waveHeight": 5.0,
+          "temperature": 25.0,
+          "waterTemperature": 27.0,
           "boats": [
             {
               "lane": 1,
               "name": "守田 俊介",
               "class": "A1",
-              "pct": 50,
+              "pct": 51,
               "natWin": 6.86,
               "localWin": 7.84,
               "natPlace": 50.72,
               "localPlace": 70.09,
-              "exh": null,
+              "exh": 7.09,
               "motor2r": 37.39,
               "flying": 0,
               "late": 0,
@@ -23455,7 +23467,7 @@
               "localWin": 6.95,
               "natPlace": 44.44,
               "localPlace": 44.74,
-              "exh": null,
+              "exh": 7.03,
               "motor2r": 45.45,
               "flying": 0,
               "late": 0,
@@ -23465,16 +23477,16 @@
               "lane": 3,
               "name": "寺田 祥",
               "class": "A1",
-              "pct": 11,
+              "pct": 12,
               "natWin": 6.52,
               "localWin": 4.55,
               "natPlace": 44.12,
               "localPlace": 13.64,
-              "exh": null,
+              "exh": 6.99,
               "motor2r": 43.14,
               "flying": 0,
               "late": 0,
-              "mark": "△"
+              "mark": "▲"
             },
             {
               "lane": 4,
@@ -23485,22 +23497,22 @@
               "localWin": 7.5,
               "natPlace": 53.9,
               "localPlace": 63.04,
-              "exh": null,
+              "exh": 6.8,
               "motor2r": 35.19,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "△"
             },
             {
               "lane": 5,
               "name": "青木 玄太",
               "class": "A1",
-              "pct": 10,
+              "pct": 8,
               "natWin": 7.0,
               "localWin": 7.0,
               "natPlace": 52.31,
               "localPlace": 51.85,
-              "exh": null,
+              "exh": 6.88,
               "motor2r": 42.16,
               "flying": 0,
               "late": 0,
@@ -23515,7 +23527,7 @@
               "localWin": 8.45,
               "natPlace": 50.0,
               "localPlace": 72.73,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 32.41,
               "flying": 0,
               "late": 0,
@@ -23527,12 +23539,12 @@
               "lane": 1,
               "name": "守田 俊介",
               "class": "A1",
-              "pct": 50,
+              "pct": 51,
               "natWin": 6.86,
               "localWin": 7.84,
               "natPlace": 50.72,
               "localPlace": 70.09,
-              "exh": null,
+              "exh": 7.09,
               "motor2r": 37.39,
               "flying": 0,
               "late": 0,
@@ -23547,11 +23559,26 @@
               "localWin": 6.95,
               "natPlace": 44.44,
               "localPlace": 44.74,
-              "exh": null,
+              "exh": 7.03,
               "motor2r": 45.45,
               "flying": 0,
               "late": 0,
               "mark": "○"
+            },
+            {
+              "lane": 3,
+              "name": "寺田 祥",
+              "class": "A1",
+              "pct": 12,
+              "natWin": 6.52,
+              "localWin": 4.55,
+              "natPlace": 44.12,
+              "localPlace": 13.64,
+              "exh": 6.99,
+              "motor2r": 43.14,
+              "flying": 0,
+              "late": 0,
+              "mark": "▲"
             },
             {
               "lane": 4,
@@ -23562,23 +23589,8 @@
               "localWin": 7.5,
               "natPlace": 53.9,
               "localPlace": 63.04,
-              "exh": null,
+              "exh": 6.8,
               "motor2r": 35.19,
-              "flying": 0,
-              "late": 0,
-              "mark": "▲"
-            },
-            {
-              "lane": 3,
-              "name": "寺田 祥",
-              "class": "A1",
-              "pct": 11,
-              "natWin": 6.52,
-              "localWin": 4.55,
-              "natPlace": 44.12,
-              "localPlace": 13.64,
-              "exh": null,
-              "motor2r": 43.14,
               "flying": 0,
               "late": 0,
               "mark": "△"
@@ -23587,12 +23599,12 @@
               "lane": 5,
               "name": "青木 玄太",
               "class": "A1",
-              "pct": 10,
+              "pct": 8,
               "natWin": 7.0,
               "localWin": 7.0,
               "natPlace": 52.31,
               "localPlace": 51.85,
-              "exh": null,
+              "exh": 6.88,
               "motor2r": 42.16,
               "flying": 0,
               "late": 0,
@@ -23607,7 +23619,7 @@
               "localWin": 8.45,
               "natPlace": 50.0,
               "localPlace": 72.73,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 32.41,
               "flying": 0,
               "late": 0,
@@ -23616,42 +23628,42 @@
           ],
           "bets": [
             {
+              "combo": "1-4-3",
+              "prob": "4.2%"
+            },
+            {
+              "combo": "1-3-4",
+              "prob": "4.1%"
+            },
+            {
               "combo": "1-4-2",
-              "prob": "3.8%"
+              "prob": "4.1%"
             },
             {
               "combo": "1-2-4",
-              "prob": "3.8%"
-            },
-            {
-              "combo": "1-4-3",
-              "prob": "3.4%"
-            },
-            {
-              "combo": "1-2-3",
-              "prob": "3.4%"
+              "prob": "4.0%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-4",
-              "prob": "12.1%"
+              "prob": "12.9%"
             },
             {
-              "combo": "1-2",
-              "prob": "11.9%"
+              "combo": "1-3",
+              "prob": "12.3%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -23901,14 +23913,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -24142,25 +24154,28 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 2,
+            "name": "乃村 康友"
+          },
+          "actualCombo": "2-1-3"
         },
         {
           "number": 3,
@@ -24168,7 +24183,7 @@
           "grade": "ippan",
           "weather": "晴",
           "windDirection": "5",
-          "windSpeed": 5.0,
+          "windSpeed": 4.0,
           "waveHeight": 2.0,
           "temperature": 28.0,
           "waterTemperature": 26.0,
@@ -24177,12 +24192,12 @@
               "lane": 1,
               "name": "伊藤 喜智",
               "class": "A2",
-              "pct": 49,
+              "pct": 46,
               "natWin": 5.44,
               "localWin": 5.26,
               "natPlace": 30.1,
               "localPlace": 33.33,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 38.68,
               "flying": 0,
               "late": 0,
@@ -24192,12 +24207,12 @@
               "lane": 2,
               "name": "吉島 祥之",
               "class": "A2",
-              "pct": 17,
+              "pct": 18,
               "natWin": 5.44,
               "localWin": 7.4,
               "natPlace": 35.96,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.95,
               "motor2r": 31.07,
               "flying": 0,
               "late": 0,
@@ -24207,12 +24222,12 @@
               "lane": 3,
               "name": "森 晋太郎",
               "class": "B2",
-              "pct": 15,
+              "pct": 16,
               "natWin": 5.7,
               "localWin": 4.22,
               "natPlace": 39.51,
               "localPlace": 27.78,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 24.0,
               "flying": 0,
               "late": 0,
@@ -24227,7 +24242,7 @@
               "localWin": 5.96,
               "natPlace": 33.77,
               "localPlace": 39.29,
-              "exh": null,
+              "exh": 6.89,
               "motor2r": 24.76,
               "flying": 1,
               "late": 0,
@@ -24237,12 +24252,12 @@
               "lane": 5,
               "name": "廣中 良一",
               "class": "B1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 4.66,
               "localWin": 0.0,
               "natPlace": 27.27,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.97,
               "motor2r": 30.1,
               "flying": 0,
               "late": 0,
@@ -24257,7 +24272,7 @@
               "localWin": 0.0,
               "natPlace": 9.64,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 27.62,
               "flying": 1,
               "late": 0,
@@ -24269,12 +24284,12 @@
               "lane": 1,
               "name": "伊藤 喜智",
               "class": "A2",
-              "pct": 49,
+              "pct": 46,
               "natWin": 5.44,
               "localWin": 5.26,
               "natPlace": 30.1,
               "localPlace": 33.33,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 38.68,
               "flying": 0,
               "late": 0,
@@ -24284,12 +24299,12 @@
               "lane": 2,
               "name": "吉島 祥之",
               "class": "A2",
-              "pct": 17,
+              "pct": 18,
               "natWin": 5.44,
               "localWin": 7.4,
               "natPlace": 35.96,
               "localPlace": 60.0,
-              "exh": null,
+              "exh": 6.95,
               "motor2r": 31.07,
               "flying": 0,
               "late": 0,
@@ -24299,12 +24314,12 @@
               "lane": 3,
               "name": "森 晋太郎",
               "class": "B2",
-              "pct": 15,
+              "pct": 16,
               "natWin": 5.7,
               "localWin": 4.22,
               "natPlace": 39.51,
               "localPlace": 27.78,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 24.0,
               "flying": 0,
               "late": 0,
@@ -24319,7 +24334,7 @@
               "localWin": 5.96,
               "natPlace": 33.77,
               "localPlace": 39.29,
-              "exh": null,
+              "exh": 6.89,
               "motor2r": 24.76,
               "flying": 1,
               "late": 0,
@@ -24329,12 +24344,12 @@
               "lane": 5,
               "name": "廣中 良一",
               "class": "B1",
-              "pct": 5,
+              "pct": 6,
               "natWin": 4.66,
               "localWin": 0.0,
               "natPlace": 27.27,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.97,
               "motor2r": 30.1,
               "flying": 0,
               "late": 0,
@@ -24349,7 +24364,7 @@
               "localWin": 0.0,
               "natPlace": 9.64,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 27.62,
               "flying": 1,
               "late": 0,
@@ -24359,47 +24374,47 @@
           "bets": [
             {
               "combo": "1-2-3",
-              "prob": "7.2%"
+              "prob": "6.9%"
             },
             {
               "combo": "1-3-2",
-              "prob": "6.6%"
-            },
-            {
-              "combo": "1-2-4",
-              "prob": "4.9%"
+              "prob": "6.4%"
             },
             {
               "combo": "2-1-3",
+              "prob": "4.6%"
+            },
+            {
+              "combo": "1-2-4",
               "prob": "4.5%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "16.7%"
+              "prob": "15.8%"
             },
             {
               "combo": "1-3",
-              "prob": "13.9%"
+              "prob": "13.4%"
             }
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -24410,12 +24425,12 @@
           "number": 4,
           "close": "2026-09-22 16:32:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "5",
+          "windSpeed": 4.0,
+          "waveHeight": 2.0,
+          "temperature": 28.0,
+          "waterTemperature": 26.0,
           "boats": [
             {
               "lane": 1,
@@ -24603,11 +24618,11 @@
           "bets": [
             {
               "combo": "1-2-3",
-              "prob": "7.5%"
+              "prob": "7.3%"
             },
             {
               "combo": "1-3-2",
-              "prob": "7.4%"
+              "prob": "7.3%"
             },
             {
               "combo": "1-2-6",
@@ -24615,35 +24630,35 @@
             },
             {
               "combo": "1-3-6",
-              "prob": "4.6%"
+              "prob": "4.7%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "17.8%"
+              "prob": "17.6%"
             },
             {
               "combo": "1-3",
-              "prob": "17.5%"
+              "prob": "17.4%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -24880,14 +24895,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -25124,14 +25139,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -25362,20 +25377,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -25606,20 +25621,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -25850,20 +25865,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -26094,20 +26109,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -26338,20 +26353,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -26582,20 +26597,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -26839,14 +26854,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -27080,20 +27095,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -27327,20 +27342,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -27574,20 +27589,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -27821,14 +27836,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -28068,20 +28083,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -28321,14 +28336,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -28568,14 +28583,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -28809,20 +28824,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -29056,47 +29071,50 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "谷野 錬志"
+          },
+          "actualCombo": "1-2-3"
         },
         {
           "number": 11,
           "close": "2026-09-22 16:07:00",
           "grade": "ippan",
           "weather": "晴",
-          "windDirection": "7",
+          "windDirection": "5",
           "windSpeed": 4.0,
-          "waveHeight": 3.0,
-          "temperature": 28.0,
+          "waveHeight": 5.0,
+          "temperature": 29.0,
           "waterTemperature": 27.0,
           "boats": [
             {
               "lane": 1,
               "name": "北村 征嗣",
               "class": "A1",
-              "pct": 60,
+              "pct": 59,
               "natWin": 6.1,
               "localWin": 6.98,
               "natPlace": 39.39,
               "localPlace": 52.38,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 28.5,
               "flying": 0,
               "late": 0,
@@ -29111,7 +29129,7 @@
               "localWin": 5.91,
               "natPlace": 25.42,
               "localPlace": 45.45,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 31.9,
               "flying": 0,
               "late": 0,
@@ -29126,7 +29144,7 @@
               "localWin": 3.11,
               "natPlace": 1.85,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.98,
               "motor2r": 31.31,
               "flying": 0,
               "late": 0,
@@ -29141,7 +29159,7 @@
               "localWin": 5.87,
               "natPlace": 39.45,
               "localPlace": 36.64,
-              "exh": null,
+              "exh": 7.0,
               "motor2r": 36.36,
               "flying": 1,
               "late": 0,
@@ -29156,7 +29174,7 @@
               "localWin": 5.0,
               "natPlace": 17.0,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 28.02,
               "flying": 0,
               "late": 0,
@@ -29166,12 +29184,12 @@
               "lane": 6,
               "name": "田村 隆信",
               "class": "A1",
-              "pct": 6,
+              "pct": 7,
               "natWin": 5.64,
               "localWin": 6.86,
               "natPlace": 36.19,
               "localPlace": 57.14,
-              "exh": null,
+              "exh": 7.02,
               "motor2r": 22.84,
               "flying": 0,
               "late": 0,
@@ -29183,12 +29201,12 @@
               "lane": 1,
               "name": "北村 征嗣",
               "class": "A1",
-              "pct": 60,
+              "pct": 59,
               "natWin": 6.1,
               "localWin": 6.98,
               "natPlace": 39.39,
               "localPlace": 52.38,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 28.5,
               "flying": 0,
               "late": 0,
@@ -29203,7 +29221,7 @@
               "localWin": 5.91,
               "natPlace": 25.42,
               "localPlace": 45.45,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 31.9,
               "flying": 0,
               "late": 0,
@@ -29218,7 +29236,7 @@
               "localWin": 5.87,
               "natPlace": 39.45,
               "localPlace": 36.64,
-              "exh": null,
+              "exh": 7.0,
               "motor2r": 36.36,
               "flying": 1,
               "late": 0,
@@ -29228,12 +29246,12 @@
               "lane": 6,
               "name": "田村 隆信",
               "class": "A1",
-              "pct": 6,
+              "pct": 7,
               "natWin": 5.64,
               "localWin": 6.86,
               "natPlace": 36.19,
               "localPlace": 57.14,
-              "exh": null,
+              "exh": 7.02,
               "motor2r": 22.84,
               "flying": 0,
               "late": 0,
@@ -29248,7 +29266,7 @@
               "localWin": 3.11,
               "natPlace": 1.85,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.98,
               "motor2r": 31.31,
               "flying": 0,
               "late": 0,
@@ -29263,7 +29281,7 @@
               "localWin": 5.0,
               "natPlace": 17.0,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.87,
               "motor2r": 28.02,
               "flying": 0,
               "late": 0,
@@ -29273,15 +29291,15 @@
           "bets": [
             {
               "combo": "1-2-4",
-              "prob": "7.9%"
+              "prob": "7.8%"
             },
             {
               "combo": "1-4-2",
-              "prob": "7.2%"
+              "prob": "7.3%"
             },
             {
               "combo": "1-2-6",
-              "prob": "4.8%"
+              "prob": "4.7%"
             },
             {
               "combo": "1-6-2",
@@ -29291,29 +29309,29 @@
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "19.8%"
+              "prob": "19.4%"
             },
             {
               "combo": "1-4",
-              "prob": "16.0%"
+              "prob": "16.5%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.7630853994490359,
-            "sampleSize": 363,
-            "bucket": "60-69%"
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
+            "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -29544,20 +29562,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -29801,14 +29819,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -30048,14 +30066,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -30289,20 +30307,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -30536,8 +30554,8 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
@@ -30548,8 +30566,8 @@
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -30789,8 +30807,8 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -31036,14 +31054,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -31283,14 +31301,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -31530,14 +31548,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -31771,14 +31789,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -32024,14 +32042,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -32265,20 +32283,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -32509,20 +32527,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -32766,14 +32784,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -33007,20 +33025,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30959752321981426,
-            "sampleSize": 323,
+            "hitRate": 0.3076923076923077,
+            "sampleSize": 325,
             "bucket": "20-24%"
           },
           "isFinished": true,
@@ -33260,14 +33278,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -33501,20 +33519,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -33754,14 +33772,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -34001,14 +34019,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -34248,14 +34266,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -34489,20 +34507,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -34736,20 +34754,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -34983,14 +35001,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -35230,20 +35248,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -35474,14 +35492,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -35728,20 +35746,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -35975,20 +35993,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -36222,14 +36240,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -36246,23 +36264,23 @@
           "number": 4,
           "close": "2026-09-22 16:25:00",
           "grade": "G1a",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "4",
+          "windSpeed": 5.0,
+          "waveHeight": 5.0,
+          "temperature": 25.0,
+          "waterTemperature": 27.0,
           "boats": [
             {
               "lane": 1,
               "name": "塚越 海斗",
               "class": "A1",
-              "pct": 48,
+              "pct": 50,
               "natWin": 6.72,
               "localWin": 6.17,
               "natPlace": 55.8,
               "localPlace": 45.83,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 31.84,
               "flying": 0,
               "late": 0,
@@ -36277,7 +36295,7 @@
               "localWin": 6.63,
               "natPlace": 48.25,
               "localPlace": 47.37,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 53.22,
               "flying": 0,
               "late": 0,
@@ -36292,7 +36310,7 @@
               "localWin": 5.45,
               "natPlace": 51.92,
               "localPlace": 27.27,
-              "exh": null,
+              "exh": 6.89,
               "motor2r": 32.82,
               "flying": 2,
               "late": 0,
@@ -36302,12 +36320,12 @@
               "lane": 4,
               "name": "米丸 乃絵",
               "class": "A1",
-              "pct": 12,
+              "pct": 10,
               "natWin": 6.9,
               "localWin": 6.05,
               "natPlace": 54.39,
               "localPlace": 41.07,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 31.91,
               "flying": 0,
               "late": 0,
@@ -36322,7 +36340,7 @@
               "localWin": 6.5,
               "natPlace": 50.45,
               "localPlace": 44.44,
-              "exh": null,
+              "exh": 6.85,
               "motor2r": 32.07,
               "flying": 0,
               "late": 0,
@@ -36337,7 +36355,7 @@
               "localWin": 6.94,
               "natPlace": 54.96,
               "localPlace": 66.67,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 34.92,
               "flying": 0,
               "late": 0,
@@ -36349,12 +36367,12 @@
               "lane": 1,
               "name": "塚越 海斗",
               "class": "A1",
-              "pct": 48,
+              "pct": 50,
               "natWin": 6.72,
               "localWin": 6.17,
               "natPlace": 55.8,
               "localPlace": 45.83,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 31.84,
               "flying": 0,
               "late": 0,
@@ -36369,7 +36387,7 @@
               "localWin": 6.63,
               "natPlace": 48.25,
               "localPlace": 47.37,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 53.22,
               "flying": 0,
               "late": 0,
@@ -36384,7 +36402,7 @@
               "localWin": 5.45,
               "natPlace": 51.92,
               "localPlace": 27.27,
-              "exh": null,
+              "exh": 6.89,
               "motor2r": 32.82,
               "flying": 2,
               "late": 0,
@@ -36394,12 +36412,12 @@
               "lane": 4,
               "name": "米丸 乃絵",
               "class": "A1",
-              "pct": 12,
+              "pct": 10,
               "natWin": 6.9,
               "localWin": 6.05,
               "natPlace": 54.39,
               "localPlace": 41.07,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 31.91,
               "flying": 0,
               "late": 0,
@@ -36414,7 +36432,7 @@
               "localWin": 6.5,
               "natPlace": 50.45,
               "localPlace": 44.44,
-              "exh": null,
+              "exh": 6.85,
               "motor2r": 32.07,
               "flying": 0,
               "late": 0,
@@ -36429,7 +36447,7 @@
               "localWin": 6.94,
               "natPlace": 54.96,
               "localPlace": 66.67,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 34.92,
               "flying": 0,
               "late": 0,
@@ -36439,41 +36457,41 @@
           "bets": [
             {
               "combo": "1-2-3",
-              "prob": "4.0%"
+              "prob": "4.6%"
             },
             {
               "combo": "1-3-2",
-              "prob": "3.9%"
+              "prob": "4.6%"
             },
             {
               "combo": "1-2-4",
-              "prob": "3.7%"
+              "prob": "3.8%"
             },
             {
               "combo": "1-3-4",
-              "prob": "3.7%"
+              "prob": "3.6%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "12.1%"
+              "prob": "13.3%"
             },
             {
               "combo": "1-3",
-              "prob": "11.9%"
+              "prob": "12.9%"
             }
           ],
           "confidence": {
-            "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
-            "bucket": "40-49%"
+            "isConfident": true,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
+            "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -36710,14 +36728,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -36954,14 +36972,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -37198,14 +37216,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -37442,20 +37460,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -37686,14 +37704,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -37930,14 +37948,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -38174,14 +38192,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -38418,14 +38436,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -38675,14 +38693,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -38916,20 +38934,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -39169,14 +39187,14 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -39410,14 +39428,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
@@ -39657,20 +39675,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -39904,20 +39922,20 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.17598343685300208,
-            "sampleSize": 483,
+            "hitRate": 0.1756198347107438,
+            "sampleSize": 484,
             "bucket": "5-9%"
           },
           "isFinished": true,
@@ -40151,14 +40169,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.58203125,
-            "sampleSize": 256,
+            "hitRate": 0.5836575875486382,
+            "sampleSize": 257,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -40404,14 +40422,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": true,
@@ -40645,47 +40663,50 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "今井 貴士"
+          },
+          "actualCombo": "1-3-5"
         },
         {
           "number": 10,
           "close": "2026-09-22 16:18:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "晴",
+          "windDirection": "12",
+          "windSpeed": 7.0,
+          "waveHeight": 7.0,
+          "temperature": 27.0,
+          "waterTemperature": 26.0,
           "boats": [
             {
               "lane": 1,
               "name": "吉川 昭男",
               "class": "A2",
-              "pct": 61,
+              "pct": 62,
               "natWin": 6.38,
               "localWin": 6.41,
               "natPlace": 49.55,
               "localPlace": 47.06,
-              "exh": null,
+              "exh": 6.92,
               "motor2r": 32.37,
               "flying": 0,
               "late": 0,
@@ -40695,12 +40716,12 @@
               "lane": 2,
               "name": "向井 美鈴",
               "class": "B1",
-              "pct": 13,
+              "pct": 12,
               "natWin": 5.6,
               "localWin": 6.05,
               "natPlace": 36.46,
               "localPlace": 42.11,
-              "exh": null,
+              "exh": 7.01,
               "motor2r": 40.5,
               "flying": 0,
               "late": 0,
@@ -40715,7 +40736,7 @@
               "localWin": 3.67,
               "natPlace": 31.37,
               "localPlace": 11.11,
-              "exh": null,
+              "exh": 7.05,
               "motor2r": 28.68,
               "flying": 0,
               "late": 0,
@@ -40730,7 +40751,7 @@
               "localWin": 4.5,
               "natPlace": 36.89,
               "localPlace": 10.0,
-              "exh": null,
+              "exh": 6.95,
               "motor2r": 32.76,
               "flying": 0,
               "late": 0,
@@ -40745,7 +40766,7 @@
               "localWin": 6.18,
               "natPlace": 18.97,
               "localPlace": 36.36,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 32.79,
               "flying": 0,
               "late": 0,
@@ -40760,7 +40781,7 @@
               "localWin": 5.22,
               "natPlace": 39.06,
               "localPlace": 34.33,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 26.12,
               "flying": 0,
               "late": 0,
@@ -40772,12 +40793,12 @@
               "lane": 1,
               "name": "吉川 昭男",
               "class": "A2",
-              "pct": 61,
+              "pct": 62,
               "natWin": 6.38,
               "localWin": 6.41,
               "natPlace": 49.55,
               "localPlace": 47.06,
-              "exh": null,
+              "exh": 6.92,
               "motor2r": 32.37,
               "flying": 0,
               "late": 0,
@@ -40787,12 +40808,12 @@
               "lane": 2,
               "name": "向井 美鈴",
               "class": "B1",
-              "pct": 13,
+              "pct": 12,
               "natWin": 5.6,
               "localWin": 6.05,
               "natPlace": 36.46,
               "localPlace": 42.11,
-              "exh": null,
+              "exh": 7.01,
               "motor2r": 40.5,
               "flying": 0,
               "late": 0,
@@ -40807,7 +40828,7 @@
               "localWin": 3.67,
               "natPlace": 31.37,
               "localPlace": 11.11,
-              "exh": null,
+              "exh": 7.05,
               "motor2r": 28.68,
               "flying": 0,
               "late": 0,
@@ -40822,7 +40843,7 @@
               "localWin": 4.5,
               "natPlace": 36.89,
               "localPlace": 10.0,
-              "exh": null,
+              "exh": 6.95,
               "motor2r": 32.76,
               "flying": 0,
               "late": 0,
@@ -40837,7 +40858,7 @@
               "localWin": 5.22,
               "natPlace": 39.06,
               "localPlace": 34.33,
-              "exh": null,
+              "exh": 6.93,
               "motor2r": 26.12,
               "flying": 0,
               "late": 0,
@@ -40852,7 +40873,7 @@
               "localWin": 6.18,
               "natPlace": 18.97,
               "localPlace": 36.36,
-              "exh": null,
+              "exh": 6.96,
               "motor2r": 32.79,
               "flying": 0,
               "late": 0,
@@ -40862,15 +40883,15 @@
           "bets": [
             {
               "combo": "1-2-3",
-              "prob": "6.6%"
+              "prob": "6.2%"
             },
             {
               "combo": "1-3-2",
-              "prob": "5.9%"
+              "prob": "5.7%"
             },
             {
               "combo": "1-2-4",
-              "prob": "5.8%"
+              "prob": "5.7%"
             },
             {
               "combo": "1-4-2",
@@ -40880,11 +40901,11 @@
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "19.1%"
+              "prob": "18.4%"
             },
             {
               "combo": "1-3",
-              "prob": "14.2%"
+              "prob": "14.3%"
             }
           ],
           "confidence": {
@@ -40895,14 +40916,14 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -41133,20 +41154,20 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6475869809203143,
-            "sampleSize": 891,
+            "hitRate": 0.6473214285714286,
+            "sampleSize": 896,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.11711026615969582,
-            "sampleSize": 1315,
+            "hitRate": 0.1165783497350492,
+            "sampleSize": 1321,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.30350665054413545,
-            "sampleSize": 827,
+            "hitRate": 0.3020457280385078,
+            "sampleSize": 831,
             "bucket": "15-19%"
           },
           "isFinished": false,
@@ -41377,14 +41398,14 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5388235294117647,
-            "sampleSize": 425,
+            "hitRate": 0.539906103286385,
+            "sampleSize": 426,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0923226433430515,
-            "sampleSize": 1029,
+            "hitRate": 0.09223300970873786,
+            "sampleSize": 1030,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -41405,32 +41426,32 @@
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 73
+        "sample_size": 74
       }
     },
     "2": {
@@ -41501,64 +41522,64 @@
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 104
+        "sample_size": 105
       }
     },
     "8": {
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 82
+        "sample_size": 83
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 82
+        "sample_size": 83
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 82
+        "sample_size": 83
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 82
+        "sample_size": 83
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 82
+        "sample_size": 83
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 80
+        "sample_size": 81
       }
     },
     "9": {
@@ -41629,96 +41650,96 @@
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 118
+        "sample_size": 119
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 118
+        "sample_size": 119
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 118
+        "sample_size": 119
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 118
+        "sample_size": 119
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 118
+        "sample_size": 119
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 117
+        "sample_size": 118
       }
     },
     "12": {
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 121
+        "sample_size": 122
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 121
+        "sample_size": 122
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 121
+        "sample_size": 122
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 121
+        "sample_size": 122
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 121
+        "sample_size": 122
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 120
+        "sample_size": 121
       }
     },
     "16": {
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 141
+        "sample_size": 142
       }
     },
     "17": {
@@ -41821,32 +41842,32 @@
       "1": {
         "win_rate": 0.55,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       },
       "2": {
         "win_rate": 0.14,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       },
       "4": {
         "win_rate": 0.11,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       },
       "5": {
         "win_rate": 0.05,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       },
       "6": {
         "win_rate": 0.03,
         "is_fallback": true,
-        "sample_size": 92
+        "sample_size": 93
       }
     }
   }
