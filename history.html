@@ -593,7 +593,12 @@ function renderTrendChart(races){
     const d = byDate.get(race.date);
     d.total++;
     if (race.winHit) d.win++;
-    if (race.betHit) d.bet++;
+    // race.betHit は「本命(1位候補)だけ」の的中判定なので、サマリーカードの
+    // 「推奨3連単的中率(候補4点のいずれか)」と揃えるため、recomputeSummary() と
+    // 同じロジック(predictedBetCombosのどれか1つでも当たっていればヒット)で数える。
+    const combos = Array.isArray(race.predictedBetCombos) && race.predictedBetCombos.length
+      ? race.predictedBetCombos : [{hit: race.betHit}];
+    if (combos.some(c => c.hit)) d.bet++;
   }
   const dates = Array.from(byDate.keys()).sort(); // 古い順
 
