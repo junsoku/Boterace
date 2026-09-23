@@ -63,6 +63,16 @@ def _migrate_add_missing_columns(conn: sqlite3.Connection):
     except sqlite3.OperationalError as e:
         print(f"[WARN] payouts一意インデックス作成に失敗(既存データに重複がある可能性): {e}")
 
+    # 選手の「直近の調子」(technique_stats.compute_racer_recent_form / fetch_racer_history)を
+    # 学習・予想の両方で頻繁に検索するようになったため、racer_registration_numberにインデックスを張る。
+    try:
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_entries_racer_reg ON entries(racer_registration_number)"
+        )
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        print(f"[WARN] entries.racer_registration_numberインデックス作成に失敗: {e}")
+
 
 def save_raw(conn: sqlite3.Connection, race_date: date, payload: Optional[dict]):
     if payload is None:

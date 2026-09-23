@@ -29,6 +29,9 @@ STADIUM_DEFAULT_COURSE_STATS = {
 }
 MIN_SAMPLE_SIZE = 200  # このレース数未満ならフォールバック値を使う
 
+RECENT_FORM_N_RACES = 10   # 「直近の調子」として遡る走数の既定値
+RECENT_FORM_MIN_SAMPLE = 5  # これ未満の走数しか無ければ「調子」は計算しない(不安定なため)
+
 
 def compute_course_technique_rates(conn: sqlite3.Connection, stadium_number: Optional[int] = None) -> dict:
     """
@@ -111,3 +114,87 @@ def course_advantage_score(course_stats: dict, course: int) -> float:
     if not stat:
         return 3.0
     return stat["win_rate"] * 10
+
+
+def fetch_racer_history(conn: sqlite3.Connection, racer_registration_number: int) -> list:
+    """
+    選手の全レース結果を (race_date, race_id, arrival_order) のリストで、日付昇順に返す。
+    build_features.py が同じ選手について何度も呼び出す(1選手が複数レースに出走するため)ことを
+    想定し、DBへの問い合わせは選手ごとに1回だけで済むようにしている
+    (呼び出し側でrecent_form_from_history()に渡して都度スライスする使い方を想定)。
+    """
+    rows = conn.execute(
+        """
+        SELECT races.race_date, races.race_id, r.arrival_order
+        FROM results r
+        JOIN entries e ON e.entry_id = r.entry_id
+        JOIN races ON races.race_id = e.race_id
+        WHERE e.racer_registration_number = ? AND r.arrival_order IS NOT NULL
+        ORDER BY races.race_date, races.race_id
+        """,
+        (racer_registration_number,),
+    ).fetchall()
+    return rows
+
+
+def recent_form_from_history(history: list, before_date: str, before_race_id: Optional[int] = None,
+                              n_races: int = RECENT_FORM_N_RACES) -> Optional[dict]:
+    """
+    fetch_racer_history() で取得済みの履歴から、「before_date(・before_race_id)より前」の
+    直近n_races走だけを切り出して平均着順・勝率を計算する。
+
+    未来のレースの結果が紛れ込まないよう、race_dateで厳密に区切っている
+    (同日開催の複数レースまでは区別していない簡易実装。同日中の先着順までは見ていないため、
+    ごく僅かに同日レース分の情報が前後する可能性があるが、実運用上の影響は小さい)。
+    十分なサンプルがなければ None を返す。
+    """
+    if before_race_id is not None:
+        past = [h for h in history if (h[0], h[1]) < (before_date, before_race_id)]
+    else:
+        past = [h for h in history if h[0] < before_date]
+
+    if len(past) < RECENT_FORM_MIN_SAMPLE:
+        return None
+    recent = past[-n_races:]
+    n = len(recent)
+    avg_order = sum(row[2] for row in recent) / n
+    win_rate = sum(1 for row in recent if row[2] == 1) / n
+    return {"avg_arrival_order": avg_order, "recent_win_rate": win_rate, "sample_size": n}
+
+
+def compute_racer_recent_form(conn: sqlite3.Connection, racer_registration_number: int,
+                               before_date: Optional[str] = None,
+                               n_races: int = RECENT_FORM_N_RACES) -> Optional[dict]:
+    """
+    選手の直近n_races走(before_dateより前。Noneなら全期間の最新n_races走)の
+    平均着順・勝率を1回のクエリで計算する。
+
+    export_today.py・confidence.py のように「1レースにつき選手6人分」程度の呼び出し頻度なら
+    このままで十分軽い。build_features.py のように同じ選手を何百行にもわたって扱う場合は、
+    fetch_racer_history() + recent_form_from_history() の組み合わせ(選手ごとに1クエリ)を使うこと。
+    """
+    where = "WHERE e.racer_registration_number = ? AND r.arrival_order IS NOT NULL"
+    params = [racer_registration_number]
+    if before_date is not None:
+        where += " AND races.race_date < ?"
+        params.append(before_date)
+
+    rows = conn.execute(
+        f"""
+        SELECT r.arrival_order
+        FROM results r
+        JOIN entries e ON e.entry_id = r.entry_id
+        JOIN races ON races.race_id = e.race_id
+        {where}
+        ORDER BY races.race_date DESC, races.race_id DESC
+        LIMIT ?
+        """,
+        params + [n_races],
+    ).fetchall()
+
+    n = len(rows)
+    if n < RECENT_FORM_MIN_SAMPLE:
+        return None
+    avg_order = sum(row[0] for row in rows) / n
+    win_rate = sum(1 for row in rows if row[0] == 1) / n
+    return {"avg_arrival_order": avg_order, "recent_win_rate": win_rate, "sample_size": n}

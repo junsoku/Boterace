@@ -26,7 +26,10 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
 
-from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate, course_advantage_score
+from technique_stats import (
+    compute_course_technique_rates, compute_racer_nigashi_rate, compute_racer_recent_form,
+    course_advantage_score,
+)
 
 # build_features.py と同じ並び・同じ特徴量(直接定義してファイル間の依存をなくしている)
 # ※ build_features.py の FEATURE_COLS を変更したら、必ずこちらも合わせて直すこと。
@@ -57,6 +60,8 @@ FEATURE_COLS = [
     "start_timing_preview",
     "temperature_c",
     "water_temperature_c",
+    "racer_recent_avg_order",
+    "racer_recent_win_rate",
 ]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
@@ -179,6 +184,8 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "start_timing_preview": e.get("start_timing_preview") or 0.17,
             "temperature_c": race_context.get("temperature_c") if race_context.get("temperature_c") is not None else 20.0,
             "water_temperature_c": race_context.get("water_temperature_c") if race_context.get("water_temperature_c") is not None else 20.0,
+            "racer_recent_avg_order": e.get("racer_recent_avg_order") if e.get("racer_recent_avg_order") is not None else 3.5,
+            "racer_recent_win_rate": e.get("racer_recent_win_rate") if e.get("racer_recent_win_rate") is not None else (1/6),
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]
@@ -413,6 +420,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "weight_adjustment_kg": weight_adj,
                 "start_timing_preview": start_timing_prev,
             }
+            if reg_no is not None:
+                # target_date当日より前の結果だけを使う(学習時と同じ考え方でリークを防ぐ)
+                form = compute_racer_recent_form(conn, reg_no, before_date=target_date.isoformat())
+                if form:
+                    d["racer_recent_avg_order"] = form["avg_arrival_order"]
+                    d["racer_recent_win_rate"] = form["recent_win_rate"]
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
                 if nigashi:

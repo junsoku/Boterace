@@ -31,7 +31,9 @@ from export_today import (
     score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml,
     estimate_exacta_bets, estimate_exacta_bets_ml, predict_with_model,
 )
-from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate
+from technique_stats import (
+    compute_course_technique_rates, compute_racer_nigashi_rate, compute_racer_recent_form,
+)
 
 # ---- ◎(単勝)用の確信度設定 ----
 # 予想確率を10%刻みでグループ化する(サンプルが集まりやすいよう粗めの区切り)
@@ -94,7 +96,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
     start = end - timedelta(days=lookback_days)
 
     races = conn.execute(
-        """SELECT race_id, stadium_number, race_grade, wave_height_cm, wind_speed_m,
+        """SELECT race_id, race_date, stadium_number, race_grade, wave_height_cm, wind_speed_m,
                   temperature_c, water_temperature_c
            FROM races WHERE race_date BETWEEN ? AND ?""",
         (start.isoformat(), end.isoformat()),
@@ -102,7 +104,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
 
     course_stats_cache = {}
 
-    for race_id, stadium_number, race_grade, wave, wind, temperature_c, water_temperature_c in races:
+    for race_id, race_date, stadium_number, race_grade, wave, wind, temperature_c, water_temperature_c in races:
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
@@ -143,6 +145,12 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                 "weight_adjustment_kg": weight_adj,
                 "start_timing_preview": start_timing_prev,
             }
+            if reg_no is not None:
+                # そのレースの日付より前の結果だけを使う(build_features.pyと同じ、リーク防止)
+                form = compute_racer_recent_form(conn, reg_no, before_date=race_date)
+                if form:
+                    d["racer_recent_avg_order"] = form["avg_arrival_order"]
+                    d["racer_recent_win_rate"] = form["recent_win_rate"]
             if bn == 1 and reg_no is not None:
                 nigashi = compute_racer_nigashi_rate(conn, reg_no)
                 if nigashi:

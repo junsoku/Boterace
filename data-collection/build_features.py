@@ -17,7 +17,9 @@ import sqlite3
 
 import pandas as pd
 
-from technique_stats import compute_course_technique_rates
+from technique_stats import (
+    compute_course_technique_rates, fetch_racer_history, recent_form_from_history,
+)
 
 # racer_class(文字列 "A1"/"A2"/"B1"/"B2") を数値化するためのマップ。
 # 数値が大きいほど上位級(LightGBMに渡すための単純な序列エンコーディング)。
@@ -51,6 +53,10 @@ FEATURE_COLS = [
     # ここから気温・水温(races由来、追加漏れしていた分)
     "temperature_c",
     "water_temperature_c",
+    # ここから選手の直近の調子(直近10走の平均着順・勝率。未来の結果が混ざらないよう
+    # そのレースの日付より前の結果だけを使っている。詳細はtechnique_stats.py参照)
+    "racer_recent_avg_order",
+    "racer_recent_win_rate",
 ]
 
 
@@ -96,6 +102,26 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
     df["course_nige_rate"] = df.apply(lambda row: course_stat_lookup(row, "逃げ"), axis=1)
     df["course_sashi_rate"] = df.apply(lambda row: course_stat_lookup(row, "差し"), axis=1)
     df["course_makuri_rate"] = df.apply(lambda row: course_stat_lookup(row, "まくり"), axis=1)
+
+    # 選手の直近の調子: 選手ごとに全履歴を1回だけ取得してキャッシュし(DB問い合わせを選手数分に抑える)、
+    # 各行では「そのレースの日付より前」の直近10走だけを切り出す(未来の結果が混ざるリークを防ぐため)。
+    racer_history_cache = {}
+
+    def recent_form_lookup(row, key):
+        reg_no = row["racer_registration_number"]
+        if pd.isna(reg_no):
+            return None
+        reg_no = int(reg_no)
+        if reg_no not in racer_history_cache:
+            racer_history_cache[reg_no] = fetch_racer_history(conn, reg_no)
+        form = recent_form_from_history(
+            racer_history_cache[reg_no], row["race_date"], before_race_id=int(row["race_id"])
+        )
+        return form.get(key) if form else None
+
+    df["racer_recent_avg_order"] = df.apply(lambda row: recent_form_lookup(row, "avg_arrival_order"), axis=1)
+    df["racer_recent_win_rate"] = df.apply(lambda row: recent_form_lookup(row, "recent_win_rate"), axis=1)
+
     df["is_winner"] = (df["arrival_order"] == 1).astype(int)
     df["is_second"] = (df["arrival_order"] == 2).astype(int)  # 2着モデル用(1着だった艇を除いた中で学習)
     df["is_third"] = (df["arrival_order"] == 3).astype(int)   # 3着モデル用(1・2着だった艇を除いた中で学習)
