@@ -55,6 +55,8 @@ FEATURE_COLS = [
     "course_makuri_rate",
     "weight_adjustment_kg",
     "start_timing_preview",
+    "temperature_c",
+    "water_temperature_c",
 ]
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
@@ -175,6 +177,8 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "course_makuri_rate": stat.get("まくり") if stat.get("まくり") is not None else 0.03,
             "weight_adjustment_kg": e.get("weight_adjustment_kg") or 0.0,
             "start_timing_preview": e.get("start_timing_preview") or 0.17,
+            "temperature_c": race_context.get("temperature_c") if race_context.get("temperature_c") is not None else 20.0,
+            "water_temperature_c": race_context.get("water_temperature_c") if race_context.get("water_temperature_c") is not None else 20.0,
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]
@@ -383,6 +387,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "wind_speed_m": wind_speed_m,
             "race_grade": race_grade,
             "avg_exhibition_time": avg_exhibition_time,
+            "temperature_c": temperature_c,
+            "water_temperature_c": water_temperature_c,
         }
 
         boat_dicts = []

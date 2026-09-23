@@ -97,13 +97,17 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None
         print("レース数が少なすぎて交差検証できないためスキップしました。")
         return None
 
+    # データが9,966行→15,000行超まで増えてきたため、木の複雑さを少し上げても
+    # 過学習しにくくなっている想定でnum_leavesを15→24に引き上げ、
+    # 葉あたりの最低データ数(min_data_in_leaf)で過学習に軽く歯止めをかける。
     params = {
         "objective": "lambdarank",
         "metric": "ndcg",
         "ndcg_eval_at": [1, 3],
         "verbosity": -1,
         "learning_rate": 0.05,
-        "num_leaves": 15,
+        "num_leaves": 24,
+        "min_data_in_leaf": 20,
     }
 
     gkf = GroupKFold(n_splits=n_folds)

@@ -48,6 +48,9 @@ FEATURE_COLS = [
     # ここから直前情報の取りこぼし分
     "weight_adjustment_kg",
     "start_timing_preview",
+    # ここから気温・水温(races由来、追加漏れしていた分)
+    "temperature_c",
+    "water_temperature_c",
 ]
 
 
@@ -56,6 +59,7 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
         SELECT
             races.race_id, races.race_date, races.stadium_number, races.race_number,
             races.wind_speed_m, races.wave_height_cm,
+            races.temperature_c, races.water_temperature_c,
             e.entry_id, e.boat_number, e.racer_registration_number, e.racer_name,
             e.racer_class,
             e.national_win_rate, e.national_2連率,

@@ -94,14 +94,15 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
     start = end - timedelta(days=lookback_days)
 
     races = conn.execute(
-        """SELECT race_id, stadium_number, race_grade, wave_height_cm, wind_speed_m
+        """SELECT race_id, stadium_number, race_grade, wave_height_cm, wind_speed_m,
+                  temperature_c, water_temperature_c
            FROM races WHERE race_date BETWEEN ? AND ?""",
         (start.isoformat(), end.isoformat()),
     ).fetchall()
 
     course_stats_cache = {}
 
-    for race_id, stadium_number, race_grade, wave, wind in races:
+    for race_id, stadium_number, race_grade, wave, wind, temperature_c, water_temperature_c in races:
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
@@ -125,7 +126,8 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
         exh_values = [row[12] for row in entries if row[12]]
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
         race_context = {"wave_height_cm": wave, "wind_speed_m": wind, "race_grade": race_grade,
-                         "avg_exhibition_time": avg_exh}
+                         "avg_exhibition_time": avg_exh,
+                         "temperature_c": temperature_c, "water_temperature_c": water_temperature_c}
 
         boat_dicts = []
         for (bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r, avg_st,

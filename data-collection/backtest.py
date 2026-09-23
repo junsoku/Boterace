@@ -37,7 +37,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
 
     races = conn.execute(
         """SELECT race_id, race_date, stadium_number, race_number, race_grade,
-                  wave_height_cm, wind_speed_m
+                  wave_height_cm, wind_speed_m, temperature_c, water_temperature_c
            FROM races
            WHERE race_date BETWEEN ? AND ?
            ORDER BY race_date, stadium_number, race_number""",
@@ -57,7 +57,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
     return_multi = 0      # 同、払戻額
     payout_data_races = 0 # 払戻データが取れたレース数
 
-    for race_id, race_date_str, stadium_number, race_number, race_grade, wave, wind in races:
+    for race_id, race_date_str, stadium_number, race_number, race_grade, wave, wind, temperature_c, water_temperature_c in races:
         # predict_with_model(MLモデル)が必要とする全特徴量を取得する。
         # ヒューリスティック(score_boat)しか使わない場合でも、同じクエリで揃えておけば
         # --model の有無を後から切り替えても困らない。
@@ -85,7 +85,8 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
         exh_values = [row[13] for row in entries if row[13]]
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
         race_context = {"wave_height_cm": wave, "wind_speed_m": wind, "race_grade": race_grade,
-                         "avg_exhibition_time": avg_exh}
+                         "avg_exhibition_time": avg_exh,
+                         "temperature_c": temperature_c, "water_temperature_c": water_temperature_c}
 
         boat_dicts = []
         for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
