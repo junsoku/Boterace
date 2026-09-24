@@ -287,6 +287,21 @@
   }
   .confidence-detail.open{ display:block; }
 
+  .tier-tag{
+    font-size:10px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:4px;
+    letter-spacing:.02em;
+    border:none;
+    font-family:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tier-tag.tier-A{ background:var(--accent-soft); color:var(--accent); }
+  .tier-tag.tier-B{ background:#E3EEFB; color:#1D63B4; }
+  .tier-tag.tier-C{ background:#FFF3D6; color:#8A6100; }
+  .tier-tag.tier-D{ background:#FCE8E6; color:#B3261E; }
+
   .lanes{
     display:flex;
     gap:9px;
@@ -508,6 +523,7 @@ async function loadRealData(){
         confWin: r.confidence || null,
         confBet: r.betConfidence || null,
         confExacta: r.exactaConfidence || null,
+        tier: r.raceTier || null,
         isFinished: !!r.isFinished,
         actualWinner: r.actualWinner || null,
         actualCombo: r.actualCombo || null,
@@ -673,6 +689,10 @@ function renderRaces(){
       <div class="race-body">
         <div class="race-toprow">
           <div class="close-time">締切 <b>${escapeHtml(race.close)}</b></div>
+          ${race.tier ? `
+            <button type="button" class="tier-tag tier-${escapeHtml(race.tier.tier)}" aria-expanded="false" onclick="toggleConfidenceDetail(event, this)">${escapeHtml(race.tier.tier)}判定 ⓘ</button>
+            <div class="confidence-detail">${escapeHtml(race.tier.reason)}</div>
+          ` : ""}
           ${race.isFinished ? `<div class="result-tag">結果あり${race.actualCombo ? "・" + escapeHtml(race.actualCombo) : ""}</div>` : ""}
           ${predictionStatusTag}
           ${winConfident ? `
