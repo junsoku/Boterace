@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS prediction_log (
     top_bet_combo               TEXT,   -- 推奨3連単の本命(後方互換のため残す。先頭候補と同じ値)
     is_confident                   INTEGER,  -- 「自信あり」判定だったか(0/1)(◎単勝の確信度)
     top_bets_json                     TEXT,  -- 上位候補(通常4件)を [{"combo":"1-4-2","prob":"9.8%"}, ...] のJSON文字列で保存
-    bet_is_confident                     INTEGER  -- 推奨3連単(本命)の「自信あり」判定だったか(0/1)
+    bet_is_confident                     INTEGER,  -- 推奨3連単(本命)の「自信あり」判定だったか(0/1)
+    race_tier                              TEXT   -- そのレースの信頼度A〜D(classify_race_tier()の結果。予想時点のスナップショット)
 );
 CREATE INDEX IF NOT EXISTS idx_prediction_log_race ON prediction_log(race_id, computed_at);

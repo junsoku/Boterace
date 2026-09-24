@@ -566,11 +566,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         conn.execute(
             """INSERT INTO prediction_log
                    (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident,
-                    top_bets_json, bet_is_confident)
-               VALUES (?,?,?,?,?,?,?,?)""",
+                    top_bets_json, bet_is_confident, race_tier)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
             (race_id, datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
              top_bet_combo, int(confidence["isConfident"]), top_bets_json,
-             int(bet_confidence["isConfident"]) if bet_confidence else None),
+             int(bet_confidence["isConfident"]) if bet_confidence else None,
+             race_tier["tier"]),
         )
 
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")

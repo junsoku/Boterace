@@ -45,6 +45,7 @@ def _migrate_add_missing_columns(conn: sqlite3.Connection):
         ("entries", "late_count", "INTEGER"),
         ("prediction_log", "top_bets_json", "TEXT"),
         ("prediction_log", "bet_is_confident", "INTEGER"),
+        ("prediction_log", "race_tier", "TEXT"),
     ]
     for table, column, coltype in migrations:
         try:
