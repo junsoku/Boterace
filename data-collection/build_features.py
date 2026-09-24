@@ -57,6 +57,8 @@ FEATURE_COLS = [
     # そのレースの日付より前の結果だけを使っている。詳細はtechnique_stats.py参照)
     "racer_recent_avg_order",
     "racer_recent_win_rate",
+    # 展示での進入コース(号艇番号とズレることがある実測値。previews.start_course)
+    "start_course",
 ]
 
 
@@ -73,7 +75,7 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
             e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
             e.flying_count, e.late_count,
             p.exhibition_time, p.tilt_angle,
-            p.weight_adjustment_kg, p.start_timing_preview,
+            p.weight_adjustment_kg, p.start_timing_preview, p.start_course,
             r.arrival_order
         FROM entries e
         JOIN races ON races.race_id = e.race_id

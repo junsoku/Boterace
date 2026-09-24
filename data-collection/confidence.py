@@ -111,7 +111,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                       e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
                       e.flying_count, e.late_count,
                       p.exhibition_time, p.tilt_angle, p.weight_adjustment_kg,
-                      p.start_timing_preview, r.arrival_order
+                      p.start_timing_preview, p.start_course, r.arrival_order
                FROM entries e
                JOIN results r ON r.entry_id = e.entry_id
                LEFT JOIN previews p ON p.entry_id = e.entry_id
@@ -133,7 +133,8 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
 
         boat_dicts = []
         for (bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r, avg_st,
-             flying, late, exh, tilt_angle, weight_adj, start_timing_prev, arrival_order) in entries:
+             flying, late, exh, tilt_angle, weight_adj, start_timing_prev, start_course,
+             arrival_order) in entries:
             d = {
                 "boat_number": bn, "racer_class": racer_class,
                 "national_win_rate": nat, "national_2連率": nat_2r,
@@ -144,6 +145,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
                 "exhibition_time": exh, "tilt_angle": tilt_angle,
                 "weight_adjustment_kg": weight_adj,
                 "start_timing_preview": start_timing_prev,
+                "start_course": start_course,
             }
             if reg_no is not None:
                 # そのレースの日付より前の結果だけを使う(build_features.pyと同じ、リーク防止)
@@ -320,3 +322,80 @@ def lookup_exacta_confidence(calibration: dict, top_exacta_prob_pct: float) -> d
         "sample_size": stat["sample_size"],
         "is_confident": stat["hit_rate"] >= EXACTA_CONFIDENCE_THRESHOLD,
     }
+
+
+# ---- レース単位の信頼度ティア(A/B/C/D) ----
+# 「このレース自体、予想が当てやすいか」を事前に判定し、Dは見送りの目安にする。
+# 主軸は lookup_confidence() と同じ実績データ(◎予測確率帯ごとの過去の的中率)。
+# 「勘」や手作りの閾値ではなく、実際に的中率を最優先する方針に沿って、
+# 「過去、この確率帯だった時に本当にどれくらい当たっていたか」だけで判定する。
+RACE_TIER_THRESHOLDS = [
+    ("A", 0.60),  # このバケットの実績的中率が60%以上
+    ("B", 0.45),  # 45%以上
+    ("C", 0.30),  # 30%以上
+    # それ未満、またはサンプル不足はD
+]
+RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケットは実績を信頼せず、暫定判定に頼る
+
+# 実績データが少ない(まだ判定できない)場合の暫定フォールバック: 1位と2位の予測確率差が
+# 小さいほど「読めていないレース」とみなして格下げする。実績が溜まったら本判定に置き換わる。
+RACE_TIER_FALLBACK_GAP_THRESHOLDS = [
+    ("B", 20),  # 1位と2位の確率差が20pt以上ならB相当
+    ("C", 8),   # 8pt以上ならC相当
+    # それ未満はD
+]
+
+# 荒れ水面(波高・風速がこの値以上)は、実績・暫定判定に関わらず1段階格下げする
+# (score_boat()の「荒れ水面だと1号艇が不利になりやすい」というロジックと同じ考え方)。
+ROUGH_WATER_WAVE_CM = 3
+ROUGH_WATER_WIND_MS = 5
+_TIER_ORDER = ["A", "B", "C", "D"]
+
+
+def _downgrade_tier(tier: str) -> str:
+    idx = _TIER_ORDER.index(tier)
+    return _TIER_ORDER[min(idx + 1, len(_TIER_ORDER) - 1)]
+
+
+def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = None,
+                        wave_height_cm: float = None, wind_speed_m: float = None) -> dict:
+    """
+    レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
+
+    優先順位:
+      1. lookup_confidence()と同じ実績データ(◎予測確率帯ごとの過去の的中率)が
+         十分なサンプル(RACE_TIER_MIN_SAMPLE以上)を持っていれば、それで判定する。
+      2. サンプル不足で実績が信頼できない場合は、1位・2位の予測確率差だけで暫定判定する。
+      3. 荒れ水面(波・風がROUGH_WATER_*以上)なら、上記の判定から1段階格下げする。
+
+    戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
+    """
+    label = _bucket_label(int(top1_pct))
+    stat = calibration.get(label)
+
+    if stat and stat["sample_size"] >= RACE_TIER_MIN_SAMPLE and stat["hit_rate"] is not None:
+        tier = "D"
+        for t, threshold in RACE_TIER_THRESHOLDS:
+            if stat["hit_rate"] >= threshold:
+                tier = t
+                break
+        reason = f"◎予測確率{label}帯の実績的中率{stat['hit_rate']:.1%}(n={stat['sample_size']})"
+        basis = "calibration"
+    else:
+        gap = (top1_pct - second_pct) if second_pct is not None else 0
+        tier = "D"
+        for t, threshold in RACE_TIER_FALLBACK_GAP_THRESHOLDS:
+            if gap >= threshold:
+                tier = t
+                break
+        sample_note = f"n={stat['sample_size']}" if stat else "n=0"
+        reason = f"実績データ不足({sample_note})のため暫定判定: 1位-2位の確率差{gap:.0f}pt"
+        basis = "fallback"
+
+    rough_water = (wave_height_cm is not None and wave_height_cm >= ROUGH_WATER_WAVE_CM) or \
+                  (wind_speed_m is not None and wind_speed_m >= ROUGH_WATER_WIND_MS)
+    if rough_water and tier != "D":
+        tier = _downgrade_tier(tier)
+        reason += " / 荒れ水面のため1段階格下げ"
+
+    return {"tier": tier, "reason": reason, "basis": basis}

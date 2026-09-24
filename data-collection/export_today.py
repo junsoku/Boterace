@@ -62,7 +62,29 @@ FEATURE_COLS = [
     "water_temperature_c",
     "racer_recent_avg_order",
     "racer_recent_win_rate",
+    "start_course",
 ]
+
+# 特徴量の不一致(学習側と予測側で数・名前・順番がズレる)は、LightGBMの分かりにくいエラー
+# (「The number of features in data (25) is not the same as it was in training data (23)」等)
+# としてしか気付けず、原因調査に時間がかかる。起動時点で早期に、分かりやすいメッセージで検出する。
+# ※ LightGBMは学習・予測どちらもDataFrameを列の「順番」で扱う(列名を見て自動整列はしない)ため、
+#   要素の集合が同じでも順番が違えば別の特徴量として扱われてしまう。そのため一致チェックは
+#   「同じ要素を含むか」ではなく「完全に同じ並びか」で行う。
+def _assert_feature_cols_match():
+    from build_features import FEATURE_COLS as _BUILD_FEATURE_COLS
+    if FEATURE_COLS != _BUILD_FEATURE_COLS:
+        only_here = [c for c in FEATURE_COLS if c not in _BUILD_FEATURE_COLS]
+        only_there = [c for c in _BUILD_FEATURE_COLS if c not in FEATURE_COLS]
+        raise RuntimeError(
+            "export_today.FEATURE_COLS が build_features.FEATURE_COLS と一致していません。"
+            "モデルを学習し直す前にこのままpredictすると壊れます。"
+            f" export_today.pyにしかない列: {only_here} / build_features.pyにしかない列: {only_there}"
+            " (要素が同じでも順番が違う場合もここに出ます)"
+        )
+
+
+_assert_feature_cols_match()
 
 # 号艇(コース)ごとの平均的な有利さの目安(競艇はイン=1号艇が圧倒的に有利という実際の傾向を反映)
 # ※ technique_stats.compute_course_technique_rates() が使えるならそちらを優先し、
@@ -186,6 +208,7 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "water_temperature_c": race_context.get("water_temperature_c") if race_context.get("water_temperature_c") is not None else 20.0,
             "racer_recent_avg_order": e.get("racer_recent_avg_order") if e.get("racer_recent_avg_order") is not None else 3.5,
             "racer_recent_win_rate": e.get("racer_recent_win_rate") if e.get("racer_recent_win_rate") is not None else (1/6),
+            "start_course": e.get("start_course") if e.get("start_course") is not None else e.get("boat_number", 3),
         })
     import pandas as pd
     X = pd.DataFrame(rows)[FEATURE_COLS]
@@ -332,6 +355,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
         compute_exacta_confidence_calibration, lookup_exacta_confidence,
+        classify_race_tier,
     )
     calibration = compute_confidence_calibration(conn, model=model)
     bet_calibration = compute_bet_confidence_calibration(conn, model=model)
@@ -356,7 +380,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
                       e.motor_2連率, e.boat_hull_2連率,
                       e.average_start_timing, p.exhibition_time, p.tilt_angle,
-                      e.flying_count, e.late_count, p.weight_adjustment_kg, p.start_timing_preview
+                      e.flying_count, e.late_count, p.weight_adjustment_kg, p.start_timing_preview,
+                      p.start_course
                FROM entries e
                LEFT JOIN previews p ON p.entry_id = e.entry_id
                WHERE e.race_id = ? ORDER BY e.boat_number""",
@@ -401,7 +426,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
         boat_dicts = []
         for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
              avg_st, exh_time, tilt_angle, flying_count, late_count,
-             weight_adj, start_timing_prev) in entries:
+             weight_adj, start_timing_prev, start_course) in entries:
             d = {
                 "boat_number": bn,
                 "racer_name": name,
@@ -419,6 +444,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
                 "late_count": late_count,
                 "weight_adjustment_kg": weight_adj,
                 "start_timing_preview": start_timing_prev,
+                "start_course": start_course,
             }
             if reg_no is not None:
                 # target_date当日より前の結果だけを使う(学習時と同じ考え方でリークを防ぐ)
@@ -469,6 +495,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "sampleSize": confidence_raw["sample_size"],
             "bucket": confidence_raw["bucket"],
         }
+
+        second_pct = boats_ranked[1]["pct"] if len(boats_ranked) > 1 else None
+        race_tier = classify_race_tier(
+            calibration, boats_ranked[0]["pct"], second_pct,
+            wave_height_cm=wave_height_cm, wind_speed_m=wind_speed_m,
+        )
 
         if scores_by_lane is not None:
             bets = estimate_bets_ml(boat_dicts, scores_by_lane)
@@ -521,6 +553,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
             "confidence": confidence,           # ◎(単勝)の確信度
             "betConfidence": bet_confidence,    # 推奨3連単(本命)の確信度
             "exactaConfidence": exacta_confidence,  # 推奨2連単(本命)の確信度
+            "raceTier": race_tier,               # レース単位の信頼度A〜D({"tier":.., "reason":.., "basis":..})
             "isFinished": is_finished,          # このレースの結果がもう確定しているか
             "actualWinner": actual_winner,      # 確定していれば{"lane":.., "name":..}
             "actualCombo": actual_combo,         # 確定していれば "1-2-3" のような1〜3着の文字列
