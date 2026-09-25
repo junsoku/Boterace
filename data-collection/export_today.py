@@ -350,7 +350,7 @@ def estimate_exacta_bets_ml(boat_dicts: list, scores_by_lane: dict, top_n: int =
     return [{"combo": c["combo"], "prob": f'{c["raw_prob"]*100:.1f}%'} for c in top]
 
 
-def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) -> dict:
+def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, previous: dict = None) -> dict:
     from confidence import (  # 遅延importで循環参照を回避
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
@@ -360,6 +360,19 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
     calibration = compute_confidence_calibration(conn, model=model)
     bet_calibration = compute_bet_confidence_calibration(conn, model=model)
     exacta_calibration = compute_exacta_confidence_calibration(conn, model=model)
+
+    # 前回出力(同じ日付分)から、(場番号, レース番号) -> レースの出力 の対応表を作る。
+    # 「締切を過ぎたのにまだ結果が確定していないレース」を再計算せず凍結して使い回すために使う
+    # (数レース分の結果が確定していく過程でcourse_stats・確信度の実績データが動き、
+    #  締切後なのに予測確率や買い目が変わって見えてしまう問題を防ぐため)。
+    previous_by_key = {}
+    if previous and previous.get("date") == target_date.isoformat():
+        for st in previous.get("stadiums", []):
+            sn = st.get("stadium_number")
+            for r in st.get("races", []):
+                previous_by_key[(sn, r.get("number"))] = r
+
+    now_jst = datetime.now(ZoneInfo("Asia/Tokyo"))
 
     races = conn.execute(
         """SELECT race_id, stadium_number, race_number, race_grade, close_at,
@@ -375,6 +388,34 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None) ->
     for (race_id, stadium_number, race_number, race_grade, close_at,
          weather, wind_direction, wind_speed_m, wave_height_cm,
          temperature_c, water_temperature_c) in races:
+
+        # 締切を過ぎているか(closed)を先に調べる。過去に計算済みで、かつまだ結果が確定していない
+        # 場合は、このレースは丸ごと前回の出力を使い回して確定させる(下のブロックで処理)。
+        close_dt = None
+        if close_at:
+            try:
+                close_dt = datetime.fromisoformat(close_at.replace(" ", "T"))
+            except ValueError:
+                close_dt = None
+        is_closed = close_dt is not None and now_jst.replace(tzinfo=None) > close_dt
+
+        prev_race = previous_by_key.get((stadium_number, race_number))
+        if is_closed and prev_race is not None and not prev_race.get("isFinished"):
+            # まだ結果が確定していないことをDBでも確認してから凍結する
+            still_unfinished = conn.execute(
+                """SELECT COUNT(*) FROM entries e LEFT JOIN results r ON r.entry_id = e.entry_id
+                   WHERE e.race_id = ? AND r.arrival_order IS NULL""",
+                (race_id,),
+            ).fetchone()[0] > 0
+            if still_unfinished:
+                stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
+                stadium_map.setdefault(
+                    stadium_name,
+                    {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []},
+                )
+                stadium_map[stadium_name]["races"].append(prev_race)
+                continue  # 再計算しない
+
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_name, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
@@ -614,10 +655,22 @@ def main():
     target_date = date.fromisoformat(args.date) if args.date else date.today()
     from ingest import init_db  # schema.sql適用+マイグレーションを共通化するため再利用
     conn = init_db(args.db)
-    result = build_today_json(conn, target_date, model=model)
+
+    # 前回出力したtoday.jsonがあれば読み込む。「締切を過ぎたのにまだ結果未確定」のレースを
+    # 再計算せず凍結して使い回すために使う(詳細はbuild_today_json内のコメント参照)。
+    out_path = Path(args.out)
+    previous = None
+    if out_path.exists():
+        try:
+            prev_json = json.loads(out_path.read_text(encoding="utf-8"))
+            if prev_json.get("date") == target_date.isoformat():
+                previous = prev_json
+        except (json.JSONDecodeError, OSError):
+            previous = None  # 読めなければ素直に全レース再計算する
+
+    result = build_today_json(conn, target_date, model=model, previous=previous)
     conn.close()
 
-    out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"出力しました: {out_path} ({len(result['stadiums'])}場)")
