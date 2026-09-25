@@ -96,6 +96,22 @@
     margin-top:2px;
   }
 
+  .tier-tag{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:10px;
+    font-weight:700;
+    padding:2px 6px;
+    border-radius:4px;
+    vertical-align:middle;
+    margin-left:2px;
+    border:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tier-tag.tier-A{ background:var(--accent-soft); color:var(--accent); }
+  .tier-tag.tier-B{ background:#E3EEFB; color:#1D63B4; }
+  .tier-tag.tier-C{ background:#FFF3D6; color:#8A6100; }
+  .tier-tag.tier-D{ background:#FCE8E6; color:#B3261E; }
+
   .confidence-detail{
     display:none;
     margin:0 16px 0;
@@ -389,6 +405,7 @@
         <button class="star-tag" id="confidenceBadgeWin" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('win')">★ ◎単勝 自信あり ⓘ</button>
         <button class="star-tag" id="confidenceBadgeBet" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('bet')">★ 3連単 自信あり ⓘ</button>
         <button class="star-tag" id="confidenceBadgeExacta" style="display:none;" aria-expanded="false" onclick="toggleConfidenceDetail('exacta')">★ 2連単 自信あり ⓘ</button>
+        <button class="tier-tag" id="tierBadge" style="display:none;" aria-expanded="false" onclick="toggleTierDetail()">A判定 ⓘ</button>
       </div>
       <div class="appbar-sub">締切 10:47 ・ 一般戦</div>
       <div class="appbar-sub" id="predictionStatusLabel"></div>
@@ -399,6 +416,7 @@
   <div class="confidence-detail" id="confidenceDetailWin"></div>
   <div class="confidence-detail" id="confidenceDetailBet"></div>
   <div class="confidence-detail" id="confidenceDetailExacta"></div>
+  <div class="confidence-detail" id="tierDetailPanel"></div>
 
   <div class="section">
     <div class="section-label">予想順位 <span class="note">モデル予測確率</span></div>
@@ -465,6 +483,8 @@ let BETS = MOCK_BETS;
 let EXACTA_BETS = MOCK_EXACTA_BETS;
 // それぞれ {isConfident, hitRate, sampleSize, bucket}
 let CONFIDENCE = { win: null, bet: null, exacta: null };
+// {tier: "A", reason: "...", basis: "calibration"}
+let RACE_TIER = null;
 
 const CONFIDENCE_LABELS = {
   win: "◎単勝",
@@ -489,6 +509,19 @@ function toggleConfidenceDetail(kind){
     panel.textContent = c && c.hitRate !== null && c.hitRate !== undefined
       ? `${CONFIDENCE_LABELS[kind]}のこの確信度の帯(${c.bucket ?? "-"})では、過去 ${c.sampleSize ?? 0}件中 ${Math.round((c.hitRate ?? 0) * 100)}% が的中しています。`
       : "根拠データがまだ十分に溜まっていません。";
+  }
+}
+
+// レース信頼度ティア(A〜D)バッジの判定理由をタップで開閉表示する
+function toggleTierDetail(){
+  const panel = document.getElementById("tierDetailPanel");
+  const btn = document.getElementById("tierBadge");
+  const isOpen = panel.classList.toggle("open");
+  btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  if(isOpen){
+    panel.textContent = RACE_TIER && RACE_TIER.reason
+      ? RACE_TIER.reason
+      : "判定根拠データがまだありません。";
   }
 }
 
@@ -590,6 +623,7 @@ async function loadRealData(){
     EXACTA_BETS = Array.isArray(race.exactaBets) ? race.exactaBets : [];
     document.getElementById("exactaSection").style.display = EXACTA_BETS.length ? "" : "none";
     CONFIDENCE = { win: race.confidence || null, bet: race.betConfidence || null, exacta: race.exactaConfidence || null };
+    RACE_TIER = race.raceTier || null;
     document.querySelector("#titleText").textContent = `${st.name} ${race.number}R 予想`;
     document.getElementById("confidenceBadgeWin").style.display =
       (CONFIDENCE.win && CONFIDENCE.win.isConfident) ? "inline" : "none";
@@ -597,6 +631,14 @@ async function loadRealData(){
       (CONFIDENCE.bet && CONFIDENCE.bet.isConfident) ? "inline" : "none";
     document.getElementById("confidenceBadgeExacta").style.display =
       (CONFIDENCE.exacta && CONFIDENCE.exacta.isConfident) ? "inline" : "none";
+    const tierBadge = document.getElementById("tierBadge");
+    if (RACE_TIER && RACE_TIER.tier){
+      tierBadge.style.display = "inline";
+      tierBadge.className = `tier-tag tier-${RACE_TIER.tier}`;
+      tierBadge.textContent = `${RACE_TIER.tier}判定 ⓘ`;
+    }else{
+      tierBadge.style.display = "none";
+    }
     document.querySelector(".appbar-sub").textContent =
       `締切 ${race.close || "--:--"}${race.grade ? " ・ " + race.grade : ""}` +
       (race.weather ? ` ・ ${race.weather}` : "") +
@@ -615,6 +657,8 @@ async function loadRealData(){
     EXACTA_BETS = MOCK_EXACTA_BETS;
     document.getElementById("exactaSection").style.display = "";
     CONFIDENCE = { win: null, bet: null, exacta: null };
+    RACE_TIER = null;
+    document.getElementById("tierBadge").style.display = "none";
   }
   document.querySelector(".disclaimer").textContent = usingReal
     ? "実データに基づく予想です。舟券の購入は自己責任で、当たりを保証するものではありません。"
