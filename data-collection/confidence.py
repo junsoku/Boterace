@@ -26,6 +26,7 @@
 """
 import sqlite3
 from datetime import date, timedelta
+from typing import Optional
 
 from export_today import (
     score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml,
@@ -326,26 +327,43 @@ def lookup_exacta_confidence(calibration: dict, top_exacta_prob_pct: float) -> d
 
 # ---- レース単位の信頼度ティア(A/B/C/D) ----
 # 「このレース自体、予想が当てやすいか」を事前に判定し、Dは見送りの目安にする。
-# 主軸は lookup_confidence() と同じ実績データ(◎予測確率帯ごとの過去の的中率)。
+# 単勝・2連単・3連単、それぞれの実績データ(予測確率帯ごとの過去の的中率)で個別に判定し、
+# 一番厳しい(悪い)ものを採用する。「単勝は堅いが2着・3着が大混戦」のようなレースを
+# 単勝だけで見た判定(=★自信ありバッジと同じ情報)にせず、正しくC/D寄りに倒すため。
 # 「勘」や手作りの閾値ではなく、実際に的中率を最優先する方針に沿って、
-# 「過去、この確率帯だった時に本当にどれくらい当たっていたか」だけで判定する。
-RACE_TIER_THRESHOLDS = [
-    ("A", 0.60),  # このバケットの実績的中率が60%以上
-    ("B", 0.45),  # 45%以上
-    ("C", 0.30),  # 30%以上
-    # それ未満、またはサンプル不足はD
-]
-RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケットは実績を信頼せず、暫定判定に頼る
+# 「過去、この確率帯だった時に本当にどれくらい当たっていたか」を軸に判定する。
 
-# 実績データが少ない(まだ判定できない)場合の暫定フォールバック: 1位と2位の予測確率差が
-# 小さいほど「読めていないレース」とみなして格下げする。実績が溜まったら本判定に置き換わる。
+# 単勝は◎の予測確率がそのまま50〜60%台まで乗りやすいので、実績的中率の基準もそれに合わせて高め。
+RACE_TIER_WIN_THRESHOLDS = [
+    ("A", 0.60),
+    ("B", 0.45),
+    ("C", 0.30),
+]
+# 2連単(30通り)は単勝より当てにくいが3連単よりは当てやすいので、間に基準を置く。
+# (diagnose_confidence.pyの実測で15-19%帯が実績的中率32.5%だったことを踏まえた目安値)
+RACE_TIER_EXACTA_THRESHOLDS = [
+    ("A", 0.35),
+    ("B", 0.25),
+    ("C", 0.15),
+]
+# 3連単(120通り)は最も当てにくく、予測確率自体が10%を超えることも稀
+# (diagnose_confidence.pyの実測で5-9%帯が実績的中率12.0%だったことを踏まえた目安値)
+RACE_TIER_BET_THRESHOLDS = [
+    ("A", 0.15),
+    ("B", 0.10),
+    ("C", 0.05),
+]
+RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケットは実績を信頼せず、その軸の判定はスキップする
+
+# 実績データが少ない(まだ判定できない)場合の暫定フォールバック(単勝軸のみ): 1位と2位の
+# 予測確率差が小さいほど「読めていないレース」とみなして格下げする。実績が溜まったら本判定に置き換わる。
 RACE_TIER_FALLBACK_GAP_THRESHOLDS = [
     ("B", 20),  # 1位と2位の確率差が20pt以上ならB相当
     ("C", 8),   # 8pt以上ならC相当
     # それ未満はD
 ]
 
-# 荒れ水面(波高・風速がこの値以上)は、実績・暫定判定に関わらず1段階格下げする
+# 荒れ水面(波高・風速がこの値以上)は、判定に関わらず1段階格下げする
 # (score_boat()の「荒れ水面だと1号艇が不利になりやすい」というロジックと同じ考え方)。
 ROUGH_WATER_WAVE_CM = 3
 ROUGH_WATER_WIND_MS = 5
@@ -357,29 +375,45 @@ def _downgrade_tier(tier: str) -> str:
     return _TIER_ORDER[min(idx + 1, len(_TIER_ORDER) - 1)]
 
 
+def _worse_tier(a: str, b: str) -> str:
+    return a if _TIER_ORDER.index(a) >= _TIER_ORDER.index(b) else b
+
+
+def _classify_by_calibration(calibration: dict, pct: float, thresholds: list,
+                              bucket_fn=_bucket_label) -> Optional[dict]:
+    """calibration(予測確率帯ごとの実績的中率)から、指定した閾値でA〜Dを判定する。
+    サンプル不足で判定できなければNoneを返す(呼び出し側でフォールバックに回す)。"""
+    label = bucket_fn(pct)
+    stat = calibration.get(label)
+    if not stat or stat["sample_size"] < RACE_TIER_MIN_SAMPLE or stat["hit_rate"] is None:
+        return None
+    tier = "D"
+    for t, threshold in thresholds:
+        if stat["hit_rate"] >= threshold:
+            tier = t
+            break
+    return {"tier": tier, "label": label, "hit_rate": stat["hit_rate"], "sample_size": stat["sample_size"]}
+
+
 def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = None,
-                        wave_height_cm: float = None, wind_speed_m: float = None) -> dict:
+                        wave_height_cm: float = None, wind_speed_m: float = None,
+                        exacta_calibration: dict = None, top_exacta_prob_pct: float = None,
+                        bet_calibration: dict = None, top_bet_prob_pct: float = None) -> dict:
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
-    優先順位:
-      1. lookup_confidence()と同じ実績データ(◎予測確率帯ごとの過去の的中率)が
-         十分なサンプル(RACE_TIER_MIN_SAMPLE以上)を持っていれば、それで判定する。
-      2. サンプル不足で実績が信頼できない場合は、1位・2位の予測確率差だけで暫定判定する。
-      3. 荒れ水面(波・風がROUGH_WATER_*以上)なら、上記の判定から1段階格下げする。
+    単勝・2連単・3連単、それぞれの実績データで個別に判定し、一番厳しい(悪い)ものを採用する
+    (2連単・3連単の確率が渡されなければ単勝のみで判定する)。
+    単勝は実績データが不十分な場合、1位・2位の予測確率差で暫定判定する(2連単・3連単は
+    暫定判定を持たず、単にその軸の判定をスキップする)。
+    最後に、荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
 
     戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
     """
-    label = _bucket_label(int(top1_pct))
-    stat = calibration.get(label)
-
-    if stat and stat["sample_size"] >= RACE_TIER_MIN_SAMPLE and stat["hit_rate"] is not None:
-        tier = "D"
-        for t, threshold in RACE_TIER_THRESHOLDS:
-            if stat["hit_rate"] >= threshold:
-                tier = t
-                break
-        reason = f"◎予測確率{label}帯の実績的中率{stat['hit_rate']:.1%}(n={stat['sample_size']})"
+    win_result = _classify_by_calibration(calibration, top1_pct, RACE_TIER_WIN_THRESHOLDS)
+    if win_result:
+        tier = win_result["tier"]
+        reasons = [f"単勝{win_result['label']}帯の実績的中率{win_result['hit_rate']:.1%}(n={win_result['sample_size']})"]
         basis = "calibration"
     else:
         gap = (top1_pct - second_pct) if second_pct is not None else 0
@@ -388,9 +422,26 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
             if gap >= threshold:
                 tier = t
                 break
-        sample_note = f"n={stat['sample_size']}" if stat else "n=0"
-        reason = f"実績データ不足({sample_note})のため暫定判定: 1位-2位の確率差{gap:.0f}pt"
+        reasons = [f"単勝の実績データ不足のため暫定判定: 1位-2位の確率差{gap:.0f}pt"]
         basis = "fallback"
+
+    if exacta_calibration is not None and top_exacta_prob_pct is not None:
+        exacta_result = _classify_by_calibration(exacta_calibration, top_exacta_prob_pct,
+                                                   RACE_TIER_EXACTA_THRESHOLDS, bucket_fn=_exacta_bucket_label)
+        if exacta_result:
+            tier = _worse_tier(tier, exacta_result["tier"])
+            reasons.append(f"2連単{exacta_result['label']}帯の実績的中率{exacta_result['hit_rate']:.1%}"
+                            f"(n={exacta_result['sample_size']})")
+
+    if bet_calibration is not None and top_bet_prob_pct is not None:
+        bet_result = _classify_by_calibration(bet_calibration, top_bet_prob_pct,
+                                               RACE_TIER_BET_THRESHOLDS, bucket_fn=_bet_bucket_label)
+        if bet_result:
+            tier = _worse_tier(tier, bet_result["tier"])
+            reasons.append(f"3連単{bet_result['label']}帯の実績的中率{bet_result['hit_rate']:.1%}"
+                            f"(n={bet_result['sample_size']})")
+
+    reason = " / ".join(reasons)
 
     rough_water = (wave_height_cm is not None and wave_height_cm >= ROUGH_WATER_WAVE_CM) or \
                   (wind_speed_m is not None and wind_speed_m >= ROUGH_WATER_WIND_MS)

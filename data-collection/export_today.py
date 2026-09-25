@@ -537,18 +537,34 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
             "bucket": confidence_raw["bucket"],
         }
 
-        second_pct = boats_ranked[1]["pct"] if len(boats_ranked) > 1 else None
-        race_tier = classify_race_tier(
-            calibration, boats_ranked[0]["pct"], second_pct,
-            wave_height_cm=wave_height_cm, wind_speed_m=wind_speed_m,
-        )
-
         if scores_by_lane is not None:
             bets = estimate_bets_ml(boat_dicts, scores_by_lane)
             exacta_bets = estimate_exacta_bets_ml(boat_dicts, scores_by_lane)
         else:
             bets = estimate_bets(boats_out)
             exacta_bets = estimate_exacta_bets(boats_out)
+
+        top_bet_prob_for_tier = None
+        if bets:
+            try:
+                top_bet_prob_for_tier = float(bets[0]["prob"].rstrip("%"))
+            except (ValueError, AttributeError):
+                top_bet_prob_for_tier = None
+        top_exacta_prob_for_tier = None
+        if exacta_bets:
+            try:
+                top_exacta_prob_for_tier = float(exacta_bets[0]["prob"].rstrip("%"))
+            except (ValueError, AttributeError):
+                top_exacta_prob_for_tier = None
+
+        second_pct = boats_ranked[1]["pct"] if len(boats_ranked) > 1 else None
+        race_tier = classify_race_tier(
+            calibration, boats_ranked[0]["pct"], second_pct,
+            wave_height_cm=wave_height_cm, wind_speed_m=wind_speed_m,
+            exacta_calibration=exacta_calibration, top_exacta_prob_pct=top_exacta_prob_for_tier,
+            bet_calibration=bet_calibration, top_bet_prob_pct=top_bet_prob_for_tier,
+        )
+
         bet_confidence = None
         if bets:
             try:
