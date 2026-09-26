@@ -20,8 +20,10 @@ build_features.py が出力した特徴量CSVから、LightGBMのランク学習
 
 検証方法(交差検証):
     train_model.py(旧版)と同様、GroupKFoldでrace_id単位に5分割して評価する。
-    ランク学習の評価指標としては ndcg を使うが、直感的にわかりやすいよう
-    「予測1位に選んだ艇が実際に1着だった割合」(的中率)も併せて出す。
+    ランク学習の評価指標としてはndcg@1(1着の並びの正確さ)とndcg@3(上位3着の並びの
+    正確さ。2連単・3連単の精度に近い指標)を使う。直感的にわかりやすいよう、
+    「予測1位に選んだ艇が実際に1着だった割合」(的中率)と、「予測上位3艇の顔ぶれが
+    実際の1〜3着の顔ぶれと一致した割合」(3連複相当的中率)も併せて出す。
 
 学習結果の記録:
     学習のたびに、交差検証の的中率・ndcg@1・データ件数などを --history で指定した
@@ -47,19 +49,34 @@ N_FOLDS = 5
 MAX_RELEVANCE = 6  # 6艇立てを想定(relevance = MAX_RELEVANCE - arrival_order + 1)
 HISTORY_COLUMNS = [
     "run_at", "n_rows", "n_races", "n_folds",
-    "mean_ndcg1", "std_ndcg1", "mean_hit_rate", "std_hit_rate", "final_num_round",
+    "mean_ndcg1", "std_ndcg1", "mean_ndcg3", "std_ndcg3",
+    "mean_hit_rate", "std_hit_rate", "mean_top3_rate", "std_top3_rate",
+    "final_num_round",
 ]
 
 
 def _append_history(history_path: str, row: dict) -> None:
-    """学習結果を training_history.csv に1行追記する(ファイルが無ければヘッダーから作成)。"""
+    """学習結果を training_history.csv に1行追記する(ファイルが無ければヘッダーから作成)。
+    列(HISTORY_COLUMNS)が増えて既存ファイルのヘッダーと食い違う場合は、
+    古い行を新しい列構成に合わせて読み直してから書き直す(古いデータも保持したまま移行する)。
+    """
     path = Path(history_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    file_exists = path.exists()
-    with path.open("a", newline="", encoding="utf-8") as f:
+
+    old_rows = []
+    if path.exists():
+        with path.open("r", newline="", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames and list(reader.fieldnames) != HISTORY_COLUMNS:
+                print(f"学習履歴の列構成が変わったため、{history_path} を新しい列構成に移行します"
+                      f"(旧列: {reader.fieldnames})")
+            old_rows = list(reader)
+
+    with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=HISTORY_COLUMNS)
-        if not file_exists:
-            writer.writeheader()
+        writer.writeheader()
+        for old_row in old_rows:
+            writer.writerow({col: old_row.get(col, "") for col in HISTORY_COLUMNS})
         writer.writerow(row)
     print(f"学習履歴を記録しました: {history_path}")
 
@@ -85,6 +102,24 @@ def _hit_rate(df: pd.DataFrame, preds: np.ndarray) -> float:
     return float((top_pick["arrival_order"] == 1).mean())
 
 
+def _top3_set_rate(df: pd.DataFrame, preds: np.ndarray) -> float:
+    """レースごとに予測スコア上位3艇の「顔ぶれ」(順不同)が、実際の1〜3着の顔ぶれと
+    一致した割合(3連複が当たるかどうかに相当する、着順を問わない指標)。
+    ndcg@3(着順の並びまで含めた抽象的なスコア)と違い、直感的な%で見られるようにするため。
+    """
+    tmp = df.copy()
+    tmp["pred"] = preds
+    hits = 0
+    n_races = 0
+    for _, g in tmp.groupby("race_id"):
+        n_races += 1
+        pred_top3 = set(g.nlargest(3, "pred")["boat_number"])
+        actual_top3 = set(g[g["arrival_order"] <= 3]["boat_number"])
+        if pred_top3 == actual_top3:
+            hits += 1
+    return hits / n_races if n_races else 0.0
+
+
 def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None:
     """モデルを学習・保存し、training_history.csv に追記するための結果サマリを返す
     (交差検証できず学習をスキップした場合は None を返す)。"""
@@ -97,22 +132,27 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None
         print("レース数が少なすぎて交差検証できないためスキップしました。")
         return None
 
-    # データが9,966行→15,000行超まで増えてきたため、木の複雑さを少し上げても
+    # データが9,966行→17,000行超まで増えてきたため、木の複雑さを少し上げても
     # 過学習しにくくなっている想定でnum_leavesを15→24に引き上げ、
     # 葉あたりの最低データ数(min_data_in_leaf)で過学習に軽く歯止めをかける。
+    # learning_rateは0.05→0.03に下げた(反復回数が18〜50回程度で早期停止しており、
+    # 学習率を下げてより細かく最適解に近づけられるか試すため)。それに伴い、
+    # 早期停止の判定に使うearly_stopping roundsも30→40に緩め、判断を急ぎすぎないようにした。
     params = {
         "objective": "lambdarank",
         "metric": "ndcg",
         "ndcg_eval_at": [1, 3],
         "verbosity": -1,
-        "learning_rate": 0.05,
+        "learning_rate": 0.03,
         "num_leaves": 24,
         "min_data_in_leaf": 20,
     }
 
     gkf = GroupKFold(n_splits=n_folds)
-    fold_ndcg = []
+    fold_ndcg1 = []
+    fold_ndcg3 = []
     fold_hit_rates = []
+    fold_top3_rates = []
     fold_best_iters = []
 
     for fold_i, (train_idx, test_idx) in enumerate(gkf.split(df, groups=df["race_id"]), start=1):
@@ -134,24 +174,34 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None
             train_set,
             num_boost_round=500,
             valid_sets=[valid_set],
-            callbacks=[lgb.early_stopping(30), lgb.log_evaluation(0)],
+            callbacks=[lgb.early_stopping(40), lgb.log_evaluation(0)],
         )
 
         preds = model.predict(test_df[FEATURE_COLS])
         hit_rate = _hit_rate(test_df, preds)
+        top3_rate = _top3_set_rate(test_df, preds)
         ndcg1 = model.best_score["valid_0"].get("ndcg@1")
+        ndcg3 = model.best_score["valid_0"].get("ndcg@3")
 
-        fold_ndcg.append(ndcg1)
+        fold_ndcg1.append(ndcg1)
+        fold_ndcg3.append(ndcg3)
         fold_hit_rates.append(hit_rate)
+        fold_top3_rates.append(top3_rate)
         fold_best_iters.append(model.best_iteration or 500)
-        print(f"fold {fold_i}/{n_folds}: ndcg@1={ndcg1:.4f} 的中率={hit_rate:.1%} (反復{model.best_iteration})")
+        print(f"fold {fold_i}/{n_folds}: ndcg@1={ndcg1:.4f} ndcg@3={ndcg3:.4f} "
+              f"的中率={hit_rate:.1%} 3連複相当的中率={top3_rate:.1%} (反復{model.best_iteration})")
 
-    mean_ndcg = float(np.mean(fold_ndcg))
-    std_ndcg = float(np.std(fold_ndcg))
+    mean_ndcg1 = float(np.mean(fold_ndcg1))
+    std_ndcg1 = float(np.std(fold_ndcg1))
+    mean_ndcg3 = float(np.mean(fold_ndcg3))
+    std_ndcg3 = float(np.std(fold_ndcg3))
     mean_hit = float(np.mean(fold_hit_rates))
     std_hit = float(np.std(fold_hit_rates))
+    mean_top3 = float(np.mean(fold_top3_rates))
+    std_top3 = float(np.std(fold_top3_rates))
     print(f"\n交差検証({n_folds}分割)の平均: "
-          f"ndcg@1={mean_ndcg:.4f}(±{std_ndcg:.4f}) 的中率={mean_hit:.1%}(±{std_hit*100:.1f}pt)")
+          f"ndcg@1={mean_ndcg1:.4f}(±{std_ndcg1:.4f}) ndcg@3={mean_ndcg3:.4f}(±{std_ndcg3:.4f}) "
+          f"的中率={mean_hit:.1%}(±{std_hit*100:.1f}pt) 3連複相当的中率={mean_top3:.1%}(±{std_top3*100:.1f}pt)")
 
     # 最終モデルは、5分割の平均的な学習回数を使って全データで学習し直す
     final_num_round = max(10, round(float(np.mean(fold_best_iters))))
@@ -185,10 +235,14 @@ def train_model(df: pd.DataFrame, out_path: str, lgb, GroupKFold) -> dict | None
         "n_rows": len(df),
         "n_races": n_races,
         "n_folds": n_folds,
-        "mean_ndcg1": round(mean_ndcg, 4),
-        "std_ndcg1": round(std_ndcg, 4),
+        "mean_ndcg1": round(mean_ndcg1, 4),
+        "std_ndcg1": round(std_ndcg1, 4),
+        "mean_ndcg3": round(mean_ndcg3, 4),
+        "std_ndcg3": round(std_ndcg3, 4),
         "mean_hit_rate": round(mean_hit, 4),
         "std_hit_rate": round(std_hit, 4),
+        "mean_top3_rate": round(mean_top3, 4),
+        "std_top3_rate": round(std_top3, 4),
         "final_num_round": final_num_round,
     }
 
