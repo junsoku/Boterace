@@ -370,6 +370,12 @@ _TIER_ORDER = ["A", "B", "C", "D"]
 # 3連単は実際に購入する対象(推奨3連単)なので、他の2軸よりやや重めに配分している。
 RACE_TIER_WEIGHTS = {"win": 0.3, "exacta": 0.3, "bet": 0.4}
 
+# 下限ルール: 加重平均で他の軸に助けられても、いずれかの軸の実績的中率がここまで低ければ
+# 「ほぼ運任せと変わらない」とみなし、他がどれだけ強くても問答無用でDにする。
+# Dを「見送りの目安」として厳格に保つための安全弁(比較として、6艇均等なら単勝16.7%、
+# 2連単は30通りで3.3%、3連単は120通りで0.83%が完全にランダムな場合の的中率)。
+RACE_TIER_FLOOR = {"win": 0.20, "exacta": 0.05, "bet": 0.02}
+
 
 def _downgrade_tier(tier: str) -> str:
     idx = _TIER_ORDER.index(tier)
@@ -451,17 +457,26 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     数えているのとほぼ同じになってしまう(「ギリギリ基準超え」も「大幅に基準超え」も
     同じ点数になるため)ので、それを避けるために連続スコアのまま合成している。
 
+    ただし、加重平均だけだと「1つの軸がほぼ運任せレベルまで弱くても、他の軸が
+    強ければDを回避できてしまう」ため、Dを「見送りの目安」として厳格に保つ安全弁として、
+    いずれかの軸の実績的中率がRACE_TIER_FLOORを下回っていれば、平均計算を待たず
+    問答無用でDにする(下限ルール)。
+
     単勝は実績データが不十分な場合、1位・2位の予測確率差で暫定判定する(2連単・3連単は
-    暫定判定を持たず、単にその軸を平均から除外する)。
+    暫定判定を持たず、単にその軸を平均から除外する。下限ルールも実績データがある軸にしか
+    適用されない)。
     最後に、荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
 
     戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
     """
+    floor_triggered = False
     win_result = _classify_by_calibration(calibration, top1_pct, RACE_TIER_WIN_THRESHOLDS)
     if win_result:
         win_score = _continuous_score(win_result["hit_rate"], _anchors_from_thresholds(RACE_TIER_WIN_THRESHOLDS))
         reasons = [f"単勝{win_result['label']}帯の実績的中率{win_result['hit_rate']:.1%}(n={win_result['sample_size']})"]
         basis = "calibration"
+        if win_result["hit_rate"] < RACE_TIER_FLOOR["win"]:
+            floor_triggered = True
     else:
         gap = (top1_pct - second_pct) if second_pct is not None else 0
         # フォールバックはA相当を出さない(実績データに基づかない暫定判定のため上限3点=B相当まで)
@@ -483,6 +498,8 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
             weight_total += RACE_TIER_WEIGHTS["exacta"]
             reasons.append(f"2連単{exacta_result['label']}帯の実績的中率{exacta_result['hit_rate']:.1%}"
                             f"(n={exacta_result['sample_size']})")
+            if exacta_result["hit_rate"] < RACE_TIER_FLOOR["exacta"]:
+                floor_triggered = True
 
     if bet_calibration is not None and top_bet_prob_pct is not None:
         bet_result = _classify_by_calibration(bet_calibration, top_bet_prob_pct,
@@ -494,11 +511,17 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
             weight_total += RACE_TIER_WEIGHTS["bet"]
             reasons.append(f"3連単{bet_result['label']}帯の実績的中率{bet_result['hit_rate']:.1%}"
                             f"(n={bet_result['sample_size']})")
+            if bet_result["hit_rate"] < RACE_TIER_FLOOR["bet"]:
+                floor_triggered = True
 
     avg_score = weighted_sum / weight_total if weight_total else win_score
     tier = _score_to_tier(avg_score)
 
     reason = " / ".join(reasons)
+
+    if floor_triggered and tier != "D":
+        tier = "D"
+        reason += " / いずれかの軸がほぼ運任せレベル(下限ルール)のためD"
 
     rough_water = (wave_height_cm is not None and wave_height_cm >= ROUGH_WATER_WAVE_CM) or \
                   (wind_speed_m is not None and wind_speed_m >= ROUGH_WATER_WIND_MS)
