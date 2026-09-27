@@ -355,13 +355,10 @@ RACE_TIER_BET_THRESHOLDS = [
 ]
 RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケットは実績を信頼せず、その軸の判定はスキップする
 
-# 実績データが少ない(まだ判定できない)場合の暫定フォールバック(単勝軸のみ): 1位と2位の
-# 予測確率差が小さいほど「読めていないレース」とみなして格下げする。実績が溜まったら本判定に置き換わる。
-RACE_TIER_FALLBACK_GAP_THRESHOLDS = [
-    ("B", 20),  # 1位と2位の確率差が20pt以上ならB相当
-    ("C", 8),   # 8pt以上ならC相当
-    # それ未満はD
-]
+# 実績データが少ない(まだ判定できない)場合の暫定フォールバック(単勝軸のみ)で使う
+# gap(1位・2位の予測確率差)の基準点。classify_race_tier内でfallback_anchorsとして直接使用。
+# 1位と2位の確率差が8pt以上ならC境界、20pt以上ならB境界相当(A相当は暫定判定では出さない)。
+# 実績が溜まればcalibrationベースの本判定に置き換わる。
 
 # 荒れ水面(波高・風速がこの値以上)は、判定に関わらず1段階格下げする
 # (score_boat()の「荒れ水面だと1号艇が不利になりやすい」というロジックと同じ考え方)。
@@ -369,19 +366,42 @@ ROUGH_WATER_WAVE_CM = 3
 ROUGH_WATER_WIND_MS = 5
 _TIER_ORDER = ["A", "B", "C", "D"]
 
+# 単勝・2連単・3連単それぞれの軸の重み(重み付き平均のウェイト)。
+# 3連単は実際に購入する対象(推奨3連単)なので、他の2軸よりやや重めに配分している。
+RACE_TIER_WEIGHTS = {"win": 0.3, "exacta": 0.3, "bet": 0.4}
+
 
 def _downgrade_tier(tier: str) -> str:
     idx = _TIER_ORDER.index(tier)
     return _TIER_ORDER[min(idx + 1, len(_TIER_ORDER) - 1)]
 
 
-def _worse_tier(a: str, b: str) -> str:
-    return a if _TIER_ORDER.index(a) >= _TIER_ORDER.index(b) else b
+def _continuous_score(value: float, anchors: list) -> float:
+    """
+    (基準値, スコア)の組(昇順)を区分線形で補間し、valueに対応する連続的なスコアを返す。
+    例えば単勝の実績的中率が「Aの基準(60%)をギリギリ超えた61%」なのか
+    「90%と余裕で超えている」のかで、スコアに差を付けるために使う。
+    これをやらずに先にA/B/C/Dの4段階へ丸めてから平均すると、結局
+    「自信ありバッジが何個点灯しているか」を数えているのとほぼ同じになってしまうため。
+    range外は両端の値でクリップする。
+    """
+    if value <= anchors[0][0]:
+        return anchors[0][1]
+    if value >= anchors[-1][0]:
+        return anchors[-1][1]
+    for (x0, y0), (x1, y1) in zip(anchors, anchors[1:]):
+        if x0 <= value <= x1:
+            if x1 == x0:
+                return y1
+            frac = (value - x0) / (x1 - x0)
+            return y0 + frac * (y1 - y0)
+    return anchors[-1][1]  # 到達しないはずだが念のため
 
 
 def _classify_by_calibration(calibration: dict, pct: float, thresholds: list,
                               bucket_fn=_bucket_label) -> Optional[dict]:
-    """calibration(予測確率帯ごとの実績的中率)から、指定した閾値でA〜Dを判定する。
+    """calibration(予測確率帯ごとの実績的中率)から、指定した閾値でA〜Dを判定する
+    (人が読む理由テキスト用。最終ティアの計算自体は連続スコアの方を使う)。
     サンプル不足で判定できなければNoneを返す(呼び出し側でフォールバックに回す)。"""
     label = bucket_fn(pct)
     stat = calibration.get(label)
@@ -395,6 +415,28 @@ def _classify_by_calibration(calibration: dict, pct: float, thresholds: list,
     return {"tier": tier, "label": label, "hit_rate": stat["hit_rate"], "sample_size": stat["sample_size"]}
 
 
+def _anchors_from_thresholds(thresholds: list, max_score: float = 4.0) -> list:
+    """[("A",a),("B",b),("C",c)]の閾値リストから、_continuous_score用の
+    (基準値, スコア)アンカー列を作る。D=1点を原点(0)に置き、C→2点、B→3点、A→max_scoreとする。"""
+    by_tier = dict(thresholds)
+    scores = {"C": 2.0, "B": 3.0, "A": max_score}
+    anchors = [(0.0, 1.0)]
+    for t in ("C", "B", "A"):
+        if t in by_tier:
+            anchors.append((by_tier[t], scores[t]))
+    return anchors
+
+
+def _score_to_tier(score: float) -> str:
+    if score >= 3.5:
+        return "A"
+    if score >= 2.5:
+        return "B"
+    if score >= 1.5:
+        return "C"
+    return "D"
+
+
 def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = None,
                         wave_height_cm: float = None, wind_speed_m: float = None,
                         exacta_calibration: dict = None, top_exacta_prob_pct: float = None,
@@ -402,34 +444,43 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
-    単勝・2連単・3連単、それぞれの実績データで個別に判定し、一番厳しい(悪い)ものを採用する
-    (2連単・3連単の確率が渡されなければ単勝のみで判定する)。
+    単勝・2連単・3連単、それぞれの実績的中率を(A/B/C/Dの4段階に丸めるのではなく)
+    _continuous_score()で連続的なスコア(1〜4点)に変換してから、RACE_TIER_WEIGHTSで
+    重み付き平均を取り、最後に1回だけ最終ティアへ丸める。
+    先に4段階へ丸めてから平均すると、結局「自信ありバッジが何個点灯しているか」を
+    数えているのとほぼ同じになってしまう(「ギリギリ基準超え」も「大幅に基準超え」も
+    同じ点数になるため)ので、それを避けるために連続スコアのまま合成している。
+
     単勝は実績データが不十分な場合、1位・2位の予測確率差で暫定判定する(2連単・3連単は
-    暫定判定を持たず、単にその軸の判定をスキップする)。
+    暫定判定を持たず、単にその軸を平均から除外する)。
     最後に、荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
 
     戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
     """
     win_result = _classify_by_calibration(calibration, top1_pct, RACE_TIER_WIN_THRESHOLDS)
     if win_result:
-        tier = win_result["tier"]
+        win_score = _continuous_score(win_result["hit_rate"], _anchors_from_thresholds(RACE_TIER_WIN_THRESHOLDS))
         reasons = [f"単勝{win_result['label']}帯の実績的中率{win_result['hit_rate']:.1%}(n={win_result['sample_size']})"]
         basis = "calibration"
     else:
         gap = (top1_pct - second_pct) if second_pct is not None else 0
-        tier = "D"
-        for t, threshold in RACE_TIER_FALLBACK_GAP_THRESHOLDS:
-            if gap >= threshold:
-                tier = t
-                break
+        # フォールバックはA相当を出さない(実績データに基づかない暫定判定のため上限3点=B相当まで)
+        fallback_anchors = [(0.0, 1.0), (8.0, 2.0), (20.0, 3.0)]  # gap=8pt→C境界、20pt→B境界
+        win_score = _continuous_score(gap, fallback_anchors)
         reasons = [f"単勝の実績データ不足のため暫定判定: 1位-2位の確率差{gap:.0f}pt"]
         basis = "fallback"
+
+    weighted_sum = win_score * RACE_TIER_WEIGHTS["win"]
+    weight_total = RACE_TIER_WEIGHTS["win"]
 
     if exacta_calibration is not None and top_exacta_prob_pct is not None:
         exacta_result = _classify_by_calibration(exacta_calibration, top_exacta_prob_pct,
                                                    RACE_TIER_EXACTA_THRESHOLDS, bucket_fn=_exacta_bucket_label)
         if exacta_result:
-            tier = _worse_tier(tier, exacta_result["tier"])
+            exacta_score = _continuous_score(exacta_result["hit_rate"],
+                                              _anchors_from_thresholds(RACE_TIER_EXACTA_THRESHOLDS))
+            weighted_sum += exacta_score * RACE_TIER_WEIGHTS["exacta"]
+            weight_total += RACE_TIER_WEIGHTS["exacta"]
             reasons.append(f"2連単{exacta_result['label']}帯の実績的中率{exacta_result['hit_rate']:.1%}"
                             f"(n={exacta_result['sample_size']})")
 
@@ -437,9 +488,15 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
         bet_result = _classify_by_calibration(bet_calibration, top_bet_prob_pct,
                                                RACE_TIER_BET_THRESHOLDS, bucket_fn=_bet_bucket_label)
         if bet_result:
-            tier = _worse_tier(tier, bet_result["tier"])
+            bet_score = _continuous_score(bet_result["hit_rate"],
+                                           _anchors_from_thresholds(RACE_TIER_BET_THRESHOLDS))
+            weighted_sum += bet_score * RACE_TIER_WEIGHTS["bet"]
+            weight_total += RACE_TIER_WEIGHTS["bet"]
             reasons.append(f"3連単{bet_result['label']}帯の実績的中率{bet_result['hit_rate']:.1%}"
                             f"(n={bet_result['sample_size']})")
+
+    avg_score = weighted_sum / weight_total if weight_total else win_score
+    tier = _score_to_tier(avg_score)
 
     reason = " / ".join(reasons)
 
