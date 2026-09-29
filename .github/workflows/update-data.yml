@@ -51,6 +51,10 @@ jobs:
             --date ${{ steps.dates.outputs.today }} \
             --out data/today.json \
             $MODEL_ARG
+        # レース信頼度ティア(A〜D)の閾値は data-collection/tier_thresholds.json に
+        # 1日1回だけ計算してキャッシュされる(get_daily_tier_thresholds参照)。
+        # 下のcommitステップで一緒にpushしないと、次回実行時に引き継がれず
+        # 毎回再計算されてしまう(=判定がブレる)ため、必ずgit addに含めること。
 
       - name: 履歴JSONを生成
         run: |
@@ -68,6 +72,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data-collection/boatrace.db data/today.json data/history.json
+          git add data-collection/boatrace.db data-collection/tier_thresholds.json data/today.json data/history.json
           git diff --cached --quiet || git commit -m "データ更新: ${{ steps.dates.outputs.today }}"
           git push
