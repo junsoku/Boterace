@@ -355,11 +355,20 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
         compute_exacta_confidence_calibration, lookup_exacta_confidence,
-        classify_race_tier,
+        classify_race_tier, get_daily_tier_thresholds,
     )
     calibration = compute_confidence_calibration(conn, model=model)
     bet_calibration = compute_bet_confidence_calibration(conn, model=model)
     exacta_calibration = compute_exacta_confidence_calibration(conn, model=model)
+
+    # レース信頼度ティア(A〜D)の閾値は、実行のたびに計算し直すと(update-data.ymlが
+    # 30分おきに動くため)同じ強さのレースでも判定がブレてしまう。1日1回だけ計算して
+    # 固定するため、日付ベースでキャッシュする(詳細はget_daily_tier_thresholdsのdocstring参照)。
+    tier_thresholds = get_daily_tier_thresholds(
+        calibration, exacta_calibration, bet_calibration,
+        cache_path=str(Path(__file__).parent / "tier_thresholds.json"),
+        today_str=target_date.isoformat(),
+    )
 
     # 前回出力(同じ日付分)から、(場番号, レース番号) -> レースの出力 の対応表を作る。
     # 「締切を過ぎたのにまだ結果が確定していないレース」を再計算せず凍結して使い回すために使う
@@ -563,6 +572,8 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
             wave_height_cm=wave_height_cm, wind_speed_m=wind_speed_m,
             exacta_calibration=exacta_calibration, top_exacta_prob_pct=top_exacta_prob_for_tier,
             bet_calibration=bet_calibration, top_bet_prob_pct=top_bet_prob_for_tier,
+            win_thresholds=tier_thresholds["win"], exacta_thresholds=tier_thresholds["exacta"],
+            bet_thresholds=tier_thresholds["bet"],
         )
 
         bet_confidence = None

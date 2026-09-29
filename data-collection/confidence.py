@@ -24,8 +24,10 @@
     bet_conf = lookup_bet_confidence(bet_calibration, top_bet_prob_pct)
     # bet_conf = {"bucket": "10-14%", "hit_rate": 0.22, "sample_size": 35, "is_confident": True}
 """
+import json
 import sqlite3
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Optional
 
 from export_today import (
@@ -428,6 +430,53 @@ def _dynamic_thresholds(calibration: dict, default: list) -> list:
     return [("A", a), ("B", b), ("C", c)]
 
 
+def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_calibration: dict,
+                               cache_path: str, today_str: str) -> dict:
+    """
+    単勝・2連単・3連単それぞれの動的閾値を、1日1回だけ計算してcache_path(JSONファイル)に
+    保存し、同じ日のうちは再計算せず使い回す。
+
+    理由: classify_race_tier()を呼び出すたびに(=update-data.ymlが30分おきに実行されるたびに)
+    _dynamic_thresholds()を計算し直すと、
+      1. 同じ強さのレースでも実行タイミングによって判定がブレる
+      2. モデル全体の実力が変わっても、パーセンタイル方式だと機械的に常に同じ割合でDが
+         出続けてしまう(絶対評価ではなく、その時点の分布内での相対評価になってしまう)
+    という問題がある。日付が変わるまで固定することで、少なくとも「今日1日の判定基準は
+    一貫している」状態を保証する(2の問題は残るが、下限ルール(RACE_TIER_FLOOR)が
+    絶対的な安全弁として機能しているため、実用上はカバーできている)。
+
+    cache_pathはgit管理下に置き、呼び出し側(export_today.py)でcommitすることを想定している
+    (GitHub Actionsのランナーは実行のたびに使い捨てなので、commitしないと次の実行に引き継がれない)。
+    """
+    cached = None
+    path = Path(cache_path)
+    if path.exists():
+        try:
+            cached = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            cached = None
+
+    if cached and cached.get("computed_date") == today_str:
+        return {
+            "win": [tuple(x) for x in cached["win"]],
+            "exacta": [tuple(x) for x in cached["exacta"]],
+            "bet": [tuple(x) for x in cached["bet"]],
+        }
+
+    thresholds = {
+        "win": _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT),
+        "exacta": _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT),
+        "bet": _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT),
+    }
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"computed_date": today_str, **thresholds}, ensure_ascii=False, indent=2),
+                         encoding="utf-8")
+    except OSError:
+        pass  # 保存できなくても、その回の判定自体は続行して問題ない
+    return thresholds
+
+
 def _continuous_score(value: float, anchors: list) -> float:
     """
     (基準値, スコア)の組(昇順)を区分線形で補間し、valueに対応する連続的なスコアを返す。
@@ -492,7 +541,9 @@ def _score_to_tier(score: float) -> str:
 def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = None,
                         wave_height_cm: float = None, wind_speed_m: float = None,
                         exacta_calibration: dict = None, top_exacta_prob_pct: float = None,
-                        bet_calibration: dict = None, top_bet_prob_pct: float = None) -> dict:
+                        bet_calibration: dict = None, top_bet_prob_pct: float = None,
+                        win_thresholds: list = None, exacta_thresholds: list = None,
+                        bet_thresholds: list = None) -> dict:
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
@@ -513,13 +564,23 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     適用されない)。
     最後に、荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
 
+    win_thresholds/exacta_thresholds/bet_thresholds を渡した場合はそれを使い、
+    渡さなければ呼び出しごとにcalibrationから動的算出する。
+    export_today.py側では、30分おきの実行のたびに閾値が微妙に動いて同じ強さのレースの
+    判定がブレたり、モデル全体の実力が変わっても機械的に同じ割合でDが出続けてしまう
+    (絶対評価ではなく相対評価になってしまう)ことを避けるため、get_daily_tier_thresholds()
+    で1日1回だけ計算した値をここに渡す運用を想定している。
+
     戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
     """
-    win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
-    exacta_thresholds = _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT) \
-        if exacta_calibration is not None else RACE_TIER_EXACTA_THRESHOLDS_DEFAULT
-    bet_thresholds = _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT) \
-        if bet_calibration is not None else RACE_TIER_BET_THRESHOLDS_DEFAULT
+    if win_thresholds is None:
+        win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
+    if exacta_thresholds is None:
+        exacta_thresholds = _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT) \
+            if exacta_calibration is not None else RACE_TIER_EXACTA_THRESHOLDS_DEFAULT
+    if bet_thresholds is None:
+        bet_thresholds = _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT) \
+            if bet_calibration is not None else RACE_TIER_BET_THRESHOLDS_DEFAULT
 
     floor_triggered = False
     win_result = _classify_by_calibration(calibration, top1_pct, win_thresholds)
