@@ -333,31 +333,32 @@ def lookup_exacta_confidence(calibration: dict, top_exacta_prob_pct: float) -> d
 # 「勘」や手作りの閾値ではなく、実際に的中率を最優先する方針に沿って、
 # 「過去、この確率帯だった時に本当にどれくらい当たっていたか」を軸に判定する。
 
-# 単勝は◎の予測確率がそのまま50〜60%台まで乗りやすいので、実績的中率の基準もそれに合わせて高め。
-# 各グレード間の間隔を広めに取り、A〜Dの実際の的中率差がはっきり出るようにしている
-# (間隔が狭いと、複数軸の加重平均を通した後で差がぼやけてしまうため)。
-RACE_TIER_WIN_THRESHOLDS = [
-    ("A", 0.65),
-    ("B", 0.50),
-    ("C", 0.35),
+# 各軸のA/B/C基準は、固定値を手で決め打ちするのをやめ、実際のcalibrationデータ(その軸の
+# 各予測確率帯の実績的中率)の加重(サンプル数)パーセンタイルから動的に算出する
+# (_dynamic_thresholds参照)。手作業で決め打ちした固定値だと、2連単・3連単のように
+# 実現しうる的中率の範囲が狭い軸で「Aが理論上ほぼ出ない」「逆に緩すぎる」といった
+# 事故が起きやすかったため(実際に何度か発生した)。
+# 以下は、calibrationデータがまだ薄くて動的算出できない場合だけに使うフォールバック値。
+RACE_TIER_WIN_THRESHOLDS_DEFAULT = [
+    ("A", 0.60),
+    ("B", 0.45),
+    ("C", 0.30),
 ]
-# 2連単(30通り)は単勝より当てにくいが3連単よりは当てやすいので、間に基準を置く。
-# (diagnose_confidence.pyの実測で15-19%帯が実績的中率32.5%だったことを踏まえた目安値)
-# ※ Aの基準を実測の最高値(約32〜35%)より高くすると、Aにほぼ到達できなくなる(過去に一度
-#   0.40にして「A判定が出なくなった」ことがあったため、実測値を超えない範囲に留めている)。
-RACE_TIER_EXACTA_THRESHOLDS = [
+RACE_TIER_EXACTA_THRESHOLDS_DEFAULT = [
     ("A", 0.35),
     ("B", 0.25),
     ("C", 0.15),
 ]
-# 3連単(120通り)は最も当てにくく、予測確率自体が10%を超えることも稀
-# (diagnose_confidence.pyの実測で5-9%帯が実績的中率12.0%だったことを踏まえた目安値)
-# ※ 同上。実測の最高値(約12%)を大きく超える基準にするとAに到達できなくなる。
-RACE_TIER_BET_THRESHOLDS = [
+RACE_TIER_BET_THRESHOLDS_DEFAULT = [
     ("A", 0.15),
     ("B", 0.10),
     ("C", 0.05),
 ]
+# 動的算出に使うパーセンタイル(サンプル数で加重)。上位25%をA、中央値をB、下位25%をCの基準にする。
+RACE_TIER_PERCENTILES = {"A": 0.75, "B": 0.50, "C": 0.25}
+# 動的算出には、信頼できるバケット(サンプル数RACE_TIER_MIN_SAMPLE以上)が最低これだけ必要
+RACE_TIER_MIN_BUCKETS_FOR_DYNAMIC = 3
+
 RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケットは実績を信頼せず、その軸の判定はスキップする
 
 # 実績データが少ない(まだ判定できない)場合の暫定フォールバック(単勝軸のみ)で使う
@@ -385,6 +386,46 @@ RACE_TIER_FLOOR = {"win": 0.20, "exacta": 0.05, "bet": 0.02}
 def _downgrade_tier(tier: str) -> str:
     idx = _TIER_ORDER.index(tier)
     return _TIER_ORDER[min(idx + 1, len(_TIER_ORDER) - 1)]
+
+
+def _weighted_percentile(pairs: list, q: float) -> float:
+    """(値, 重み)の組のリストから、重み付きのqパーセンタイル値を返す。
+    重みにはバケットのサンプル数を使う(サンプルが多いバケットほど、その的中率の
+    信頼度が高いとみなして、パーセンタイル計算に強く反映させるため)。"""
+    pairs = sorted(pairs, key=lambda p: p[0])
+    total = sum(w for _, w in pairs)
+    if total <= 0:
+        return pairs[0][0] if pairs else 0.0
+    target = q * total
+    cum = 0.0
+    for value, weight in pairs:
+        cum += weight
+        if cum >= target:
+            return value
+    return pairs[-1][0]
+
+
+def _dynamic_thresholds(calibration: dict, default: list) -> list:
+    """calibration(予測確率帯ごとの実績的中率)から、A/B/Cの基準を動的に算出する。
+    固定値を手で決め打ちすると、2連単・3連単のように実現しうる的中率の範囲が軸ごとに
+    大きく違う場合に「Aが理論上ほぼ出ない」「逆に緩すぎる」事故が起きやすいため、
+    実際の分布の上位25%(A)・中央値(B)・下位25%(C)を毎回そのデータから計算し直す。
+    信頼できるバケットが少なすぎる場合は、defaultで渡された固定値にフォールバックする。
+    """
+    pairs = [
+        (stat["hit_rate"], stat["sample_size"])
+        for stat in calibration.values()
+        if stat.get("hit_rate") is not None and stat.get("sample_size", 0) >= RACE_TIER_MIN_SAMPLE
+    ]
+    if len(pairs) < RACE_TIER_MIN_BUCKETS_FOR_DYNAMIC:
+        return default
+
+    a = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["A"])
+    b = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["B"])
+    c = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["C"])
+    if not (a > b > c):  # 分布が偏っていてパーセンタイルが潰れた場合は固定値に退避する
+        return default
+    return [("A", a), ("B", b), ("C", c)]
 
 
 def _continuous_score(value: float, anchors: list) -> float:
@@ -474,10 +515,16 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
 
     戻り値: {"tier": "A", "reason": "...", "basis": "calibration" or "fallback"}
     """
+    win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
+    exacta_thresholds = _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT) \
+        if exacta_calibration is not None else RACE_TIER_EXACTA_THRESHOLDS_DEFAULT
+    bet_thresholds = _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT) \
+        if bet_calibration is not None else RACE_TIER_BET_THRESHOLDS_DEFAULT
+
     floor_triggered = False
-    win_result = _classify_by_calibration(calibration, top1_pct, RACE_TIER_WIN_THRESHOLDS)
+    win_result = _classify_by_calibration(calibration, top1_pct, win_thresholds)
     if win_result:
-        win_score = _continuous_score(win_result["hit_rate"], _anchors_from_thresholds(RACE_TIER_WIN_THRESHOLDS))
+        win_score = _continuous_score(win_result["hit_rate"], _anchors_from_thresholds(win_thresholds))
         reasons = [f"単勝{win_result['label']}帯の実績的中率{win_result['hit_rate']:.1%}(n={win_result['sample_size']})"]
         basis = "calibration"
         if win_result["hit_rate"] < RACE_TIER_FLOOR["win"]:
@@ -495,10 +542,10 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
 
     if exacta_calibration is not None and top_exacta_prob_pct is not None:
         exacta_result = _classify_by_calibration(exacta_calibration, top_exacta_prob_pct,
-                                                   RACE_TIER_EXACTA_THRESHOLDS, bucket_fn=_exacta_bucket_label)
+                                                   exacta_thresholds, bucket_fn=_exacta_bucket_label)
         if exacta_result:
             exacta_score = _continuous_score(exacta_result["hit_rate"],
-                                              _anchors_from_thresholds(RACE_TIER_EXACTA_THRESHOLDS))
+                                              _anchors_from_thresholds(exacta_thresholds))
             weighted_sum += exacta_score * RACE_TIER_WEIGHTS["exacta"]
             weight_total += RACE_TIER_WEIGHTS["exacta"]
             reasons.append(f"2連単{exacta_result['label']}帯の実績的中率{exacta_result['hit_rate']:.1%}"
@@ -508,10 +555,10 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
 
     if bet_calibration is not None and top_bet_prob_pct is not None:
         bet_result = _classify_by_calibration(bet_calibration, top_bet_prob_pct,
-                                               RACE_TIER_BET_THRESHOLDS, bucket_fn=_bet_bucket_label)
+                                               bet_thresholds, bucket_fn=_bet_bucket_label)
         if bet_result:
             bet_score = _continuous_score(bet_result["hit_rate"],
-                                           _anchors_from_thresholds(RACE_TIER_BET_THRESHOLDS))
+                                           _anchors_from_thresholds(bet_thresholds))
             weighted_sum += bet_score * RACE_TIER_WEIGHTS["bet"]
             weight_total += RACE_TIER_WEIGHTS["bet"]
             reasons.append(f"3連単{bet_result['label']}帯の実績的中率{bet_result['hit_rate']:.1%}"
