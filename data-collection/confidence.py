@@ -24,6 +24,7 @@
     bet_conf = lookup_bet_confidence(bet_calibration, top_bet_prob_pct)
     # bet_conf = {"bucket": "10-14%", "hit_rate": 0.22, "sample_size": 35, "is_confident": True}
 """
+import itertools
 import json
 import sqlite3
 from datetime import date, timedelta
@@ -407,6 +408,16 @@ def _weighted_percentile(pairs: list, q: float) -> float:
     return pairs[-1][0]
 
 
+def _filtered_pairs(calibration: dict) -> list:
+    """calibrationから、サンプル数が十分な(値, サンプル数)の組だけを取り出す。
+    _dynamic_thresholds()と_simulate_combined_score_cutoffs()の両方から使う共通処理。"""
+    return [
+        (stat["hit_rate"], stat["sample_size"])
+        for stat in calibration.values()
+        if stat.get("hit_rate") is not None and stat.get("sample_size", 0) >= RACE_TIER_MIN_SAMPLE
+    ]
+
+
 def _dynamic_thresholds(calibration: dict, default: list) -> list:
     """calibration(予測確率帯ごとの実績的中率)から、A/B/Cの基準を動的に算出する。
     固定値を手で決め打ちすると、2連単・3連単のように実現しうる的中率の範囲が軸ごとに
@@ -414,11 +425,7 @@ def _dynamic_thresholds(calibration: dict, default: list) -> list:
     実際の分布の上位25%(A)・中央値(B)・下位25%(C)を毎回そのデータから計算し直す。
     信頼できるバケットが少なすぎる場合は、defaultで渡された固定値にフォールバックする。
     """
-    pairs = [
-        (stat["hit_rate"], stat["sample_size"])
-        for stat in calibration.values()
-        if stat.get("hit_rate") is not None and stat.get("sample_size", 0) >= RACE_TIER_MIN_SAMPLE
-    ]
+    pairs = _filtered_pairs(calibration)
     if len(pairs) < RACE_TIER_MIN_BUCKETS_FOR_DYNAMIC:
         return default
 
@@ -428,6 +435,64 @@ def _dynamic_thresholds(calibration: dict, default: list) -> list:
     if not (a > b > c):  # 分布が偏っていてパーセンタイルが潰れた場合は固定値に退避する
         return default
     return [("A", a), ("B", b), ("C", c)]
+
+
+def _simulate_combined_score_cutoffs(win_pairs: list, exacta_pairs: list, bet_pairs: list,
+                                      win_thresholds: list, exacta_thresholds: list,
+                                      bet_thresholds: list) -> tuple:
+    """
+    単勝・2連単・3連単それぞれの軸のスコア分布から、RACE_TIER_WEIGHTSで加重平均した
+    「合成後スコア」が実際にどんな分布になるかを、各軸のバケットの組み合わせを
+    全列挙して厳密に計算し、その分布の75%点・50%点・25%点を返す
+    (最終ティアのA/B/C境界に使う)。バケット数は各軸せいぜい数個〜十数個程度なので、
+    全組み合わせ(数十〜数百通り)を列挙しても計算コストは無視できる。
+
+    各軸を単独で見て「上位25%」を基準にしても、3軸を独立に組み合わせた後では
+    「3つとも同時に上位25%」という、ずっと狭い(理論上25%×25%×25%に近い)条件に
+    なってしまい、Aがほとんど出ない事故が起きていた。合成した後の実際の分布から
+    改めて75/50/25%点を取り直すことで、「合成後スコアの上位25%が本当にA」という
+    状態に補正する。
+    """
+    axes = []
+    if win_pairs:
+        axes.append(("win", win_pairs, _anchors_from_thresholds(win_thresholds)))
+    if exacta_pairs:
+        axes.append(("exacta", exacta_pairs, _anchors_from_thresholds(exacta_thresholds)))
+    if bet_pairs:
+        axes.append(("bet", bet_pairs, _anchors_from_thresholds(bet_thresholds)))
+    if not axes:
+        return (3.5, 2.5, 1.5)  # データが無ければ元の固定値に頼るしかない
+
+    # 各軸を「(スコア, 発生確率)」のリストに変換する(発生確率はサンプル数で加重した割合)
+    axis_score_probs = []
+    for name, pairs, anchors in axes:
+        total_w = sum(w for _, w in pairs)
+        axis_score_probs.append((
+            name,
+            [(_continuous_score(hr, anchors), w / total_w) for hr, w in pairs],
+        ))
+
+    weight_total_all = sum(RACE_TIER_WEIGHTS[name] for name, _ in axis_score_probs)
+
+    # 全軸の組み合わせを全列挙し、それぞれの合成後スコアと同時確率を求める
+    results = []  # (合成後スコア, 同時確率)
+    names = [name for name, _ in axis_score_probs]
+    choices_per_axis = [sp for _, sp in axis_score_probs]
+    for combo in itertools.product(*choices_per_axis):
+        combined_score = sum(
+            combo[i][0] * RACE_TIER_WEIGHTS[names[i]] for i in range(len(names))
+        ) / weight_total_all
+        joint_prob = 1.0
+        for _, p in combo:
+            joint_prob *= p
+        results.append((combined_score, joint_prob))
+
+    a = _weighted_percentile(results, RACE_TIER_PERCENTILES["A"])
+    b = _weighted_percentile(results, RACE_TIER_PERCENTILES["B"])
+    c = _weighted_percentile(results, RACE_TIER_PERCENTILES["C"])
+    if not (a > b > c):  # シミュレーション結果に同点(プラトー)が出た場合は固定値に退避する
+        return (3.5, 2.5, 1.5)
+    return (a, b, c)
 
 
 def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_calibration: dict,
@@ -461,12 +526,21 @@ def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_c
             "win": [tuple(x) for x in cached["win"]],
             "exacta": [tuple(x) for x in cached["exacta"]],
             "bet": [tuple(x) for x in cached["bet"]],
+            "score_cutoffs": tuple(cached["score_cutoffs"]),
         }
 
+    win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
+    exacta_thresholds = _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT)
+    bet_thresholds = _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT)
+    score_cutoffs = _simulate_combined_score_cutoffs(
+        _filtered_pairs(calibration), _filtered_pairs(exacta_calibration), _filtered_pairs(bet_calibration),
+        win_thresholds, exacta_thresholds, bet_thresholds,
+    )
     thresholds = {
-        "win": _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT),
-        "exacta": _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT),
-        "bet": _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT),
+        "win": win_thresholds,
+        "exacta": exacta_thresholds,
+        "bet": bet_thresholds,
+        "score_cutoffs": score_cutoffs,
     }
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -528,12 +602,13 @@ def _anchors_from_thresholds(thresholds: list, max_score: float = 4.0) -> list:
     return anchors
 
 
-def _score_to_tier(score: float) -> str:
-    if score >= 3.5:
+def _score_to_tier(score: float, cutoffs: tuple = (3.5, 2.5, 1.5)) -> str:
+    a_cut, b_cut, c_cut = cutoffs
+    if score >= a_cut:
         return "A"
-    if score >= 2.5:
+    if score >= b_cut:
         return "B"
-    if score >= 1.5:
+    if score >= c_cut:
         return "C"
     return "D"
 
@@ -543,7 +618,7 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
                         exacta_calibration: dict = None, top_exacta_prob_pct: float = None,
                         bet_calibration: dict = None, top_bet_prob_pct: float = None,
                         win_thresholds: list = None, exacta_thresholds: list = None,
-                        bet_thresholds: list = None) -> dict:
+                        bet_thresholds: list = None, score_cutoffs: tuple = None) -> dict:
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
@@ -566,6 +641,11 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
 
     win_thresholds/exacta_thresholds/bet_thresholds を渡した場合はそれを使い、
     渡さなければ呼び出しごとにcalibrationから動的算出する。
+    score_cutoffs(A/B/C境界の合成後スコア値、3点のタプル)を渡した場合は、固定の
+    (3.5, 2.5, 1.5)ではなくそれを使う。各軸を単独で「上位25%」に基準を置いても、
+    3軸を加重平均した後では「3つとも同時に上位25%」という遥かに狭い条件になってしまい
+    Aがほとんど出ない問題があったため、get_daily_tier_thresholds()で合成後スコアの
+    実際の分布をシミュレーションして75/50/25%点を求め、それをここに渡す運用を想定している。
     export_today.py側では、30分おきの実行のたびに閾値が微妙に動いて同じ強さのレースの
     判定がブレたり、モデル全体の実力が変わっても機械的に同じ割合でDが出続けてしまう
     (絶対評価ではなく相対評価になってしまう)ことを避けるため、get_daily_tier_thresholds()
@@ -628,7 +708,7 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
                 floor_triggered = True
 
     avg_score = weighted_sum / weight_total if weight_total else win_score
-    tier = _score_to_tier(avg_score)
+    tier = _score_to_tier(avg_score, cutoffs=score_cutoffs or (3.5, 2.5, 1.5))
 
     reason = " / ".join(reasons)
 
