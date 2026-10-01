@@ -368,6 +368,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         calibration, exacta_calibration, bet_calibration,
         cache_path=str(Path(__file__).parent / "tier_thresholds.json"),
         today_str=target_date.isoformat(),
+        conn=conn, model=model,
     )
 
     # 前回出力(同じ日付分)から、(場番号, レース番号) -> レースの出力 の対応表を作る。

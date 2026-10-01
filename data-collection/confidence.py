@@ -437,6 +437,88 @@ def _dynamic_thresholds(calibration: dict, default: list) -> list:
     return [("A", a), ("B", b), ("C", c)]
 
 
+RACE_TIER_MIN_RACES_FOR_REAL_DISTRIBUTION = 30  # これ未満しか実レースが集まらなければ全列挙方式に頼る
+
+
+def _real_combined_score_distribution(conn: sqlite3.Connection, lookback_days: int, model,
+                                       calibration: dict, exacta_calibration: dict, bet_calibration: dict,
+                                       win_thresholds: list, exacta_thresholds: list,
+                                       bet_thresholds: list) -> list:
+    """
+    過去lookback_days日分の実レース1件1件について、実際に単勝・2連単・3連単の予測確率を
+    計算し、それぞれの軸の実績的中率(calibration)から連続スコアに変換して合成する。
+    単勝・2連単・3連単は同じレース・同じ艇の予測から計算されるため互いに相関しており、
+    (「単勝が堅いレースは2連単・3連単も堅い傾向がある」等)、_simulate_combined_score_cutoffs()
+    のように各軸が独立であるかのように全組み合わせを仮定すると、実際より中間(B・C)に
+    寄った分布を想定してしまい、本番の判定はA・Dの両端に偏りやすくなる
+    (実際にA3割・D3割、B・Cが2割ずつ、という偏りが観測された)。
+    実レースの組み合わせをそのまま使うことで、この相関を正しく反映する。
+
+    戻り値: 各レースの合成後スコアのリスト(1レース=1個、同じ重みで扱う)。
+    """
+    win_anchors = _anchors_from_thresholds(win_thresholds)
+    exacta_anchors = _anchors_from_thresholds(exacta_thresholds)
+    bet_anchors = _anchors_from_thresholds(bet_thresholds)
+
+    scores = []
+    for boats, _actual_order, boat_dicts, scores_by_lane in _iter_calibration_races(conn, lookback_days, model):
+        ranked = sorted(boats, key=lambda b: -b["pct"])
+        top1_pct = ranked[0]["pct"]
+
+        win_stat = calibration.get(_bucket_label(int(top1_pct)))
+        if not win_stat or win_stat["sample_size"] < RACE_TIER_MIN_SAMPLE or win_stat["hit_rate"] is None:
+            continue  # 単勝軸すら判定できないレースは母集団から除く(本番の判定基準と揃えるため)
+        weighted_sum = _continuous_score(win_stat["hit_rate"], win_anchors) * RACE_TIER_WEIGHTS["win"]
+        weight_total = RACE_TIER_WEIGHTS["win"]
+
+        if scores_by_lane is not None:
+            exacta_bets = estimate_exacta_bets_ml(boat_dicts, scores_by_lane, top_n=1)
+            top_bets = estimate_bets_ml(boat_dicts, scores_by_lane, top_n=1)
+        else:
+            exacta_bets = estimate_exacta_bets(boats, top_n=1)
+            top_bets = estimate_bets(boats, top_n=1)
+
+        if exacta_bets:
+            try:
+                exacta_pct = float(exacta_bets[0]["prob"].rstrip("%"))
+            except (ValueError, AttributeError):
+                exacta_pct = None
+            if exacta_pct is not None:
+                exacta_stat = exacta_calibration.get(_exacta_bucket_label(exacta_pct))
+                if exacta_stat and exacta_stat["sample_size"] >= RACE_TIER_MIN_SAMPLE and exacta_stat["hit_rate"] is not None:
+                    weighted_sum += _continuous_score(exacta_stat["hit_rate"], exacta_anchors) * RACE_TIER_WEIGHTS["exacta"]
+                    weight_total += RACE_TIER_WEIGHTS["exacta"]
+
+        if top_bets:
+            try:
+                bet_pct = float(top_bets[0]["prob"].rstrip("%"))
+            except (ValueError, AttributeError):
+                bet_pct = None
+            if bet_pct is not None:
+                bet_stat = bet_calibration.get(_bet_bucket_label(bet_pct))
+                if bet_stat and bet_stat["sample_size"] >= RACE_TIER_MIN_SAMPLE and bet_stat["hit_rate"] is not None:
+                    weighted_sum += _continuous_score(bet_stat["hit_rate"], bet_anchors) * RACE_TIER_WEIGHTS["bet"]
+                    weight_total += RACE_TIER_WEIGHTS["bet"]
+
+        scores.append(weighted_sum / weight_total if weight_total else 1.0)
+
+    return scores
+
+
+def _percentiles_from_scores(scores: list) -> tuple:
+    """スコアのリスト(各レース1件、等しい重み)から75/50/25%点を求める。
+    同点が多くA/B/C境界が潰れた場合は固定値(3.5, 2.5, 1.5)に退避する。"""
+    if not scores:
+        return (3.5, 2.5, 1.5)
+    pairs = [(s, 1.0) for s in scores]
+    a = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["A"])
+    b = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["B"])
+    c = _weighted_percentile(pairs, RACE_TIER_PERCENTILES["C"])
+    if not (a > b > c):
+        return (3.5, 2.5, 1.5)
+    return (a, b, c)
+
+
 def _simulate_combined_score_cutoffs(win_pairs: list, exacta_pairs: list, bet_pairs: list,
                                       win_thresholds: list, exacta_thresholds: list,
                                       bet_thresholds: list) -> tuple:
@@ -496,7 +578,8 @@ def _simulate_combined_score_cutoffs(win_pairs: list, exacta_pairs: list, bet_pa
 
 
 def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_calibration: dict,
-                               cache_path: str, today_str: str) -> dict:
+                               cache_path: str, today_str: str,
+                               conn: sqlite3.Connection = None, model=None, lookback_days: int = 90) -> dict:
     """
     単勝・2連単・3連単それぞれの動的閾値を、1日1回だけ計算してcache_path(JSONファイル)に
     保存し、同じ日のうちは再計算せず使い回す。
@@ -509,6 +592,11 @@ def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_c
     という問題がある。日付が変わるまで固定することで、少なくとも「今日1日の判定基準は
     一貫している」状態を保証する(2の問題は残るが、下限ルール(RACE_TIER_FLOOR)が
     絶対的な安全弁として機能しているため、実用上はカバーできている)。
+
+    合成後スコア(score_cutoffs)は、connとmodelが渡されていれば実レース
+    (_real_combined_score_distribution、単勝・2連単・3連単の相関を正しく反映する)から、
+    渡されていなければ各軸が独立であると仮定した全組み合わせ列挙(_simulate_combined_score_cutoffs、
+    やや不正確だが実レースデータが要らない簡易版)から算出する。
 
     cache_pathはgit管理下に置き、呼び出し側(export_today.py)でcommitすることを想定している
     (GitHub Actionsのランナーは実行のたびに使い捨てなので、commitしないと次の実行に引き継がれない)。
@@ -532,10 +620,22 @@ def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_c
     win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
     exacta_thresholds = _dynamic_thresholds(exacta_calibration, RACE_TIER_EXACTA_THRESHOLDS_DEFAULT)
     bet_thresholds = _dynamic_thresholds(bet_calibration, RACE_TIER_BET_THRESHOLDS_DEFAULT)
-    score_cutoffs = _simulate_combined_score_cutoffs(
-        _filtered_pairs(calibration), _filtered_pairs(exacta_calibration), _filtered_pairs(bet_calibration),
-        win_thresholds, exacta_thresholds, bet_thresholds,
-    )
+
+    score_cutoffs = None
+    if conn is not None:
+        real_scores = _real_combined_score_distribution(
+            conn, lookback_days, model, calibration, exacta_calibration, bet_calibration,
+            win_thresholds, exacta_thresholds, bet_thresholds,
+        )
+        if len(real_scores) >= RACE_TIER_MIN_RACES_FOR_REAL_DISTRIBUTION:
+            score_cutoffs = _percentiles_from_scores(real_scores)
+
+    if score_cutoffs is None:  # 実レースが少なすぎる、またはconnが渡されなかった場合のフォールバック
+        score_cutoffs = _simulate_combined_score_cutoffs(
+            _filtered_pairs(calibration), _filtered_pairs(exacta_calibration), _filtered_pairs(bet_calibration),
+            win_thresholds, exacta_thresholds, bet_thresholds,
+        )
+
     thresholds = {
         "win": win_thresholds,
         "exacta": exacta_thresholds,
