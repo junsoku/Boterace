@@ -28,7 +28,9 @@ from pathlib import Path
 from export_today import (
     score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml, predict_with_model,
 )
-from technique_stats import compute_course_technique_rates, compute_racer_nigashi_rate
+from technique_stats import (
+    compute_course_technique_rates, compute_racer_nigashi_rate, compute_racer_recent_form,
+)
 from ingest import _migrate_add_missing_columns
 
 
@@ -67,6 +69,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
                       e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
                       e.flying_count, e.late_count,
                       p.exhibition_time, p.tilt_angle, p.weight_adjustment_kg, p.start_timing_preview,
+                      p.start_course,
                       r.arrival_order
                FROM entries e
                JOIN results r ON r.entry_id = e.entry_id
@@ -78,9 +81,15 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
         if len(entries) != 6 or any(row[-1] is None for row in entries):
             continue
 
-        if stadium_number not in course_stats_cache:
-            course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
-        course_stats = course_stats_cache[stadium_number]
+        # 「そのレースより前の結果だけ」を使う(未来の結果が紛れ込むリークを防ぐ)。
+        # backtest.pyは過去レースを再予想して精度を検証するためのツールなので、
+        # ここがリークしていると検証結果(的中率・回収率)が実際の運用より楽観的に出てしまう。
+        cache_key = (stadium_number, race_date_str, race_id)
+        if cache_key not in course_stats_cache:
+            course_stats_cache[cache_key] = compute_course_technique_rates(
+                conn, stadium_number, before_date=race_date_str, before_race_id=race_id
+            )
+        course_stats = course_stats_cache[cache_key]
 
         exh_values = [row[13] for row in entries if row[13]]
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
@@ -90,7 +99,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
 
         boat_dicts = []
         for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
-             avg_st, flying, late, exh, tilt_angle, weight_adj, start_timing_prev,
+             avg_st, flying, late, exh, tilt_angle, weight_adj, start_timing_prev, start_course,
              arrival_order) in entries:
             d = {
                 "boat_number": bn, "racer_class": racer_class,
@@ -102,9 +111,16 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
                 "exhibition_time": exh, "tilt_angle": tilt_angle,
                 "weight_adjustment_kg": weight_adj,
                 "start_timing_preview": start_timing_prev,
+                "start_course": start_course,
             }
+            if reg_no is not None:
+                # そのレースの日付より前の結果だけを使う(build_features.py・confidence.pyと統一)
+                form = compute_racer_recent_form(conn, reg_no, before_date=race_date_str, before_race_id=race_id)
+                if form:
+                    d["racer_recent_avg_order"] = form["avg_arrival_order"]
+                    d["racer_recent_win_rate"] = form["recent_win_rate"]
             if bn == 1 and reg_no is not None:
-                nigashi = compute_racer_nigashi_rate(conn, reg_no)
+                nigashi = compute_racer_nigashi_rate(conn, reg_no, before_date=race_date_str, before_race_id=race_id)
                 if nigashi:
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append((d, arrival_order))

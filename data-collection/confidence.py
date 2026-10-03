@@ -125,9 +125,16 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
         if len(entries) != 6 or any(row[-1] is None for row in entries):
             continue
 
-        if stadium_number not in course_stats_cache:
-            course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
-        course_stats = course_stats_cache[stadium_number]
+        # 「そのレースより前の結果だけ」を使う(未来の結果が紛れ込むリークを防ぐ)。
+        # この関数(_iter_calibration_races)は過去レースを再予想してA〜D判定や確信度バッジの
+        # 実績データを作るためのものなので、ここがリークしていると「実績的中率」自体が
+        # 水増しされ、A判定の信頼性そのものが検証できなくなってしまう。
+        cache_key = (stadium_number, race_date, race_id)
+        if cache_key not in course_stats_cache:
+            course_stats_cache[cache_key] = compute_course_technique_rates(
+                conn, stadium_number, before_date=race_date, before_race_id=race_id
+            )
+        course_stats = course_stats_cache[cache_key]
 
         exh_values = [row[12] for row in entries if row[12]]
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
@@ -153,12 +160,12 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
             }
             if reg_no is not None:
                 # そのレースの日付より前の結果だけを使う(build_features.pyと同じ、リーク防止)
-                form = compute_racer_recent_form(conn, reg_no, before_date=race_date)
+                form = compute_racer_recent_form(conn, reg_no, before_date=race_date, before_race_id=race_id)
                 if form:
                     d["racer_recent_avg_order"] = form["avg_arrival_order"]
                     d["racer_recent_win_rate"] = form["recent_win_rate"]
             if bn == 1 and reg_no is not None:
-                nigashi = compute_racer_nigashi_rate(conn, reg_no)
+                nigashi = compute_racer_nigashi_rate(conn, reg_no, before_date=race_date, before_race_id=race_id)
                 if nigashi:
                     d["nigashi_rate"] = nigashi["nigashi_rate"]
             boat_dicts.append((d, arrival_order))

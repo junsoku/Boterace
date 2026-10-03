@@ -33,17 +33,33 @@ RECENT_FORM_N_RACES = 10   # 「直近の調子」として遡る走数の既定
 RECENT_FORM_MIN_SAMPLE = 5  # これ未満の走数しか無ければ「調子」は計算しない(不安定なため)
 
 
-def compute_course_technique_rates(conn: sqlite3.Connection, stadium_number: Optional[int] = None) -> dict:
+def compute_course_technique_rates(conn: sqlite3.Connection, stadium_number: Optional[int] = None,
+                                    before_date: Optional[str] = None,
+                                    before_race_id: Optional[int] = None) -> dict:
     """
     コース別(1〜6)の勝率・決まり手内訳を集計する。
     stadium_number を指定するとその場だけ、Noneなら全場合算。
     戻り値: {course: {"win_rate":.., "逃げ":.., "差し":.., ... , "sample_size":n}}
+
+    before_date(・before_race_id)を指定すると、「そのレースより前の結果だけ」に絞って
+    集計する(race_date < before_date、同日ならrace_id < before_race_idまで)。
+    build_features.py(学習データ作成)やconfidence.pyの過去再計算(ティア判定の実績検証)で、
+    予想対象レースより未来の結果が統計に混ざるリークを防ぐために使う。
+    本番の「今日の予想」(export_today.py)では、今日までの全データを使うのが正しい
+    (未来の情報は含まれないため)ので、before_dateを指定せずそのまま呼んでよい。
     """
     where = "WHERE r.actual_course IS NOT NULL"
     params = []
     if stadium_number is not None:
         where += " AND races.stadium_number = ?"
         params.append(stadium_number)
+    if before_date is not None:
+        if before_race_id is not None:
+            where += " AND (races.race_date < ? OR (races.race_date = ? AND races.race_id < ?))"
+            params.extend([before_date, before_date, before_race_id])
+        else:
+            where += " AND races.race_date < ?"
+            params.append(before_date)
 
     rows = conn.execute(
         f"""
@@ -83,19 +99,35 @@ def compute_course_technique_rates(conn: sqlite3.Connection, stadium_number: Opt
     return result
 
 
-def compute_racer_nigashi_rate(conn: sqlite3.Connection, racer_registration_number: int) -> Optional[dict]:
+def compute_racer_nigashi_rate(conn: sqlite3.Connection, racer_registration_number: int,
+                                before_date: Optional[str] = None,
+                                before_race_id: Optional[int] = None) -> Optional[dict]:
     """
     特定選手の「逃し率」(1コースからスタートしたのに勝ちきれなかった率)を計算する。
     十分なサンプルがなければ None を返す(呼び出し側で場の平均にフォールバックする想定)。
+
+    before_date(・before_race_id)の意味・使い分けは compute_course_technique_rates() と同じ。
     """
+    where = "WHERE e.racer_registration_number = ? AND r.actual_course = 1"
+    params = [racer_registration_number]
+    if before_date is not None:
+        if before_race_id is not None:
+            where += " AND (races.race_date < ? OR (races.race_date = ? AND races.race_id < ?))"
+            params.extend([before_date, before_date, before_race_id])
+        else:
+            where += " AND races.race_date < ?"
+            params.append(before_date)
+
+    join_races = "JOIN races ON races.race_id = e.race_id" if before_date is not None else ""
     rows = conn.execute(
-        """
+        f"""
         SELECT r.arrival_order
         FROM results r
         JOIN entries e ON e.entry_id = r.entry_id
-        WHERE e.racer_registration_number = ? AND r.actual_course = 1
+        {join_races}
+        {where}
         """,
-        (racer_registration_number,),
+        params,
     ).fetchall()
 
     n = len(rows)
@@ -164,20 +196,29 @@ def recent_form_from_history(history: list, before_date: str, before_race_id: Op
 
 def compute_racer_recent_form(conn: sqlite3.Connection, racer_registration_number: int,
                                before_date: Optional[str] = None,
+                               before_race_id: Optional[int] = None,
                                n_races: int = RECENT_FORM_N_RACES) -> Optional[dict]:
     """
     選手の直近n_races走(before_dateより前。Noneなら全期間の最新n_races走)の
     平均着順・勝率を1回のクエリで計算する。
 
+    before_race_idを合わせて指定すると、同日内でもrace_id未満のレースだけに絞れる
+    (同日後半レースの結果が前半レースの予想に混ざらないようにするため)。
+
     export_today.py・confidence.py のように「1レースにつき選手6人分」程度の呼び出し頻度なら
     このままで十分軽い。build_features.py のように同じ選手を何百行にもわたって扱う場合は、
-    fetch_racer_history() + recent_form_from_history() の組み合わせ(選手ごとに1クエリ)を使うこと。
+    fetch_racer_history() + recent_form_from_history() の組み合わせ(選手ごとに1クエリ)を使うこと
+    (そちらは元々before_race_idによる同日内の絞り込みに対応済み)。
     """
     where = "WHERE e.racer_registration_number = ? AND r.arrival_order IS NOT NULL"
     params = [racer_registration_number]
     if before_date is not None:
-        where += " AND races.race_date < ?"
-        params.append(before_date)
+        if before_race_id is not None:
+            where += " AND (races.race_date < ? OR (races.race_date = ? AND races.race_id < ?))"
+            params.extend([before_date, before_date, before_race_id])
+        else:
+            where += " AND races.race_date < ?"
+            params.append(before_date)
 
     rows = conn.execute(
         f"""

@@ -1,13 +1,13 @@
 """
 蓄積したDB(ingest.pyで作ったboatrace.db)から、機械学習用の特徴量テーブルを作る。
 
-1行 = 1艇(entry)。目的変数は3つ:
-    is_winner: そのレースで1着だったか(0/1)
-    is_second: そのレースで2着だったか(0/1)。2着モデルの学習では「1着だった艇を除いた
-               5艇」の中で使う(train_model.py 側でフィルタする)。
-    is_third:  そのレースで3着だったか(0/1)。3着モデルの学習では「1・2着だった艇を
-               除いた4艇」の中で使う。
-学習は train_model.py で行う(1着・2着・3着の3つのモデルを学習する)。
+1行 = 1艇(entry)。is_winner/is_second/is_thirdの3列を持たせているが、学習自体は
+train_model.py 側でランク学習(lambdarank)の1モデルとして行う(着順をそのまま
+relevanceとして使うため)。is_second/is_thirdは過去の3段階モデル方式の名残りで、
+現在は使っていない(将来また使う可能性があるため残してある)。
+
+特徴量のうちコース別統計(course_win_rate等)・選手の直近の調子(racer_recent_*)は、
+「そのレースより前の結果だけ」を使うようにしている(未来の情報が紛れ込むリークを防ぐため)。
 
 使い方:
     python build_features.py --db boatrace.db --out features.csv
@@ -88,14 +88,24 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
     if df.empty:
         return df, FEATURE_COLS
 
-    # 場ごとのコース別勝率をキャッシュして結合(technique_stats.py の集計を利用)
-    course_stats_cache = {
-        int(sn): compute_course_technique_rates(conn, int(sn))
-        for sn in df["stadium_number"].unique()
-    }
+    # 場ごとのコース別勝率を結合(technique_stats.py の集計を利用)。
+    # 必ず「そのレースより前の結果だけ」を使う(before_date・before_race_id)。
+    # これを省略して場全体の集計(未来の結果も含む)を使うと、学習データに未来の情報が
+    # 紛れ込むリークになり、交差検証の的中率が実際の運用より楽観的に出てしまう。
+    # レース単位(同じレースの6艇は同じ統計を使う)でキャッシュし、DB問い合わせを
+    # レース数程度に抑える(行数分=艇数分まで増やす必要はないため)。
+    course_stats_cache = {}
+
+    def course_stats_for_race(stadium_number, race_date, race_id):
+        key = (stadium_number, race_date, race_id)
+        if key not in course_stats_cache:
+            course_stats_cache[key] = compute_course_technique_rates(
+                conn, stadium_number, before_date=race_date, before_race_id=race_id
+            )
+        return course_stats_cache[key]
 
     def course_stat_lookup(row, key):
-        stats = course_stats_cache.get(int(row["stadium_number"]))
+        stats = course_stats_for_race(int(row["stadium_number"]), row["race_date"], int(row["race_id"]))
         if not stats:
             return None
         return stats.get(int(row["boat_number"]), {}).get(key)
