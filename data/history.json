@@ -3,18 +3,62 @@
   "periodStart": "2026-07-07",
   "periodEnd": "2026-10-05",
   "summary": {
-    "evaluated": 3906,
-    "winHitRate": 0.5696364567332309,
-    "betHitRate": 0.08704557091653865,
-    "betHitRateAll": 0.2670250896057348,
-    "recoveryRate": 0.794031762295082,
-    "stake": 390400,
-    "payoutReturn": 309990,
-    "recoveryRateAll": 0.8033305525251877,
-    "stakeAll": 1558300,
-    "payoutReturnAll": 1251830
+    "evaluated": 3908,
+    "winHitRate": 0.5696008188331627,
+    "betHitRate": 0.08725690890481065,
+    "betHitRateAll": 0.2671443193449335,
+    "recoveryRate": 0.7965437788018433,
+    "stake": 390600,
+    "payoutReturn": 311130,
+    "recoveryRateAll": 0.803649541402091,
+    "stakeAll": 1559100,
+    "payoutReturnAll": 1252970
   },
   "races": [
+    {
+      "date": "2026-10-05",
+      "stadium": "徳山",
+      "raceNumber": 3,
+      "grade": "ippan",
+      "predictedAt": "2026-10-05T09:17:08.311302+09:00",
+      "predictedTop": {
+        "lane": 1,
+        "name": "廣瀬 凜",
+        "pct": 53
+      },
+      "predictedBetCombo": "1-3-2",
+      "predictedBetCombos": [
+        {
+          "combo": "1-3-2",
+          "prob": "7.5%",
+          "hit": false
+        },
+        {
+          "combo": "1-2-3",
+          "prob": "6.6%",
+          "hit": false
+        },
+        {
+          "combo": "1-3-5",
+          "prob": "5.4%",
+          "hit": false
+        },
+        {
+          "combo": "1-5-3",
+          "prob": "4.3%",
+          "hit": false
+        }
+      ],
+      "wasConfident": true,
+      "actualWinner": {
+        "lane": 4,
+        "name": "田中 宏典"
+      },
+      "actualCombo": "4-3-1",
+      "winHit": false,
+      "betHit": false,
+      "actualPayout": 11330
+    },
     {
       "date": "2026-10-05",
       "stadium": "徳山",
@@ -102,6 +146,50 @@
       "winHit": true,
       "betHit": false,
       "actualPayout": 990
+    },
+    {
+      "date": "2026-10-05",
+      "stadium": "唐津",
+      "raceNumber": 4,
+      "grade": "ippan",
+      "predictedAt": "2026-10-05T09:51:57.500334+09:00",
+      "predictedTop": {
+        "lane": 1,
+        "name": "小林 遼太",
+        "pct": 44
+      },
+      "predictedBetCombo": "1-2-4",
+      "predictedBetCombos": [
+        {
+          "combo": "1-2-4",
+          "prob": "4.1%",
+          "hit": true
+        },
+        {
+          "combo": "1-2-3",
+          "prob": "4.0%",
+          "hit": false
+        },
+        {
+          "combo": "1-4-2",
+          "prob": "3.8%",
+          "hit": false
+        },
+        {
+          "combo": "1-3-2",
+          "prob": "3.7%",
+          "hit": false
+        }
+      ],
+      "wasConfident": false,
+      "actualWinner": {
+        "lane": 1,
+        "name": "小林 遼太"
+      },
+      "actualCombo": "1-2-4",
+      "winHit": true,
+      "betHit": true,
+      "actualPayout": 1140
     },
     {
       "date": "2026-10-05",
