@@ -355,7 +355,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         compute_confidence_calibration, lookup_confidence,
         compute_bet_confidence_calibration, lookup_bet_confidence,
         compute_exacta_confidence_calibration, lookup_exacta_confidence,
-        classify_race_tier, get_daily_tier_thresholds,
+        classify_race_tier, get_daily_tier_thresholds, compute_race_entropy,
     )
     calibration = compute_confidence_calibration(conn, model=model)
     bet_calibration = compute_bet_confidence_calibration(conn, model=model)
@@ -568,6 +568,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
                 top_exacta_prob_for_tier = None
 
         second_pct = boats_ranked[1]["pct"] if len(boats_ranked) > 1 else None
+        race_entropy = compute_race_entropy([b["pct"] for b in boats_ranked])
         race_tier = classify_race_tier(
             calibration, boats_ranked[0]["pct"], second_pct,
             wave_height_cm=wave_height_cm, wind_speed_m=wind_speed_m,
@@ -575,6 +576,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
             bet_calibration=bet_calibration, top_bet_prob_pct=top_bet_prob_for_tier,
             win_thresholds=tier_thresholds["win"], exacta_thresholds=tier_thresholds["exacta"],
             bet_thresholds=tier_thresholds["bet"], score_cutoffs=tier_thresholds["score_cutoffs"],
+            race_entropy=race_entropy,
         )
 
         bet_confidence = None
@@ -635,12 +637,12 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         conn.execute(
             """INSERT INTO prediction_log
                    (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident,
-                    top_bets_json, bet_is_confident, race_tier)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
+                    top_bets_json, bet_is_confident, race_tier, race_entropy, top2_pct)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
             (race_id, datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
              top_bet_combo, int(confidence["isConfident"]), top_bets_json,
              int(bet_confidence["isConfident"]) if bet_confidence else None,
-             race_tier["tier"]),
+             race_tier["tier"], race_entropy, second_pct),
         )
 
         stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")

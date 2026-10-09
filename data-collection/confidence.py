@@ -26,6 +26,7 @@
 """
 import itertools
 import json
+import math
 import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
@@ -380,6 +381,17 @@ RACE_TIER_MIN_SAMPLE = 20  # これ未満のサンプルしかないバケット
 # (score_boat()の「荒れ水面だと1号艇が不利になりやすい」というロジックと同じ考え方)。
 ROUGH_WATER_WAVE_CM = 3
 ROUGH_WATER_WIND_MS = 5
+
+# 混戦度(6艇の予測確率分布のエントロピー、0〜1。0=1艇に集中、1=均等/大混戦)が
+# この値以上なら1段階格下げする。calibration(予測確率帯ごとの実績的中率)は
+# 「1位の確率が何%だったか」しか見ていないので、例えば「1位45%・2位40%・3位10%」と
+# 「1位45%・2位20%・3位15%・4位10%・5位6%・6位4%」のように、1位の確率は同じでも
+# 2位以下の割れ方が全然違うレースを区別できていなかった。エントロピーはこの「1位以外の
+# 散らばり方」まで含めて1つの数値に集約できるため、calibrationの判定を補う形で使う。
+# 閾値0.85は暫定値(まだ実績データで検証できていない。荒れ水面の閾値と同様、
+# ある程度データが溜まったらanalyze_tier_accuracy.py等で効果を検証し、見直すこと)。
+RACE_ENTROPY_DOWNGRADE_THRESHOLD = 0.85
+
 _TIER_ORDER = ["A", "B", "C", "D"]
 
 # 単勝・2連単・3連単それぞれの軸の重み(重み付き平均のウェイト)。
@@ -720,12 +732,32 @@ def _score_to_tier(score: float, cutoffs: tuple = (3.5, 2.5, 1.5)) -> str:
     return "D"
 
 
+def compute_race_entropy(pcts: list) -> Optional[float]:
+    """
+    6艇の予測確率(0〜100の整数、合計100)から、正規化シャノンエントロピーを計算する。
+    0(1艇に確率が集中=読みやすい)〜1(6艇均等=大混戦)の範囲になる。
+    pctsが空、または合計が0の場合はNoneを返す。
+    """
+    if not pcts:
+        return None
+    total = sum(pcts)
+    if total <= 0:
+        return None
+    probs = [p / total for p in pcts if p > 0]
+    if len(probs) <= 1:
+        return 0.0
+    entropy = -sum(p * math.log(p) for p in probs)
+    max_entropy = math.log(len(pcts))  # 艇数(通常6)が均等だった場合の最大エントロピー
+    return entropy / max_entropy if max_entropy > 0 else 0.0
+
+
 def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = None,
                         wave_height_cm: float = None, wind_speed_m: float = None,
                         exacta_calibration: dict = None, top_exacta_prob_pct: float = None,
                         bet_calibration: dict = None, top_bet_prob_pct: float = None,
                         win_thresholds: list = None, exacta_thresholds: list = None,
-                        bet_thresholds: list = None, score_cutoffs: tuple = None) -> dict:
+                        bet_thresholds: list = None, score_cutoffs: tuple = None,
+                        race_entropy: float = None) -> dict:
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
@@ -744,7 +776,11 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     単勝は実績データが不十分な場合、1位・2位の予測確率差で暫定判定する(2連単・3連単は
     暫定判定を持たず、単にその軸を平均から除外する。下限ルールも実績データがある軸にしか
     適用されない)。
-    最後に、荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
+    荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
+    race_entropy(6艇の予測確率分布のエントロピー、compute_race_entropy()参照)が
+    RACE_ENTROPY_DOWNGRADE_THRESHOLD以上(大混戦)なら、さらに1段階格下げする
+    (calibrationは「1位の確率が何%か」しか見ないため、1位の確率が同じでも
+    2位以下の割れ方が全然違うレースを区別できていなかった分を補う)。
 
     win_thresholds/exacta_thresholds/bet_thresholds を渡した場合はそれを使い、
     渡さなければ呼び出しごとにcalibrationから動的算出する。
@@ -828,5 +864,9 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     if rough_water and tier != "D":
         tier = _downgrade_tier(tier)
         reason += " / 荒れ水面のため1段階格下げ"
+
+    if race_entropy is not None and race_entropy >= RACE_ENTROPY_DOWNGRADE_THRESHOLD and tier != "D":
+        tier = _downgrade_tier(tier)
+        reason += f" / 混戦度が高いため1段階格下げ(エントロピー{race_entropy:.2f})"
 
     return {"tier": tier, "reason": reason, "basis": basis}
