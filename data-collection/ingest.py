@@ -15,7 +15,7 @@ BoatraceOpenAPI 統合API(v1)から出走表・直前情報・結果・払戻を
 import argparse
 import json
 import sqlite3
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Optional
@@ -48,6 +48,7 @@ def _migrate_add_missing_columns(conn: sqlite3.Connection):
         ("prediction_log", "race_tier", "TEXT"),
         ("prediction_log", "race_entropy", "REAL"),
         ("prediction_log", "top2_pct", "INTEGER"),
+        ("entries", "motor_3連率", "REAL"),
     ]
     for table, column, coltype in migrations:
         try:
@@ -152,9 +153,9 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                     """INSERT INTO entries (race_id, boat_number, racer_registration_number,
                             racer_name, racer_branch, racer_class, racer_age, racer_weight_kg,
                             national_win_rate, national_2連率, local_win_rate, local_2連率,
-                            motor_number, motor_2連率, boat_hull_number, boat_hull_2連率,
+                            motor_number, motor_2連率, motor_3連率, boat_hull_number, boat_hull_2連率,
                             average_start_timing, flying_count, late_count)
-                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                        ON CONFLICT(race_id, boat_number) DO UPDATE SET
                          racer_class=excluded.racer_class,
                          national_win_rate=excluded.national_win_rate,
@@ -162,6 +163,7 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                          local_win_rate=excluded.local_win_rate,
                          local_2連率=excluded.local_2連率,
                          motor_2連率=excluded.motor_2連率,
+                         motor_3連率=excluded.motor_3連率,
                          boat_hull_2連率=excluded.boat_hull_2連率,
                          flying_count=excluded.flying_count,
                          late_count=excluded.late_count""",
@@ -179,6 +181,7 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
                         racer.get("local_top_2_percent"),
                         racer.get("motor_number"),
                         racer.get("motor_top_2_percent"),
+                        racer.get("motor_top_3_percent"),
                         racer.get("boat_number"),
                         racer.get("boat_top_2_percent"),
                         racer.get("average_start_timing"),
@@ -259,11 +262,42 @@ def parse_unified(conn: sqlite3.Connection, race_date: date, payload: Optional[d
     conn.commit()
 
 
+def _prune_raw_json(conn: sqlite3.Connection, keep_days: int, db_path: str) -> None:
+    """
+    raw_json(生JSONの全保存)は再パース用の安全策として持たせていたが、日々蓄積し続けると
+    DBファイルが際限なく肥大化し、GitHubの通常git(非LFS)のファイルサイズ上限100MBを
+    超えてpushが失敗するようになる(実際に発生した)。正規化済みのテーブル
+    (races/entries/previews/results等)には全データが残っているため、raw_jsonは
+    直近keep_days日分だけ残して古い分は削除して問題ない。
+    DELETE直後はSQLiteのファイルサイズがすぐには縮まらないため、VACUUMで実ファイルサイズも
+    縮小する(VACUUMは時間がかかることがあるが、GitHub Actionsの1回の実行内で完結する処理なので
+    問題ない)。
+    """
+    cutoff = (date.today() - timedelta(days=keep_days)).isoformat()
+    before = conn.execute("SELECT COUNT(*) FROM raw_json").fetchone()[0]
+    conn.execute("DELETE FROM raw_json WHERE race_date < ?", (cutoff,))
+    conn.commit()
+    after = conn.execute("SELECT COUNT(*) FROM raw_json").fetchone()[0]
+    deleted = before - after
+    if deleted > 0:
+        print(f"raw_jsonを{deleted}件削除しました(直近{keep_days}日分より古いもの)。VACUUM実行中...")
+        conn.execute("VACUUM")
+        conn.commit()
+    size_mb = Path(db_path).stat().st_size / 1024 / 1024
+    print(f"DBファイルサイズ: {size_mb:.1f}MB")
+    if size_mb > 90:
+        print(f"⚠ DBファイルサイズが90MBを超えています(GitHubの上限は100MB)。"
+              f"--prune-raw-json-days をもっと小さくするか、他の削減策を検討してください。")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", required=True, help="YYYY-MM-DD")
     ap.add_argument("--end", required=True, help="YYYY-MM-DD")
     ap.add_argument("--db", default="boatrace.db")
+    ap.add_argument("--prune-raw-json-days", type=int, default=30,
+                     help="raw_jsonをこの日数分だけ残して古い分を削除する(既定30日)。"
+                          "0を指定すると間引きをスキップする。")
     args = ap.parse_args()
 
     start = date.fromisoformat(args.start)
@@ -276,6 +310,9 @@ def main():
         save_raw(conn, d, payload)
         conn.commit()
         parse_unified(conn, d, payload)
+
+    if args.prune_raw_json_days > 0:
+        _prune_raw_json(conn, args.prune_raw_json_days, args.db)
 
     conn.close()
     print("完了しました。")
