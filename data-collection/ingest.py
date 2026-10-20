@@ -295,8 +295,9 @@ def main():
     ap.add_argument("--start", required=True, help="YYYY-MM-DD")
     ap.add_argument("--end", required=True, help="YYYY-MM-DD")
     ap.add_argument("--db", default="boatrace.db")
-    ap.add_argument("--prune-raw-json-days", type=int, default=30,
-                     help="raw_jsonをこの日数分だけ残して古い分を削除する(既定30日)。"
+    ap.add_argument("--prune-raw-json-days", type=int, default=7,
+                     help="raw_jsonをこの日数分だけ残して古い分を削除する(既定7日。"
+                          "実測で1行あたり平均約1.5MBと判明したため、30日では大きすぎた)。"
                           "0を指定すると間引きをスキップする。")
     args = ap.parse_args()
 

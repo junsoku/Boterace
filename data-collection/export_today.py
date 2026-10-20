@@ -409,22 +409,49 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
                 close_dt = None
         is_closed = close_dt is not None and now_jst.replace(tzinfo=None) > close_dt
 
+        # このレースの結果がもう確定しているか(6艇分の着順が揃っているか)を、
+        # 軽いクエリで先に調べる(出走表の全項目を取得する前に、凍結して良いか判断するため)。
+        result_rows = conn.execute(
+            """SELECT e.boat_number, e.racer_name, r.arrival_order
+               FROM entries e LEFT JOIN results r ON r.entry_id = e.entry_id
+               WHERE e.race_id = ? ORDER BY e.boat_number""",
+            (race_id,),
+        ).fetchall()
+        is_finished = len(result_rows) == 6 and all(row[2] is not None for row in result_rows)
+        actual_winner = None
+        actual_combo = None
+        if is_finished:
+            ordered = sorted(result_rows, key=lambda row: row[2])
+            winner_row = ordered[0]
+            actual_winner = {"lane": winner_row[0], "name": winner_row[1]}
+            actual_combo = "-".join(str(row[0]) for row in ordered[:3])
+
         prev_race = previous_by_key.get((stadium_number, race_number))
-        if is_closed and prev_race is not None and not prev_race.get("isFinished"):
-            # まだ結果が確定していないことをDBでも確認してから凍結する
-            still_unfinished = conn.execute(
-                """SELECT COUNT(*) FROM entries e LEFT JOIN results r ON r.entry_id = e.entry_id
-                   WHERE e.race_id = ? AND r.arrival_order IS NULL""",
-                (race_id,),
-            ).fetchone()[0] > 0
-            if still_unfinished:
-                stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
-                stadium_map.setdefault(
-                    stadium_name,
-                    {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []},
-                )
-                stadium_map[stadium_name]["races"].append(prev_race)
-                continue  # 再計算しない
+        stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
+
+        if prev_race is not None and prev_race.get("isFinished"):
+            # 既に結果確定済みで前回出力済み。結果は変わりようがないので再計算不要、丸ごと使い回す。
+            stadium_map.setdefault(
+                stadium_name, {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []},
+            )
+            stadium_map[stadium_name]["races"].append(prev_race)
+            continue
+
+        if prev_race is not None and (is_closed or is_finished):
+            # 締切後(結果未確定、または今回初めて結果が判明した)。
+            # 予測内容(pct・bets・tier等)はcourse_stats等の変動の影響を受けないよう凍結したままにし、
+            # 結果表示部分(isFinished/actualWinner/actualCombo)だけ今回のDB実測で上書きする。
+            # prediction_logへの書き込みは「締切前の予測」の記録なので、ここでは行わない
+            # (予測内容を変えていないのに記録を増やすと、無駄にレコードが膨らむだけのため)。
+            race_out = dict(prev_race)
+            race_out["isFinished"] = is_finished
+            race_out["actualWinner"] = actual_winner
+            race_out["actualCombo"] = actual_combo
+            stadium_map.setdefault(
+                stadium_name, {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []},
+            )
+            stadium_map[stadium_name]["races"].append(race_out)
+            continue
 
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_name, e.racer_registration_number, e.racer_class,
@@ -440,23 +467,6 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         ).fetchall()
         if not entries:
             continue  # 出走表未取得のレースはスキップ
-
-        # このレースの結果がもう確定しているか(6艇分の着順が揃っているか)を調べる。
-        # 場のタブの「開催終了」表示や、レースカードの「結果あり」表示に使う。
-        result_rows = conn.execute(
-            """SELECT e.boat_number, e.racer_name, r.arrival_order
-               FROM entries e LEFT JOIN results r ON r.entry_id = e.entry_id
-               WHERE e.race_id = ? ORDER BY e.boat_number""",
-            (race_id,),
-        ).fetchall()
-        is_finished = len(result_rows) == 6 and all(row[2] is not None for row in result_rows)
-        actual_winner = None
-        actual_combo = None
-        if is_finished:
-            ordered = sorted(result_rows, key=lambda row: row[2])
-            winner_row = ordered[0]
-            actual_winner = {"lane": winner_row[0], "name": winner_row[1]}
-            actual_combo = "-".join(str(row[0]) for row in ordered[:3])
 
         if stadium_number not in course_stats_cache:
             course_stats_cache[stadium_number] = compute_course_technique_rates(conn, stadium_number)
@@ -632,20 +642,42 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
 
         # 「その時点の予想」をログに残す(履歴画面で後から答え合わせするため)。
         # top_bet_combo は後方互換のため先頭候補のみ残し、top_bets_json に全候補(通常4件)を保存する。
+        #
+        # ここに到達するのは「締切前でまだ凍結されていないレース」だけ(締切後は上の凍結ブロックで
+        # continueしてここまで来ない)。締切前は30分おきに毎回INSERTすると、1レースあたり
+        # 数十件の重複スナップショットが溜まってprediction_logが際限なく肥大化していた
+        # (実測で139,322行、DB容量の約3割を占めていた)。history.html・各種analyze_*.pyは
+        # どのみち「そのレースの最後のスナップショット」しか使っていないため、途中経過は
+        # 1行だけ保持して都度UPDATEすれば十分(UPSERT)。
         top_bet_combo = race_out["bets"][0]["combo"] if race_out["bets"] else None
         top_bets_json = json.dumps(race_out["bets"], ensure_ascii=False) if race_out["bets"] else None
-        conn.execute(
-            """INSERT INTO prediction_log
-                   (race_id, computed_at, top_lane, top_pct, top_bet_combo, is_confident,
-                    top_bets_json, bet_is_confident, race_tier, race_entropy, top2_pct)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-            (race_id, datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
-             top_bet_combo, int(confidence["isConfident"]), top_bets_json,
-             int(bet_confidence["isConfident"]) if bet_confidence else None,
-             race_tier["tier"], race_entropy, second_pct),
+        log_values = (
+            datetime.now(ZoneInfo("Asia/Tokyo")).isoformat(), boats_ranked[0]["lane"], boats_ranked[0]["pct"],
+            top_bet_combo, int(confidence["isConfident"]), top_bets_json,
+            int(bet_confidence["isConfident"]) if bet_confidence else None,
+            race_tier["tier"], race_entropy, second_pct,
         )
+        existing_log = conn.execute(
+            "SELECT log_id FROM prediction_log WHERE race_id = ? ORDER BY computed_at DESC LIMIT 1",
+            (race_id,),
+        ).fetchone()
+        if existing_log:
+            conn.execute(
+                """UPDATE prediction_log
+                       SET computed_at=?, top_lane=?, top_pct=?, top_bet_combo=?, is_confident=?,
+                           top_bets_json=?, bet_is_confident=?, race_tier=?, race_entropy=?, top2_pct=?
+                   WHERE log_id=?""",
+                log_values + (existing_log[0],),
+            )
+        else:
+            conn.execute(
+                """INSERT INTO prediction_log
+                       (computed_at, top_lane, top_pct, top_bet_combo, is_confident,
+                        top_bets_json, bet_is_confident, race_tier, race_entropy, top2_pct, race_id)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                log_values + (race_id,),
+            )
 
-        stadium_name = STADIUM_NAMES.get(stadium_number, f"第{stadium_number}場")
         stadium_map.setdefault(stadium_name, {"name": stadium_name, "stadium_number": stadium_number, "grade": None, "races": []})
         stadium_map[stadium_name]["races"].append(race_out)
 
