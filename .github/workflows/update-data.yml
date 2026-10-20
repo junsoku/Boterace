@@ -2,21 +2,26 @@ name: Update boatrace data
 
 on:
   schedule:
-    # 日本時間 8:00〜23:00 の間、30分おきに実行(UTCでは前日23時〜当日14:00に相当)。
-    # 展示タイムはレース締切の直前にしか確定しないため、頻繁に取得しないと反映されない。
-    # レースが行われない深夜早朝は無駄なので対象外にしている。
-    # 毎時00分・30分ちょうどはGitHub Actions全体で最も混雑し、実行が遅延しやすいため、
-    # ずらして実行している(スケジュール自体の正確な実行時刻はGitHub側の仕様上
-    # 保証されないが、混雑のピークを避けることで遅延を減らせる)。
-    # 最初07分・37分(各節目の7分後)にしていたが、それでも遅延が伸びてきたため、
-    # 各節目の7分前(53分・23分)に変更した。
-    - cron: "53 22 * * *"       # UTC 22:53        = JST 7:53(8:00の7分前)
-    - cron: "23,53 23 * * *"    # UTC 23:23,23:53  = JST 8:23,8:53
-    - cron: "23,53 0-13 * * *"  # UTC 0:23-13:53   = JST 9:23-22:53
-  workflow_dispatch: {}  # Actionsタブから手動実行もできるようにする
+    # scheduleトリガー(cron)はGitHub側で優先度が低く、混雑時は実行自体がスキップされることが
+    # 多発していた(実測で数時間おきにしか動かない日があった)。そのため、この30分おきの
+    # 更新そのものはこのワークフロー自身がworkflow_dispatch経由で自分を再起動する「自己連鎖」で
+    # 行う(下の「次回実行を予約」ステップ参照)。workflow_dispatchはAPI直接呼び出しのため、
+    # scheduleほど優先度が下がらない。
+    # ここでのscheduleは、連鎖が何らかの理由で途切れた場合に自動復旧させるための「保険」として、
+    # 2時間おきの低頻度にしている(保険なので、多少遅延・スキップされても実害は小さい)。
+    - cron: "15 23 * * *"              # JST 8:15(その日最初の起点)
+    - cron: "15 1,3,5,7,9,11,13 * * *" # JST 10:15,12:15,14:15,16:15,18:15,20:15,22:15(保険)
+  workflow_dispatch: {}  # Actionsタブから手動実行、および自己連鎖からの呼び出しの両方に使う
+
+# 保険のscheduleと自己連鎖が重なって同時に2つ動いてしまわないよう、同じグループ名で直列化する
+# (cancel-in-progress: falseなので、先に動いている方を待ってから後発が実行される。キャンセルはしない)。
+concurrency:
+  group: update-data-chain
+  cancel-in-progress: false
 
 permissions:
   contents: write  # boatrace.db / data/today.json をコミットし直すために必要
+  actions: write   # 自分自身をworkflow_dispatchで再起動するために必要
 
 jobs:
   update:
@@ -81,3 +86,25 @@ jobs:
           git add data-collection/boatrace.db data-collection/tier_thresholds.json data/today.json data/history.json
           git diff --cached --quiet || git commit -m "データ更新: ${{ steps.dates.outputs.today }}"
           git push
+
+      - name: 次回実行を予約(自己連鎖)
+        run: |
+          # 約28分待機してから自分自身をworkflow_dispatchで起動し直す。
+          # (ここまでの処理に数分かかるため、合計でだいたい30分間隔になる。
+          # 厳密な時刻合わせはしない。scheduleと違ってworkflow_dispatchは
+          # キリの良い時刻を避ける必要が無いため。)
+          sleep 1680
+
+          HOUR_AFTER=$(TZ='Asia/Tokyo' date +%H)
+          # 日本時間8〜22時台のみ連鎖を続ける。夜間(23〜翌7時台)は止めて、
+          # 翌朝8:15の保険scheduleに起動を任せる。
+          if [ "$HOUR_AFTER" -ge 8 ] && [ "$HOUR_AFTER" -le 22 ]; then
+            echo "次回実行を予約します(現在JST ${HOUR_AFTER}時台)"
+            curl -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/update-data.yml/dispatches" \
+              -d '{"ref":"${{ github.ref_name }}"}'
+          else
+            echo "夜間帯(JST ${HOUR_AFTER}時台)のため連鎖を止めます。翌朝の保険scheduleで再開します。"
+          fi
