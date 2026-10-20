@@ -10,6 +10,7 @@
    この目安値はボートレース全体の大まかな傾向であり、正確な公式統計ではないため、
    実データが十分に溜まったら必ず compute_course_technique_rates() の結果に置き換えること。
 """
+import bisect
 import sqlite3
 from collections import defaultdict
 from typing import Optional
@@ -95,6 +96,78 @@ def compute_course_technique_rates(conn: sqlite3.Connection, stadium_number: Opt
         stat = {"win_rate": wins / n, "sample_size": n, "is_fallback": False}
         for tech in TECHNIQUES:
             stat[tech] = technique_win_by_course[course].get(tech, 0) / n
+        result[course] = stat
+    return result
+
+
+def build_course_stats_timeline(conn: sqlite3.Connection, stadium_number: int) -> dict:
+    """
+    compute_course_technique_rates(before_date=..)の高速版。レース1件ごとに個別クエリを
+    投げると(build_features.pyの学習データ作成、confidence.pyの過去再計算のように
+    数千〜数万レース分呼ばれる場面で)極端に遅くなるため、場ごとに全履歴を1回だけ取得し、
+    コースごとに時系列順の累積勝ち数・決まり手数(prefix sum)を作っておく。
+    以降は course_stats_as_of() でbisectによる二分探索(O(log n))で
+    「あるレースより前の統計」を引けるようになり、都度SQLクエリを投げるより大幅に速い。
+
+    戻り値: {course: {"keys": [(race_date, race_id), ...], "win_prefix": [...],
+                       "technique_prefix": {技: [...]}}}
+    """
+    rows = conn.execute(
+        """
+        SELECT races.race_date, races.race_id, r.actual_course, r.arrival_order, r.winning_technique
+        FROM results r
+        JOIN entries e ON e.entry_id = r.entry_id
+        JOIN races ON races.race_id = e.race_id
+        WHERE r.actual_course IS NOT NULL AND races.stadium_number = ?
+        ORDER BY races.race_date, races.race_id
+        """,
+        (stadium_number,),
+    ).fetchall()
+
+    timeline = {
+        course: {"keys": [], "win_prefix": [0], "technique_prefix": {t: [0] for t in TECHNIQUES + ["その他"]}}
+        for course in range(1, 7)
+    }
+    for race_date, race_id, course, arrival_order, technique in rows:
+        if course is None or course not in timeline:
+            continue
+        d = timeline[course]
+        d["keys"].append((race_date, race_id))
+        is_win = arrival_order == 1
+        d["win_prefix"].append(d["win_prefix"][-1] + (1 if is_win else 0))
+        key = technique if technique in TECHNIQUES else "その他"
+        for t, prefix in d["technique_prefix"].items():
+            prefix.append(prefix[-1] + (1 if (is_win and t == key) else 0))
+    return timeline
+
+
+def course_stats_as_of(timeline: dict, before_date: Optional[str] = None,
+                        before_race_id: Optional[int] = None) -> dict:
+    """
+    build_course_stats_timeline()で作った場ごとのタイムラインから、
+    「before_date(・before_race_id)より前」の時点でのコース別統計を高速に取り出す。
+    before_dateを省略すると、タイムライン全期間(=今ある全データ)の統計を返す
+    (本番の「今日の予想」用。未来の情報は無いので、このまま使ってよい)。
+    戻り値の形はcompute_course_technique_rates()と同じ。
+    """
+    cutoff = (before_date, before_race_id if before_race_id is not None else float("inf")) \
+        if before_date is not None else None
+
+    result = {}
+    for course in range(1, 7):
+        d = timeline[course]
+        if cutoff is not None:
+            idx = bisect.bisect_left(d["keys"], cutoff)
+        else:
+            idx = len(d["keys"])
+        n = idx
+        if n < MIN_SAMPLE_SIZE:
+            result[course] = dict(STADIUM_DEFAULT_COURSE_STATS[course], sample_size=n, is_fallback=True)
+            continue
+        wins = d["win_prefix"][idx]
+        stat = {"win_rate": wins / n, "sample_size": n, "is_fallback": False}
+        for tech in TECHNIQUES:
+            stat[tech] = d["technique_prefix"][tech][idx] / n
         result[course] = stat
     return result
 

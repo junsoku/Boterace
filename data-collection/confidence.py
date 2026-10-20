@@ -37,7 +37,8 @@ from export_today import (
     estimate_exacta_bets, estimate_exacta_bets_ml, predict_with_model,
 )
 from technique_stats import (
-    compute_course_technique_rates, compute_racer_nigashi_rate, compute_racer_recent_form,
+    build_course_stats_timeline, course_stats_as_of,
+    compute_racer_nigashi_rate, compute_racer_recent_form,
 )
 
 # ---- ◎(単勝)用の確信度設定 ----
@@ -107,7 +108,7 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
         (start.isoformat(), end.isoformat()),
     ).fetchall()
 
-    course_stats_cache = {}
+    timeline_cache = {}
 
     for race_id, race_date, stadium_number, race_grade, wave, wind, temperature_c, water_temperature_c in races:
         entries = conn.execute(
@@ -128,14 +129,14 @@ def _iter_calibration_races(conn: sqlite3.Connection, lookback_days: int, model=
 
         # 「そのレースより前の結果だけ」を使う(未来の結果が紛れ込むリークを防ぐ)。
         # この関数(_iter_calibration_races)は過去レースを再予想してA〜D判定や確信度バッジの
-        # 実績データを作るためのものなので、ここがリークしていると「実績的中率」自体が
-        # 水増しされ、A判定の信頼性そのものが検証できなくなってしまう。
-        cache_key = (stadium_number, race_date, race_id)
-        if cache_key not in course_stats_cache:
-            course_stats_cache[cache_key] = compute_course_technique_rates(
-                conn, stadium_number, before_date=race_date, before_race_id=race_id
-            )
-        course_stats = course_stats_cache[cache_key]
+        # 実績データを作るためのもので、export_today.pyから毎回(30分おき)3回(単勝・2連単・
+        # 3連単それぞれ)呼ばれる。以前はレース1件ごとに個別SQLクエリを投げていたため、
+        # 90日分(数千〜数万レース)×3回で極端に遅くなっていた。場ごとに全履歴を1回だけ
+        # 取得してタイムライン化し(build_course_stats_timeline)、以降は二分探索で高速に
+        # レースごとの時点を引く(course_stats_as_of)ことで、正確さを保ったまま高速化する。
+        if stadium_number not in timeline_cache:
+            timeline_cache[stadium_number] = build_course_stats_timeline(conn, stadium_number)
+        course_stats = course_stats_as_of(timeline_cache[stadium_number], before_date=race_date, before_race_id=race_id)
 
         exh_values = [row[12] for row in entries if row[12]]
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None

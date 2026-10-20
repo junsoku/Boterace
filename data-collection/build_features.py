@@ -18,7 +18,7 @@ import sqlite3
 import pandas as pd
 
 from technique_stats import (
-    compute_course_technique_rates, fetch_racer_history, recent_form_from_history,
+    build_course_stats_timeline, course_stats_as_of, fetch_racer_history, recent_form_from_history,
 )
 
 # racer_class(文字列 "A1"/"A2"/"B1"/"B2") を数値化するためのマップ。
@@ -92,17 +92,15 @@ def build_features(conn: sqlite3.Connection) -> tuple[pd.DataFrame, list]:
     # 必ず「そのレースより前の結果だけ」を使う(before_date・before_race_id)。
     # これを省略して場全体の集計(未来の結果も含む)を使うと、学習データに未来の情報が
     # 紛れ込むリークになり、交差検証の的中率が実際の運用より楽観的に出てしまう。
-    # レース単位(同じレースの6艇は同じ統計を使う)でキャッシュし、DB問い合わせを
-    # レース数程度に抑える(行数分=艇数分まで増やす必要はないため)。
-    course_stats_cache = {}
+    # レース1件ごとに個別SQLクエリを投げると数千〜数万レース分で極端に遅くなるため、
+    # 場ごとに全履歴を1回だけ取得してタイムライン化し(build_course_stats_timeline)、
+    # 以降は二分探索で高速にレースごとの時点を引く(course_stats_as_of)。
+    timeline_cache = {}
 
     def course_stats_for_race(stadium_number, race_date, race_id):
-        key = (stadium_number, race_date, race_id)
-        if key not in course_stats_cache:
-            course_stats_cache[key] = compute_course_technique_rates(
-                conn, stadium_number, before_date=race_date, before_race_id=race_id
-            )
-        return course_stats_cache[key]
+        if stadium_number not in timeline_cache:
+            timeline_cache[stadium_number] = build_course_stats_timeline(conn, stadium_number)
+        return course_stats_as_of(timeline_cache[stadium_number], before_date=race_date, before_race_id=race_id)
 
     def course_stat_lookup(row, key):
         stats = course_stats_for_race(int(row["stadium_number"]), row["race_date"], int(row["race_id"]))
