@@ -1,6 +1,6 @@
 {
   "date": "2026-10-21",
-  "generated_at": "2026-10-21T22:22:14.780506+09:00",
+  "generated_at": "2026-10-21T22:51:21.520708+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -36078,31 +36078,34 @@
             "reason": "単勝60-69%帯の実績的中率74.4%(n=1174) / 2連単20-24%帯の実績的中率33.7%(n=1104) / 3連単5-9%帯の実績的中率12.0%(n=3986)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "榎 幸司"
+          },
+          "actualCombo": "1-2-6"
         },
         {
           "number": 12,
           "close": "2026-10-21 22:54:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "2",
+          "windSpeed": 1.0,
+          "waveHeight": 1.0,
+          "temperature": 18.0,
+          "waterTemperature": 22.0,
           "boats": [
             {
               "lane": 1,
               "name": "平田 忠則",
               "class": "A1",
-              "pct": 53,
+              "pct": 54,
               "natWin": 7.89,
               "localWin": 6.65,
               "natPlace": 71.43,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.82,
               "motor2r": 40.1,
               "flying": 0,
               "late": 0,
@@ -36112,16 +36115,16 @@
               "lane": 2,
               "name": "北村 征嗣",
               "class": "A1",
-              "pct": 12,
+              "pct": 11,
               "natWin": 6.16,
               "localWin": 7.35,
               "natPlace": 42.65,
               "localPlace": 61.29,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 34.15,
               "flying": 0,
               "late": 0,
-              "mark": "○"
+              "mark": "▲"
             },
             {
               "lane": 3,
@@ -36132,11 +36135,11 @@
               "localWin": 6.33,
               "natPlace": 45.9,
               "localPlace": 45.83,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 35.91,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "○"
             },
             {
               "lane": 4,
@@ -36147,7 +36150,7 @@
               "localWin": 6.74,
               "natPlace": 43.57,
               "localPlace": 51.85,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 35.51,
               "flying": 0,
               "late": 0,
@@ -36162,7 +36165,7 @@
               "localWin": 6.76,
               "natPlace": 40.74,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 38.61,
               "flying": 0,
               "late": 0,
@@ -36177,7 +36180,7 @@
               "localWin": 7.13,
               "natPlace": 52.71,
               "localPlace": 46.67,
-              "exh": null,
+              "exh": 6.81,
               "motor2r": 38.24,
               "flying": 0,
               "late": 0,
@@ -36189,31 +36192,16 @@
               "lane": 1,
               "name": "平田 忠則",
               "class": "A1",
-              "pct": 53,
+              "pct": 54,
               "natWin": 7.89,
               "localWin": 6.65,
               "natPlace": 71.43,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.82,
               "motor2r": 40.1,
               "flying": 0,
               "late": 0,
               "mark": "◎"
-            },
-            {
-              "lane": 2,
-              "name": "北村 征嗣",
-              "class": "A1",
-              "pct": 12,
-              "natWin": 6.16,
-              "localWin": 7.35,
-              "natPlace": 42.65,
-              "localPlace": 61.29,
-              "exh": null,
-              "motor2r": 34.15,
-              "flying": 0,
-              "late": 0,
-              "mark": "○"
             },
             {
               "lane": 3,
@@ -36224,8 +36212,23 @@
               "localWin": 6.33,
               "natPlace": 45.9,
               "localPlace": 45.83,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 35.91,
+              "flying": 0,
+              "late": 0,
+              "mark": "○"
+            },
+            {
+              "lane": 2,
+              "name": "北村 征嗣",
+              "class": "A1",
+              "pct": 11,
+              "natWin": 6.16,
+              "localWin": 7.35,
+              "natPlace": 42.65,
+              "localPlace": 61.29,
+              "exh": 6.86,
+              "motor2r": 34.15,
               "flying": 0,
               "late": 0,
               "mark": "▲"
@@ -36239,7 +36242,7 @@
               "localWin": 6.74,
               "natPlace": 43.57,
               "localPlace": 51.85,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 35.51,
               "flying": 0,
               "late": 0,
@@ -36254,7 +36257,7 @@
               "localWin": 6.76,
               "natPlace": 40.74,
               "localPlace": 50.0,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 38.61,
               "flying": 0,
               "late": 0,
@@ -36269,7 +36272,7 @@
               "localWin": 7.13,
               "natPlace": 52.71,
               "localPlace": 46.67,
-              "exh": null,
+              "exh": 6.81,
               "motor2r": 38.24,
               "flying": 0,
               "late": 0,
@@ -36279,35 +36282,35 @@
           "bets": [
             {
               "combo": "1-3-2",
-              "prob": "4.9%"
-            },
-            {
-              "combo": "1-2-3",
               "prob": "4.8%"
             },
             {
-              "combo": "1-3-4",
-              "prob": "4.0%"
+              "combo": "1-2-3",
+              "prob": "4.6%"
             },
             {
-              "combo": "1-2-4",
-              "prob": "3.7%"
+              "combo": "1-3-4",
+              "prob": "4.3%"
+            },
+            {
+              "combo": "1-4-3",
+              "prob": "4.0%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-3",
-              "prob": "14.3%"
+              "prob": "14.8%"
             },
             {
               "combo": "1-2",
-              "prob": "13.5%"
+              "prob": "12.9%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6425320645428216,
-            "sampleSize": 2417,
+            "hitRate": 0.6426799007444168,
+            "sampleSize": 2418,
             "bucket": "50-59%"
           },
           "betConfidence": {
@@ -36324,7 +36327,7 @@
           },
           "raceTier": {
             "tier": "D",
-            "reason": "単勝50-59%帯の実績的中率64.3%(n=2417) / 2連単10-14%帯の実績的中率22.1%(n=2082) / 3連単0-4%帯の実績的中率6.7%(n=2445)",
+            "reason": "単勝50-59%帯の実績的中率64.3%(n=2418) / 2連単10-14%帯の実績的中率22.1%(n=2082) / 3連単0-4%帯の実績的中率6.7%(n=2445)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -39368,34 +39371,34 @@
   "course_stats_by_stadium": {
     "20": {
       "1": {
-        "win_rate": 0.604,
+        "win_rate": 0.605,
         "is_fallback": false,
-        "sample_size": 298
+        "sample_size": 299
       },
       "2": {
-        "win_rate": 0.168,
+        "win_rate": 0.167,
         "is_fallback": false,
-        "sample_size": 298
+        "sample_size": 299
       },
       "3": {
-        "win_rate": 0.091,
+        "win_rate": 0.09,
         "is_fallback": false,
-        "sample_size": 298
+        "sample_size": 299
       },
       "4": {
         "win_rate": 0.087,
         "is_fallback": false,
-        "sample_size": 298
+        "sample_size": 299
       },
       "5": {
-        "win_rate": 0.034,
+        "win_rate": 0.033,
         "is_fallback": false,
-        "sample_size": 298
+        "sample_size": 299
       },
       "6": {
         "win_rate": 0.017,
         "is_fallback": false,
-        "sample_size": 296
+        "sample_size": 297
       }
     }
   }
