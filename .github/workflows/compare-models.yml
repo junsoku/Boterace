@@ -1,0 +1,42 @@
+name: Compare models
+
+on:
+  workflow_dispatch:
+    inputs:
+      drop_feature:
+        description: "比較したい特徴量名(空欄なら基準だけを評価)"
+        required: false
+        default: ""
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r data-collection/requirements.txt
+
+      - name: 特徴量CSVを生成
+        run: |
+          python data-collection/build_features.py \
+            --db data-collection/boatrace.db \
+            --out data-collection/features.csv
+
+      - name: モデル比較
+        run: |
+          DROP_ARG=""
+          if [ -n "${{ github.event.inputs.drop_feature }}" ]; then
+            DROP_ARG="--drop-feature ${{ github.event.inputs.drop_feature }}"
+          fi
+          python data-collection/compare_models.py \
+            --features data-collection/features.csv \
+            --db data-collection/boatrace.db \
+            $DROP_ARG
+        # git commit/pushは一切しない(model.txtは生成・保存しない使い捨ての実験)
