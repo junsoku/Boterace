@@ -1,0 +1,34 @@
+name: Analyze odds edge (turnmark)
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "検証開始日(YYYY-MM-DD)"
+        required: true
+      end:
+        description: "検証終了日(YYYY-MM-DD、turnmark/apiは前日までのデータのみ対応)"
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: Python環境をセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install -r data-collection/requirements.txt
+
+      - name: オッズとの比較検証
+        run: |
+          python data-collection/analyze_odds_edge.py \
+            --db data-collection/boatrace.db \
+            --start ${{ github.event.inputs.start }} \
+            --end ${{ github.event.inputs.end }}
+        # git commit/pushは一切しない(読み取り専用の分析。オッズもDBには保存しない)
