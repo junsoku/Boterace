@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS entries (
     local_2連率                        REAL,
     motor_number                        INTEGER,
     motor_2連率                          REAL,
+    motor_3連率                          REAL,
     boat_hull_number                       INTEGER,
     boat_hull_2連率                         REAL,
     average_start_timing                     REAL,

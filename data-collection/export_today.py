@@ -41,6 +41,7 @@ FEATURE_COLS = [
     "national_win_rate",
     "local_win_rate",
     "motor_2連率",
+    "motor_3連率",
     "boat_hull_2連率",
     "average_start_timing",
     "course_win_rate",
@@ -187,6 +188,7 @@ def predict_with_model(entries: list, course_stats: dict, model, race_context: d
             "national_win_rate": e.get("national_win_rate") or 4.0,
             "local_win_rate": e.get("local_win_rate") or 4.0,
             "motor_2連率": e.get("motor_2連率") or 30.0,
+            "motor_3連率": e.get("motor_3連率") or 50.0,
             "boat_hull_2連率": e.get("boat_hull_2連率") or 30.0,
             "average_start_timing": e.get("average_start_timing") or 0.17,
             "course_win_rate": course_win_rate if course_win_rate is not None else 0.2,
@@ -456,7 +458,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         entries = conn.execute(
             """SELECT e.boat_number, e.racer_name, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
-                      e.motor_2連率, e.boat_hull_2連率,
+                      e.motor_2連率, e.motor_3連率, e.boat_hull_2連率,
                       e.average_start_timing, p.exhibition_time, p.tilt_angle,
                       e.flying_count, e.late_count, p.weight_adjustment_kg, p.start_timing_preview,
                       p.start_course
@@ -485,7 +487,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
         }
 
         boat_dicts = []
-        for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
+        for (bn, name, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, motor_3r, hull_2r,
              avg_st, exh_time, tilt_angle, flying_count, late_count,
              weight_adj, start_timing_prev, start_course) in entries:
             d = {
@@ -497,6 +499,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
                 "local_win_rate": local,
                 "local_2連率": local_2r,
                 "motor_2連率": motor_2r,
+                "motor_3連率": motor_3r,
                 "boat_hull_2連率": hull_2r,
                 "average_start_timing": avg_st,
                 "exhibition_time": exh_time,

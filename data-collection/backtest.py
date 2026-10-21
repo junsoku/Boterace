@@ -29,7 +29,8 @@ from export_today import (
     score_boat, normalize_to_pct, estimate_bets, estimate_bets_ml, predict_with_model,
 )
 from technique_stats import (
-    compute_course_technique_rates, compute_racer_nigashi_rate, compute_racer_recent_form,
+    build_course_stats_timeline, course_stats_as_of,
+    compute_racer_nigashi_rate, compute_racer_recent_form,
 )
 from ingest import _migrate_add_missing_columns
 
@@ -66,7 +67,7 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
         entries = conn.execute(
             """SELECT e.entry_id, e.boat_number, e.racer_registration_number, e.racer_class,
                       e.national_win_rate, e.national_2連率, e.local_win_rate, e.local_2連率,
-                      e.motor_2連率, e.boat_hull_2連率, e.average_start_timing,
+                      e.motor_2連率, e.motor_3連率, e.boat_hull_2連率, e.average_start_timing,
                       e.flying_count, e.late_count,
                       p.exhibition_time, p.tilt_angle, p.weight_adjustment_kg, p.start_timing_preview,
                       p.start_course,
@@ -84,28 +85,29 @@ def backtest(conn: sqlite3.Connection, start: date, end: date, model=None) -> di
         # 「そのレースより前の結果だけ」を使う(未来の結果が紛れ込むリークを防ぐ)。
         # backtest.pyは過去レースを再予想して精度を検証するためのツールなので、
         # ここがリークしていると検証結果(的中率・回収率)が実際の運用より楽観的に出てしまう。
-        cache_key = (stadium_number, race_date_str, race_id)
-        if cache_key not in course_stats_cache:
-            course_stats_cache[cache_key] = compute_course_technique_rates(
-                conn, stadium_number, before_date=race_date_str, before_race_id=race_id
-            )
-        course_stats = course_stats_cache[cache_key]
+        # 場ごとに全履歴を1回だけ取得してタイムライン化し(build_features.py・confidence.pyと
+        # 同じ方式)、レース1件ごとの個別SQLクエリを避けて高速化する。
+        if stadium_number not in course_stats_cache:
+            course_stats_cache[stadium_number] = build_course_stats_timeline(conn, stadium_number)
+        course_stats = course_stats_as_of(
+            course_stats_cache[stadium_number], before_date=race_date_str, before_race_id=race_id
+        )
 
-        exh_values = [row[13] for row in entries if row[13]]
+        exh_values = [row[14] for row in entries if row[14]]  # motor_3連率追加で列位置が1つずれた(13→14)
         avg_exh = sum(exh_values) / len(exh_values) if exh_values else None
         race_context = {"wave_height_cm": wave, "wind_speed_m": wind, "race_grade": race_grade,
                          "avg_exhibition_time": avg_exh,
                          "temperature_c": temperature_c, "water_temperature_c": water_temperature_c}
 
         boat_dicts = []
-        for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, hull_2r,
+        for (entry_id, bn, reg_no, racer_class, nat, nat_2r, local, local_2r, motor_2r, motor_3r, hull_2r,
              avg_st, flying, late, exh, tilt_angle, weight_adj, start_timing_prev, start_course,
              arrival_order) in entries:
             d = {
                 "boat_number": bn, "racer_class": racer_class,
                 "national_win_rate": nat, "national_2連率": nat_2r,
                 "local_win_rate": local, "local_2連率": local_2r,
-                "motor_2連率": motor_2r, "boat_hull_2連率": hull_2r,
+                "motor_2連率": motor_2r, "motor_3連率": motor_3r, "boat_hull_2連率": hull_2r,
                 "average_start_timing": avg_st,
                 "flying_count": flying, "late_count": late,
                 "exhibition_time": exh, "tilt_angle": tilt_angle,
