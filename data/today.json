@@ -1,6 +1,6 @@
 {
   "date": "2026-10-22",
-  "generated_at": "2026-10-22T22:16:25.518399+09:00",
+  "generated_at": "2026-10-22T22:45:23.719703+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -35859,9 +35859,12 @@
             "reason": "単勝30-39%帯の実績的中率60.9%(n=4713) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6860) / 混戦度が高いため1段階格下げ(エントロピー0.91、閾値0.85)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 4,
+            "name": "金田 諭"
+          },
+          "actualCombo": "4-3-5"
         },
         {
           "number": 11,
@@ -36116,12 +36119,12 @@
           "number": 12,
           "close": "2026-10-22 22:54:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "2",
+          "windSpeed": 1.0,
+          "waveHeight": 1.0,
+          "temperature": 18.0,
+          "waterTemperature": 23.0,
           "boats": [
             {
               "lane": 1,
@@ -36336,25 +36339,25 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6090369113279592,
-            "sampleSize": 4714,
+            "hitRate": 0.6089077412513255,
+            "sampleSize": 4715,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.08992858183938202,
-            "sampleSize": 6861,
+            "hitRate": 0.08991547653745263,
+            "sampleSize": 6862,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.32558139534883723,
-            "sampleSize": 1720,
+            "hitRate": 0.3253922138291691,
+            "sampleSize": 1721,
             "bucket": "10-14%"
           },
           "raceTier": {
             "tier": "C",
-            "reason": "単勝30-39%帯の実績的中率60.9%(n=4714) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6861) / 混戦度が高いため1段階格下げ(エントロピー0.92、閾値0.85)",
+            "reason": "単勝30-39%帯の実績的中率60.9%(n=4715) / 2連単10-14%帯の実績的中率32.5%(n=1721) / 3連単0-4%帯の実績的中率9.0%(n=6862) / 混戦度が高いため1段階格下げ(エントロピー0.92、閾値0.85)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -42429,34 +42432,34 @@
   "course_stats_by_stadium": {
     "20": {
       "1": {
-        "win_rate": 0.599,
+        "win_rate": 0.597,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "2": {
         "win_rate": 0.165,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "3": {
-        "win_rate": 0.091,
+        "win_rate": 0.09,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "4": {
-        "win_rate": 0.091,
+        "win_rate": 0.094,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "5": {
         "win_rate": 0.039,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "6": {
         "win_rate": 0.016,
         "is_fallback": false,
-        "sample_size": 306
+        "sample_size": 307
       }
     }
   }
