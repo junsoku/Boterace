@@ -1,6 +1,6 @@
 {
   "date": "2026-10-22",
-  "generated_at": "2026-10-22T21:47:21.386915+09:00",
+  "generated_at": "2026-10-22T22:16:25.518399+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -35607,9 +35607,12 @@
             "reason": "単勝30-39%帯の実績的中率60.9%(n=4712) / 2連単5-9%帯の実績的中率21.7%(n=5085) / 3連単0-4%帯の実績的中率9.0%(n=6859) / 混戦度が高いため1段階格下げ(エントロピー0.93、閾値0.85)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 6,
+            "name": "鈴木 勝博"
+          },
+          "actualCombo": "6-1-3"
         },
         {
           "number": 10,
@@ -35864,12 +35867,12 @@
           "number": 11,
           "close": "2026-10-22 22:30:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "2",
+          "windSpeed": 1.0,
+          "waveHeight": 1.0,
+          "temperature": 18.0,
+          "waterTemperature": 23.0,
           "boats": [
             {
               "lane": 1,
@@ -36090,8 +36093,8 @@
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.08994169096209913,
-            "sampleSize": 6860,
+            "hitRate": 0.08992858183938202,
+            "sampleSize": 6861,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -36102,7 +36105,7 @@
           },
           "raceTier": {
             "tier": "C",
-            "reason": "単勝40-49%帯の実績的中率75.7%(n=589) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6860) / 混戦度が高いため1段階格下げ(エントロピー0.90、閾値0.85)",
+            "reason": "単勝40-49%帯の実績的中率75.7%(n=589) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6861) / 混戦度が高いため1段階格下げ(エントロピー0.90、閾値0.85)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -36333,14 +36336,14 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6091661362189688,
-            "sampleSize": 4713,
+            "hitRate": 0.6090369113279592,
+            "sampleSize": 4714,
             "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.08994169096209913,
-            "sampleSize": 6860,
+            "hitRate": 0.08992858183938202,
+            "sampleSize": 6861,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
@@ -36351,7 +36354,7 @@
           },
           "raceTier": {
             "tier": "C",
-            "reason": "単勝30-39%帯の実績的中率60.9%(n=4713) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6860) / 混戦度が高いため1段階格下げ(エントロピー0.92、閾値0.85)",
+            "reason": "単勝30-39%帯の実績的中率60.9%(n=4714) / 2連単10-14%帯の実績的中率32.6%(n=1720) / 3連単0-4%帯の実績的中率9.0%(n=6861) / 混戦度が高いため1段階格下げ(エントロピー0.92、閾値0.85)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -42426,34 +42429,34 @@
   "course_stats_by_stadium": {
     "20": {
       "1": {
-        "win_rate": 0.601,
+        "win_rate": 0.599,
         "is_fallback": false,
-        "sample_size": 308
+        "sample_size": 309
       },
       "2": {
-        "win_rate": 0.166,
+        "win_rate": 0.165,
         "is_fallback": false,
-        "sample_size": 308
+        "sample_size": 309
       },
       "3": {
         "win_rate": 0.091,
         "is_fallback": false,
-        "sample_size": 308
+        "sample_size": 309
       },
       "4": {
         "win_rate": 0.091,
         "is_fallback": false,
-        "sample_size": 308
+        "sample_size": 309
       },
       "5": {
-        "win_rate": 0.036,
+        "win_rate": 0.039,
         "is_fallback": false,
-        "sample_size": 308
+        "sample_size": 309
       },
       "6": {
         "win_rate": 0.016,
         "is_fallback": false,
-        "sample_size": 305
+        "sample_size": 306
       }
     }
   }
