@@ -589,7 +589,7 @@ def build_today_json(conn: sqlite3.Connection, target_date: date, model=None, pr
             bet_calibration=bet_calibration, top_bet_prob_pct=top_bet_prob_for_tier,
             win_thresholds=tier_thresholds["win"], exacta_thresholds=tier_thresholds["exacta"],
             bet_thresholds=tier_thresholds["bet"], score_cutoffs=tier_thresholds["score_cutoffs"],
-            race_entropy=race_entropy,
+            race_entropy=race_entropy, entropy_threshold=tier_thresholds["entropy_threshold"],
         )
 
         bet_confidence = None

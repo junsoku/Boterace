@@ -384,14 +384,22 @@ ROUGH_WATER_WAVE_CM = 3
 ROUGH_WATER_WIND_MS = 5
 
 # 混戦度(6艇の予測確率分布のエントロピー、0〜1。0=1艇に集中、1=均等/大混戦)が
-# この値以上なら1段階格下げする。calibration(予測確率帯ごとの実績的中率)は
+# 一定以上なら1段階格下げする。calibration(予測確率帯ごとの実績的中率)は
 # 「1位の確率が何%だったか」しか見ていないので、例えば「1位45%・2位40%・3位10%」と
 # 「1位45%・2位20%・3位15%・4位10%・5位6%・6位4%」のように、1位の確率は同じでも
 # 2位以下の割れ方が全然違うレースを区別できていなかった。エントロピーはこの「1位以外の
 # 散らばり方」まで含めて1つの数値に集約できるため、calibrationの判定を補う形で使う。
-# 閾値0.85は暫定値(まだ実績データで検証できていない。荒れ水面の閾値と同様、
-# ある程度データが溜まったらanalyze_tier_accuracy.py等で効果を検証し、見直すこと)。
-RACE_ENTROPY_DOWNGRADE_THRESHOLD = 0.85
+#
+# 当初は固定値0.85にしていたが、実データで検証したところ全レースの約45%がこの基準で
+# 格下げされてしまっており(しかもD判定の9割以上がこの格下げ由来)、「上位25%をA」という
+# スコア閾値の計算(_real_combined_score_distribution等)がこの格下げを一切考慮せずに
+# 行われていたため、Aの出現率が想定よりかなり下がってしまっていた。
+# そのため固定値をやめ、単勝・2連単・3連単の閾値と同じ考え方(実データのパーセンタイル)で
+# 動的に算出する。下記RACE_ENTROPY_DOWNGRADE_PERCENTILEが「混戦度が特に高い上位何割を
+# 格下げ対象にするか」の目安(既定0.85 = 上位15%が目安。これも実績を見て調整してよい)。
+RACE_ENTROPY_DOWNGRADE_PERCENTILE = 0.85
+RACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT = 0.85  # 実データが足りない場合のフォールバック固定値
+RACE_ENTROPY_MIN_SAMPLES_FOR_DYNAMIC = 100  # これ未満しかrace_entropyの記録が無ければフォールバック
 
 _TIER_ORDER = ["A", "B", "C", "D"]
 
@@ -597,6 +605,29 @@ def _simulate_combined_score_cutoffs(win_pairs: list, exacta_pairs: list, bet_pa
     return (a, b, c)
 
 
+def _dynamic_entropy_threshold(conn: sqlite3.Connection, lookback_days: int) -> float:
+    """
+    過去lookback_days日分のprediction_log.race_entropyの実データから、混戦度格下げの
+    閾値を動的に算出する(RACE_ENTROPY_DOWNGRADE_PERCENTILEパーセンタイル値)。
+    固定値0.85にしていた際、実データで検証したところ全レースの約45%がこの基準で
+    格下げされてしまい、「上位25%をA」というスコア閾値の計算がこの格下げを考慮して
+    いなかったため、Aの出現率が想定よりかなり下がってしまっていた。実データの分布から
+    「本当に混戦度が高い一部のレースだけ」を対象にするよう、他の閾値と同じ考え方で算出する。
+    データが少なすぎる場合はRACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULTにフォールバックする。
+    """
+    cutoff_date = (date.today() - timedelta(days=lookback_days)).isoformat()
+    rows = conn.execute(
+        """SELECT pl.race_entropy FROM prediction_log pl JOIN races r ON r.race_id = pl.race_id
+           WHERE pl.race_entropy IS NOT NULL AND r.race_date >= ?""",
+        (cutoff_date,),
+    ).fetchall()
+    values = [row[0] for row in rows if row[0] is not None]
+    if len(values) < RACE_ENTROPY_MIN_SAMPLES_FOR_DYNAMIC:
+        return RACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT
+    pairs = [(v, 1.0) for v in values]
+    return _weighted_percentile(pairs, RACE_ENTROPY_DOWNGRADE_PERCENTILE)
+
+
 def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_calibration: dict,
                                cache_path: str, today_str: str,
                                conn: sqlite3.Connection = None, model=None, lookback_days: int = 90) -> dict:
@@ -635,6 +666,7 @@ def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_c
             "exacta": [tuple(x) for x in cached["exacta"]],
             "bet": [tuple(x) for x in cached["bet"]],
             "score_cutoffs": tuple(cached["score_cutoffs"]),
+            "entropy_threshold": cached.get("entropy_threshold", RACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT),
         }
 
     win_thresholds = _dynamic_thresholds(calibration, RACE_TIER_WIN_THRESHOLDS_DEFAULT)
@@ -656,11 +688,15 @@ def get_daily_tier_thresholds(calibration: dict, exacta_calibration: dict, bet_c
             win_thresholds, exacta_thresholds, bet_thresholds,
         )
 
+    entropy_threshold = _dynamic_entropy_threshold(conn, lookback_days) if conn is not None \
+        else RACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT
+
     thresholds = {
         "win": win_thresholds,
         "exacta": exacta_thresholds,
         "bet": bet_thresholds,
         "score_cutoffs": score_cutoffs,
+        "entropy_threshold": entropy_threshold,
     }
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -758,7 +794,7 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
                         bet_calibration: dict = None, top_bet_prob_pct: float = None,
                         win_thresholds: list = None, exacta_thresholds: list = None,
                         bet_thresholds: list = None, score_cutoffs: tuple = None,
-                        race_entropy: float = None) -> dict:
+                        race_entropy: float = None, entropy_threshold: float = None) -> dict:
     """
     レース単位の信頼度をA(高信頼度)〜D(荒れ要素が強い/見送り)で判定する。
 
@@ -779,9 +815,13 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     適用されない)。
     荒れ水面(波・風がROUGH_WATER_*以上)なら1段階格下げする。
     race_entropy(6艇の予測確率分布のエントロピー、compute_race_entropy()参照)が
-    RACE_ENTROPY_DOWNGRADE_THRESHOLD以上(大混戦)なら、さらに1段階格下げする
+    entropy_threshold以上(大混戦)なら、さらに1段階格下げする
     (calibrationは「1位の確率が何%か」しか見ないため、1位の確率が同じでも
     2位以下の割れ方が全然違うレースを区別できていなかった分を補う)。
+    entropy_thresholdを渡さなければRACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT(固定値)を使う。
+    export_today.py側では、get_daily_tier_thresholds()で実データのパーセンタイルから
+    1日1回算出した値を渡す運用を想定している(固定値のままだと、全レースの半分近くが
+    格下げされるほど頻度が合っていなかったことが実データで判明したため)。
 
     win_thresholds/exacta_thresholds/bet_thresholds を渡した場合はそれを使い、
     渡さなければ呼び出しごとにcalibrationから動的算出する。
@@ -825,6 +865,8 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
     weighted_sum = win_score * RACE_TIER_WEIGHTS["win"]
     weight_total = RACE_TIER_WEIGHTS["win"]
 
+    exacta_result = None  # 下の「Aの下支え条件」チェックで未評価時にNameErrorにならないよう初期化
+    bet_result = None
     if exacta_calibration is not None and top_exacta_prob_pct is not None:
         exacta_result = _classify_by_calibration(exacta_calibration, top_exacta_prob_pct,
                                                    exacta_thresholds, bucket_fn=_exacta_bucket_label)
@@ -866,8 +908,29 @@ def classify_race_tier(calibration: dict, top1_pct: float, second_pct: float = N
         tier = _downgrade_tier(tier)
         reason += " / 荒れ水面のため1段階格下げ"
 
-    if race_entropy is not None and race_entropy >= RACE_ENTROPY_DOWNGRADE_THRESHOLD and tier != "D":
+    effective_entropy_threshold = entropy_threshold if entropy_threshold is not None \
+        else RACE_ENTROPY_DOWNGRADE_THRESHOLD_DEFAULT
+    if race_entropy is not None and race_entropy >= effective_entropy_threshold and tier != "D":
         tier = _downgrade_tier(tier)
-        reason += f" / 混戦度が高いため1段階格下げ(エントロピー{race_entropy:.2f})"
+        reason += f" / 混戦度が高いため1段階格下げ(エントロピー{race_entropy:.2f}、閾値{effective_entropy_threshold:.2f})"
+
+    # Aは「その時点の分布の中での相対的な上位」でしかないため(パーセンタイル方式の構造上、
+    # モデル全体の実力が変わっても機械的に同じ割合でAが出続けてしまう弱点がある)、
+    # 絶対的な意味を最低限持たせるための下支えとして、RACE_TIER_*_THRESHOLDS_DEFAULT
+    # (かつて固定値として「これなら単体でA相当」と判断していた基準)を満たしていない場合は、
+    # 相対評価でAに届いていてもBまでしか認めない(下限ルールのD行きとは別の、Aだけの関所)。
+    # 実績データが無く判定できなかった軸(basis="fallback"の単勝、未評価の2連単・3連単)は
+    # 対象外とする(無い情報について合否を判定できないため)。
+    if tier == "A":
+        a_floor_ok = True
+        if basis == "calibration" and win_result["hit_rate"] < RACE_TIER_WIN_THRESHOLDS_DEFAULT[0][1]:
+            a_floor_ok = False
+        if exacta_result is not None and exacta_result["hit_rate"] < RACE_TIER_EXACTA_THRESHOLDS_DEFAULT[0][1]:
+            a_floor_ok = False
+        if bet_result is not None and bet_result["hit_rate"] < RACE_TIER_BET_THRESHOLDS_DEFAULT[0][1]:
+            a_floor_ok = False
+        if not a_floor_ok:
+            tier = "B"
+            reason += " / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)"
 
     return {"tier": tier, "reason": reason, "basis": basis}
