@@ -1,6 +1,6 @@
 {
   "date": "2026-10-23",
-  "generated_at": "2026-10-23T22:22:34.776159+09:00",
+  "generated_at": "2026-10-23T22:51:35.945572+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -30052,31 +30052,34 @@
             "reason": "単勝40-49%帯の実績的中率65.1%(n=3469) / 2連単10-14%帯の実績的中率28.0%(n=4300) / 3連単0-4%帯の実績的中率8.8%(n=6211) / 荒れ水面のため1段階格下げ",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "金田 諭"
+          },
+          "actualCombo": "1-3-2"
         },
         {
           "number": 12,
           "close": "2026-10-23 22:54:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "雨",
+          "windDirection": "6",
+          "windSpeed": 5.0,
+          "waveHeight": 5.0,
+          "temperature": 19.0,
+          "waterTemperature": 22.0,
           "boats": [
             {
               "lane": 1,
               "name": "郷原 章平",
               "class": "A2",
-              "pct": 44,
+              "pct": 46,
               "natWin": 6.15,
               "localWin": 5.81,
               "natPlace": 45.04,
               "localPlace": 47.46,
-              "exh": null,
+              "exh": 6.84,
               "motor2r": 34.27,
               "flying": 0,
               "late": 0,
@@ -30091,11 +30094,11 @@
               "localWin": 5.18,
               "natPlace": 30.58,
               "localPlace": 23.53,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 26.32,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "○"
             },
             {
               "lane": 3,
@@ -30106,37 +30109,37 @@
               "localWin": 6.76,
               "natPlace": 33.33,
               "localPlace": 44.0,
-              "exh": null,
+              "exh": 6.92,
               "motor2r": 37.56,
               "flying": 0,
               "late": 0,
-              "mark": "△"
+              "mark": "▲"
             },
             {
               "lane": 4,
               "name": "岩崎 正哉",
               "class": "A2",
-              "pct": 15,
+              "pct": 10,
               "natWin": 5.89,
               "localWin": 5.91,
               "natPlace": 37.7,
               "localPlace": 40.24,
-              "exh": null,
+              "exh": 6.85,
               "motor2r": 39.42,
               "flying": 0,
               "late": 0,
-              "mark": "○"
+              "mark": "△"
             },
             {
               "lane": 5,
               "name": "近藤 雄一郎",
               "class": "B1",
-              "pct": 6,
+              "pct": 7,
               "natWin": 4.57,
               "localWin": 3.38,
               "natPlace": 22.06,
               "localPlace": 7.69,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 28.57,
               "flying": 1,
               "late": 0,
@@ -30146,12 +30149,12 @@
               "lane": 6,
               "name": "富澤 祐作",
               "class": "B1",
-              "pct": 7,
+              "pct": 9,
               "natWin": 5.05,
               "localWin": 0.0,
               "natPlace": 30.86,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 36.32,
               "flying": 1,
               "late": 0,
@@ -30163,31 +30166,16 @@
               "lane": 1,
               "name": "郷原 章平",
               "class": "A2",
-              "pct": 44,
+              "pct": 46,
               "natWin": 6.15,
               "localWin": 5.81,
               "natPlace": 45.04,
               "localPlace": 47.46,
-              "exh": null,
+              "exh": 6.84,
               "motor2r": 34.27,
               "flying": 0,
               "late": 0,
               "mark": "◎"
-            },
-            {
-              "lane": 4,
-              "name": "岩崎 正哉",
-              "class": "A2",
-              "pct": 15,
-              "natWin": 5.89,
-              "localWin": 5.91,
-              "natPlace": 37.7,
-              "localPlace": 40.24,
-              "exh": null,
-              "motor2r": 39.42,
-              "flying": 0,
-              "late": 0,
-              "mark": "○"
             },
             {
               "lane": 2,
@@ -30198,11 +30186,11 @@
               "localWin": 5.18,
               "natPlace": 30.58,
               "localPlace": 23.53,
-              "exh": null,
+              "exh": 6.9,
               "motor2r": 26.32,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "○"
             },
             {
               "lane": 3,
@@ -30213,8 +30201,23 @@
               "localWin": 6.76,
               "natPlace": 33.33,
               "localPlace": 44.0,
-              "exh": null,
+              "exh": 6.92,
               "motor2r": 37.56,
+              "flying": 0,
+              "late": 0,
+              "mark": "▲"
+            },
+            {
+              "lane": 4,
+              "name": "岩崎 正哉",
+              "class": "A2",
+              "pct": 10,
+              "natWin": 5.89,
+              "localWin": 5.91,
+              "natPlace": 37.7,
+              "localPlace": 40.24,
+              "exh": 6.85,
+              "motor2r": 39.42,
               "flying": 0,
               "late": 0,
               "mark": "△"
@@ -30223,12 +30226,12 @@
               "lane": 6,
               "name": "富澤 祐作",
               "class": "B1",
-              "pct": 7,
+              "pct": 9,
               "natWin": 5.05,
               "localWin": 0.0,
               "natPlace": 30.86,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 36.32,
               "flying": 1,
               "late": 0,
@@ -30238,12 +30241,12 @@
               "lane": 5,
               "name": "近藤 雄一郎",
               "class": "B1",
-              "pct": 6,
+              "pct": 7,
               "natWin": 4.57,
               "localWin": 3.38,
               "natPlace": 22.06,
               "localPlace": 7.69,
-              "exh": null,
+              "exh": 6.91,
               "motor2r": 28.57,
               "flying": 1,
               "late": 0,
@@ -30252,53 +30255,53 @@
           ],
           "bets": [
             {
-              "combo": "1-4-3",
-              "prob": "4.1%"
+              "combo": "1-2-3",
+              "prob": "4.0%"
             },
             {
-              "combo": "1-4-2",
-              "prob": "4.1%"
-            },
-            {
-              "combo": "1-3-4",
+              "combo": "1-3-2",
               "prob": "4.0%"
             },
             {
               "combo": "1-2-4",
-              "prob": "4.0%"
+              "prob": "3.0%"
+            },
+            {
+              "combo": "1-3-4",
+              "prob": "2.9%"
             }
           ],
           "exactaBets": [
             {
-              "combo": "1-4",
+              "combo": "1-2",
               "prob": "11.8%"
             },
             {
               "combo": "1-3",
-              "prob": "11.3%"
+              "prob": "11.5%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6506197751513404,
-            "sampleSize": 3469,
+            "hitRate": 0.6507204610951008,
+            "sampleSize": 3470,
             "bucket": "40-49%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.0882305586862019,
-            "sampleSize": 6211,
+            "hitRate": 0.08821635544108178,
+            "sampleSize": 6212,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.28,
-            "sampleSize": 4300,
+            "hitRate": 0.2801674029295513,
+            "sampleSize": 4301,
             "bucket": "10-14%"
           },
           "raceTier": {
-            "tier": "B",
-            "reason": "単勝40-49%帯の実績的中率65.1%(n=3469) / 2連単10-14%帯の実績的中率28.0%(n=4300) / 3連単0-4%帯の実績的中率8.8%(n=6211)",
+            "tier": "C",
+            "reason": "単勝40-49%帯の実績的中率65.1%(n=3470) / 2連単10-14%帯の実績的中率28.0%(n=4301) / 3連単0-4%帯の実績的中率8.8%(n=6212) / 荒れ水面のため1段階格下げ",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -42435,34 +42438,34 @@
   "course_stats_by_stadium": {
     "20": {
       "1": {
-        "win_rate": 0.593,
+        "win_rate": 0.594,
         "is_fallback": false,
-        "sample_size": 322
+        "sample_size": 323
       },
       "2": {
-        "win_rate": 0.171,
+        "win_rate": 0.17,
         "is_fallback": false,
-        "sample_size": 322
+        "sample_size": 323
       },
       "3": {
         "win_rate": 0.09,
         "is_fallback": false,
-        "sample_size": 322
+        "sample_size": 323
       },
       "4": {
         "win_rate": 0.09,
         "is_fallback": false,
-        "sample_size": 322
+        "sample_size": 323
       },
       "5": {
         "win_rate": 0.04,
         "is_fallback": false,
-        "sample_size": 322
+        "sample_size": 323
       },
       "6": {
         "win_rate": 0.016,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 320
       }
     }
   }
