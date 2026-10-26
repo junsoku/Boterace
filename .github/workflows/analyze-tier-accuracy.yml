@@ -1,7 +1,16 @@
 name: Analyze tier accuracy
 
 on:
-  workflow_dispatch:  # 手動実行のみ(読み取り専用の分析)
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "この日付(YYYY-MM-DD)以降のレースだけを対象にする(空欄なら全期間)"
+        required: false
+        default: ""
+      periods:
+        description: "期間をいくつに分けるか(既定3=初期/中期/直近。sinceで絞る時は1がおすすめ)"
+        required: false
+        default: "3"
 
 jobs:
   analyze:
@@ -20,6 +29,12 @@ jobs:
 
       - name: ティア別の的中率・回収率を検証
         run: |
+          SINCE_ARG=""
+          if [ -n "${{ github.event.inputs.since }}" ]; then
+            SINCE_ARG="--since ${{ github.event.inputs.since }}"
+          fi
           python data-collection/analyze_tier_accuracy.py \
-            --db data-collection/boatrace.db
+            --db data-collection/boatrace.db \
+            --periods ${{ github.event.inputs.periods }} \
+            $SINCE_ARG
         # git commit/pushは一切しない(読み取り専用の分析)
