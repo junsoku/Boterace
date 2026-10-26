@@ -29,9 +29,15 @@ jobs:
 
       - name: ティア別の的中率・回収率を検証
         run: |
+          SINCE_RAW="${{ github.event.inputs.since }}"
           SINCE_ARG=""
-          if [ -n "${{ github.event.inputs.since }}" ]; then
-            SINCE_ARG="--since ${{ github.event.inputs.since }}"
+          if [ -n "$SINCE_RAW" ]; then
+            # 入力欄の形式によっては20261023のようにハイフン無しで渡ってくることがあるため、
+            # 8桁の数字だけならYYYY-MM-DDに整形してから渡す。
+            if [[ "$SINCE_RAW" =~ ^[0-9]{8}$ ]]; then
+              SINCE_RAW="${SINCE_RAW:0:4}-${SINCE_RAW:4:2}-${SINCE_RAW:6:2}"
+            fi
+            SINCE_ARG="--since $SINCE_RAW"
           fi
           python data-collection/analyze_tier_accuracy.py \
             --db data-collection/boatrace.db \
