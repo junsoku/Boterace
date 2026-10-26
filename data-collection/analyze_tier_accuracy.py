@@ -19,6 +19,8 @@ prediction_log に記録された race_tier(A〜D)ごとに、実際の的中率
     python analyze_tier_accuracy.py --db boatrace.db
     python analyze_tier_accuracy.py --db boatrace.db --periods 3   # 期間を3分割(既定)
     python analyze_tier_accuracy.py --db boatrace.db --periods 1   # 期間分割なし(全期間一括)
+    python analyze_tier_accuracy.py --db boatrace.db --since 2026-10-24 --periods 1
+        # 判定ロジックを変更した日以降だけに絞って見たい時(変更前のデータと混ざらないように)
 """
 import argparse
 import json
@@ -149,10 +151,15 @@ def main():
     ap.add_argument("--db", default="boatrace.db")
     ap.add_argument("--periods", type=int, default=3,
                      help="レースをrace_date昇順でいくつの期間に分けるか(既定3=初期/中期/直近)")
+    ap.add_argument("--since", default=None,
+                     help="このrace_date(YYYY-MM-DD、当日を含む)以降のレースだけを対象にする。"
+                          "判定ロジックを変更した直後、変更前のデータと混ざらないようにする時に使う。")
     args = ap.parse_args()
 
     conn = sqlite3.connect(args.db)
     latest = _fetch_latest_predictions(conn)
+    if args.since:
+        latest = {rid: v for rid, v in latest.items() if v[4] >= args.since}
     period_of = _assign_periods(latest, args.periods)
 
     period_labels = {
@@ -191,7 +198,8 @@ def main():
 
     conn.close()
 
-    print(f"対象レース数(結果確定分): {evaluated_count}件 / 期間分割数: {args.periods}")
+    since_str = f" / {args.since}以降のみ" if args.since else ""
+    print(f"対象レース数(結果確定分): {evaluated_count}件 / 期間分割数: {args.periods}{since_str}")
 
     print("\n######## 全期間合計 ########")
     _print_period("全期間", overall_by_tier)
