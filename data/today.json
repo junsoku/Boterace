@@ -1,6 +1,6 @@
 {
   "date": "2026-10-29",
-  "generated_at": "2026-10-29T20:09:45.261256+09:00",
+  "generated_at": "2026-10-29T20:38:50.284926+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -2521,9 +2521,12 @@
             "reason": "単勝50-59%帯の実績的中率55.7%(n=1569) / 2連単20-24%帯の実績的中率30.8%(n=1901) / 3連単5-9%帯の実績的中率10.6%(n=4411)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "藤原 早菜"
+          },
+          "actualCombo": "1-3-4"
         },
         {
           "number": 11,
@@ -2778,23 +2781,23 @@
           "number": 12,
           "close": "2026-10-29 20:45:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "2",
+          "windSpeed": 2.0,
+          "waveHeight": 1.0,
+          "temperature": 11.0,
+          "waterTemperature": 17.0,
           "boats": [
             {
               "lane": 1,
               "name": "角 ひとみ",
               "class": "A2",
-              "pct": 71,
+              "pct": 74,
               "natWin": 5.43,
               "localWin": 6.58,
               "natPlace": 33.86,
               "localPlace": 38.71,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 28.65,
               "flying": 0,
               "late": 0,
@@ -2804,16 +2807,16 @@
               "lane": 2,
               "name": "岩崎 麗子",
               "class": "B1",
-              "pct": 8,
+              "pct": 6,
               "natWin": 3.75,
               "localWin": 2.72,
               "natPlace": 18.68,
               "localPlace": 8.2,
-              "exh": null,
+              "exh": 6.71,
               "motor2r": 36.09,
               "flying": 1,
               "late": 0,
-              "mark": "○"
+              "mark": "▲"
             },
             {
               "lane": 3,
@@ -2824,7 +2827,7 @@
               "localWin": 2.88,
               "natPlace": 7.55,
               "localPlace": 7.69,
-              "exh": null,
+              "exh": 6.58,
               "motor2r": 32.75,
               "flying": 1,
               "late": 0,
@@ -2834,31 +2837,31 @@
               "lane": 4,
               "name": "植竹 玲奈",
               "class": "B1",
-              "pct": 8,
+              "pct": 6,
               "natWin": 3.41,
               "localWin": 1.88,
               "natPlace": 13.64,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 33.47,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "△"
             },
             {
               "lane": 5,
               "name": "瀧川 千依",
               "class": "B2",
-              "pct": 6,
+              "pct": 7,
               "natWin": 4.27,
               "localWin": 4.2,
               "natPlace": 25.0,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.63,
               "motor2r": 41.67,
               "flying": 0,
               "late": 0,
-              "mark": "△"
+              "mark": "○"
             },
             {
               "lane": 6,
@@ -2869,7 +2872,7 @@
               "localWin": 0.0,
               "natPlace": 7.23,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.6,
               "motor2r": 40.51,
               "flying": 0,
               "late": 0,
@@ -2881,58 +2884,58 @@
               "lane": 1,
               "name": "角 ひとみ",
               "class": "A2",
-              "pct": 71,
+              "pct": 74,
               "natWin": 5.43,
               "localWin": 6.58,
               "natPlace": 33.86,
               "localPlace": 38.71,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 28.65,
               "flying": 0,
               "late": 0,
               "mark": "◎"
             },
             {
+              "lane": 5,
+              "name": "瀧川 千依",
+              "class": "B2",
+              "pct": 7,
+              "natWin": 4.27,
+              "localWin": 4.2,
+              "natPlace": 25.0,
+              "localPlace": 0.0,
+              "exh": 6.63,
+              "motor2r": 41.67,
+              "flying": 0,
+              "late": 0,
+              "mark": "○"
+            },
+            {
               "lane": 2,
               "name": "岩崎 麗子",
               "class": "B1",
-              "pct": 8,
+              "pct": 6,
               "natWin": 3.75,
               "localWin": 2.72,
               "natPlace": 18.68,
               "localPlace": 8.2,
-              "exh": null,
+              "exh": 6.71,
               "motor2r": 36.09,
               "flying": 1,
               "late": 0,
-              "mark": "○"
+              "mark": "▲"
             },
             {
               "lane": 4,
               "name": "植竹 玲奈",
               "class": "B1",
-              "pct": 8,
+              "pct": 6,
               "natWin": 3.41,
               "localWin": 1.88,
               "natPlace": 13.64,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 33.47,
-              "flying": 0,
-              "late": 0,
-              "mark": "▲"
-            },
-            {
-              "lane": 5,
-              "name": "瀧川 千依",
-              "class": "B2",
-              "pct": 6,
-              "natWin": 4.27,
-              "localWin": 4.2,
-              "natPlace": 25.0,
-              "localPlace": 0.0,
-              "exh": null,
-              "motor2r": 41.67,
               "flying": 0,
               "late": 0,
               "mark": "△"
@@ -2946,7 +2949,7 @@
               "localWin": 2.88,
               "natPlace": 7.55,
               "localPlace": 7.69,
-              "exh": null,
+              "exh": 6.58,
               "motor2r": 32.75,
               "flying": 1,
               "late": 0,
@@ -2961,7 +2964,7 @@
               "localWin": 0.0,
               "natPlace": 7.23,
               "localPlace": 0.0,
-              "exh": null,
+              "exh": 6.6,
               "motor2r": 40.51,
               "flying": 0,
               "late": 0,
@@ -2970,53 +2973,53 @@
           ],
           "bets": [
             {
-              "combo": "1-2-4",
-              "prob": "7.4%"
-            },
-            {
-              "combo": "1-4-2",
-              "prob": "7.3%"
-            },
-            {
-              "combo": "1-2-5",
-              "prob": "5.9%"
+              "combo": "1-5-4",
+              "prob": "6.4%"
             },
             {
               "combo": "1-4-5",
-              "prob": "5.5%"
+              "prob": "6.3%"
+            },
+            {
+              "combo": "1-5-2",
+              "prob": "6.2%"
+            },
+            {
+              "combo": "1-2-5",
+              "prob": "6.0%"
             }
           ],
           "exactaBets": [
             {
-              "combo": "1-2",
-              "prob": "20.0%"
+              "combo": "1-5",
+              "prob": "19.4%"
             },
             {
               "combo": "1-4",
-              "prob": "18.9%"
+              "prob": "18.1%"
             }
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.7834493426140758,
-            "sampleSize": 1293,
+            "hitRate": 0.7836166924265843,
+            "sampleSize": 1294,
             "bucket": "70-79%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10632509635003401,
-            "sampleSize": 4411,
+            "hitRate": 0.10627690913210967,
+            "sampleSize": 4413,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
-            "isConfident": true,
-            "hitRate": 0.30773277222514467,
-            "sampleSize": 1901,
-            "bucket": "20-24%"
+            "isConfident": false,
+            "hitRate": 0.25507246376811593,
+            "sampleSize": 2070,
+            "bucket": "15-19%"
           },
           "raceTier": {
             "tier": "B",
-            "reason": "単勝70-79%帯の実績的中率78.3%(n=1293) / 2連単20-24%帯の実績的中率30.8%(n=1901) / 3連単5-9%帯の実績的中率10.6%(n=4411)",
+            "reason": "単勝70-79%帯の実績的中率78.4%(n=1294) / 2連単15-19%帯の実績的中率25.5%(n=2070) / 3連単5-9%帯の実績的中率10.6%(n=4413)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -8826,9 +8829,12 @@
             "reason": "単勝70-79%帯の実績的中率78.3%(n=1292) / 2連単20-24%帯の実績的中率30.8%(n=1901) / 3連単10-14%帯の実績的中率15.8%(n=1930) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "菊地 孝平"
+          },
+          "actualCombo": "1-4-3"
         },
         {
           "number": 12,
@@ -20944,9 +20950,12 @@
             "reason": "単勝60-69%帯の実績的中率67.1%(n=1892) / 2連単15-19%帯の実績的中率25.5%(n=2070) / 3連単5-9%帯の実績的中率10.6%(n=4411)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "大澤 普司"
+          },
+          "actualCombo": "1-3-4"
         },
         {
           "number": 12,
@@ -30296,98 +30305,34 @@
   "course_stats_by_stadium": {
     "1": {
       "1": {
-        "win_rate": 0.485,
+        "win_rate": 0.487,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "2": {
         "win_rate": 0.142,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "3": {
-        "win_rate": 0.146,
+        "win_rate": 0.145,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "4": {
-        "win_rate": 0.104,
+        "win_rate": 0.103,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "5": {
         "win_rate": 0.097,
         "is_fallback": false,
-        "sample_size": 309
+        "sample_size": 310
       },
       "6": {
         "win_rate": 0.026,
         "is_fallback": false,
-        "sample_size": 305
-      }
-    },
-    "7": {
-      "1": {
-        "win_rate": 0.62,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "2": {
-        "win_rate": 0.096,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "3": {
-        "win_rate": 0.132,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "4": {
-        "win_rate": 0.08,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "5": {
-        "win_rate": 0.048,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "6": {
-        "win_rate": 0.024,
-        "is_fallback": false,
-        "sample_size": 246
-      }
-    },
-    "15": {
-      "1": {
-        "win_rate": 0.508,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "2": {
-        "win_rate": 0.16,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "3": {
-        "win_rate": 0.116,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "4": {
-        "win_rate": 0.112,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "5": {
-        "win_rate": 0.092,
-        "is_fallback": false,
-        "sample_size": 250
-      },
-      "6": {
-        "win_rate": 0.012,
-        "is_fallback": false,
-        "sample_size": 244
+        "sample_size": 306
       }
     }
   }
