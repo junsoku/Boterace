@@ -1,6 +1,6 @@
 {
   "date": "2026-11-01",
-  "generated_at": "2026-11-01T22:24:27.279896+09:00",
+  "generated_at": "2026-11-01T22:54:17.149061+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -33083,9 +33083,12 @@
             "reason": "単勝50-59%帯の実績的中率64.1%(n=3047) / 2連単15-19%帯の実績的中率27.8%(n=2993) / 3連単5-9%帯の実績的中率11.9%(n=4972)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "一瀬 明"
+          },
+          "actualCombo": "1-4-5"
         },
         {
           "number": 12,
@@ -42432,38 +42435,5 @@
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "19": {
-      "1": {
-        "win_rate": 0.59,
-        "is_fallback": false,
-        "sample_size": 310
-      },
-      "2": {
-        "win_rate": 0.094,
-        "is_fallback": false,
-        "sample_size": 310
-      },
-      "3": {
-        "win_rate": 0.152,
-        "is_fallback": false,
-        "sample_size": 310
-      },
-      "4": {
-        "win_rate": 0.09,
-        "is_fallback": false,
-        "sample_size": 310
-      },
-      "5": {
-        "win_rate": 0.042,
-        "is_fallback": false,
-        "sample_size": 310
-      },
-      "6": {
-        "win_rate": 0.032,
-        "is_fallback": false,
-        "sample_size": 310
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
