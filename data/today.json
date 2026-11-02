@@ -1,6 +1,6 @@
 {
   "date": "2026-11-02",
-  "generated_at": "2026-11-02T21:22:04.313847+09:00",
+  "generated_at": "2026-11-02T21:51:51.065841+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -29296,9 +29296,12 @@
             "reason": "単勝60-69%帯の実績的中率67.6%(n=2102) / 2連単25-29%帯の実績的中率33.9%(n=1163) / 3連単10-14%帯の実績的中率15.6%(n=1781) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "東本 勝利"
+          },
+          "actualCombo": "1-2-5"
         },
         {
           "number": 9,
@@ -29545,9 +29548,12 @@
             "reason": "単勝70-79%帯の実績的中率77.5%(n=1179) / 2連単35-39%帯の実績的中率41.7%(n=120) / 3連単10-14%帯の実績的中率15.6%(n=1781)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "山下 大輝"
+          },
+          "actualCombo": "1-3-5"
         },
         {
           "number": 10,
@@ -30022,8 +30028,8 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.7752332485156913,
-            "sampleSize": 1179,
+            "hitRate": 0.7754237288135594,
+            "sampleSize": 1180,
             "bucket": "70-79%"
           },
           "betConfidence": {
@@ -30034,13 +30040,13 @@
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.33877901977644026,
-            "sampleSize": 1163,
+            "hitRate": 0.3393470790378007,
+            "sampleSize": 1164,
             "bucket": "25-29%"
           },
           "raceTier": {
             "tier": "B",
-            "reason": "単勝70-79%帯の実績的中率77.5%(n=1179) / 2連単25-29%帯の実績的中率33.9%(n=1163) / 3連単5-9%帯の実績的中率10.5%(n=5034) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
+            "reason": "単勝70-79%帯の実績的中率77.5%(n=1180) / 2連単25-29%帯の実績的中率33.9%(n=1164) / 3連単5-9%帯の実績的中率10.5%(n=5034) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -30271,8 +30277,8 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6757013789824061,
-            "sampleSize": 2103,
+            "hitRate": 0.6758555133079848,
+            "sampleSize": 2104,
             "bucket": "60-69%"
           },
           "betConfidence": {
@@ -30289,7 +30295,7 @@
           },
           "raceTier": {
             "tier": "C",
-            "reason": "単勝60-69%帯の実績的中率67.6%(n=2103) / 2連単15-19%帯の実績的中率25.9%(n=2422) / 3連単5-9%帯の実績的中率10.5%(n=5034)",
+            "reason": "単勝60-69%帯の実績的中率67.6%(n=2104) / 2連単15-19%帯の実績的中率25.9%(n=2422) / 3連単5-9%帯の実績的中率10.5%(n=5034)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -39395,34 +39401,34 @@
   "course_stats_by_stadium": {
     "19": {
       "1": {
-        "win_rate": 0.592,
+        "win_rate": 0.595,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 321
       },
       "2": {
-        "win_rate": 0.094,
+        "win_rate": 0.093,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 321
       },
       "3": {
-        "win_rate": 0.147,
+        "win_rate": 0.146,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 321
       },
       "4": {
-        "win_rate": 0.091,
+        "win_rate": 0.09,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 321
       },
       "5": {
         "win_rate": 0.044,
         "is_fallback": false,
-        "sample_size": 319
+        "sample_size": 321
       },
       "6": {
         "win_rate": 0.031,
         "is_fallback": false,
-        "sample_size": 318
+        "sample_size": 320
       }
     }
   }
