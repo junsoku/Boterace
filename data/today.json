@@ -1,6 +1,6 @@
 {
   "date": "2026-11-03",
-  "generated_at": "2026-11-03T22:18:40.210316+09:00",
+  "generated_at": "2026-11-03T22:48:33.025901+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -30052,9 +30052,12 @@
             "reason": "単勝40-49%帯の実績的中率48.0%(n=1223) / 2連単10-14%帯の実績的中率19.4%(n=1977) / 3連単0-4%帯の実績的中率5.8%(n=2179)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "川原 涼"
+          },
+          "actualCombo": "1-5-3"
         },
         {
           "number": 12,
@@ -39401,38 +39404,5 @@
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "19": {
-      "1": {
-        "win_rate": 0.596,
-        "is_fallback": false,
-        "sample_size": 334
-      },
-      "2": {
-        "win_rate": 0.099,
-        "is_fallback": false,
-        "sample_size": 334
-      },
-      "3": {
-        "win_rate": 0.144,
-        "is_fallback": false,
-        "sample_size": 334
-      },
-      "4": {
-        "win_rate": 0.09,
-        "is_fallback": false,
-        "sample_size": 334
-      },
-      "5": {
-        "win_rate": 0.042,
-        "is_fallback": false,
-        "sample_size": 334
-      },
-      "6": {
-        "win_rate": 0.03,
-        "is_fallback": false,
-        "sample_size": 333
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
