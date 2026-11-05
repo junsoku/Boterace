@@ -1,6 +1,6 @@
 {
   "date": "2026-11-05",
-  "generated_at": "2026-11-05T20:09:13.846626+09:00",
+  "generated_at": "2026-11-05T20:39:05.252234+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -2773,9 +2773,12 @@
             "reason": "単勝50-59%帯の実績的中率57.2%(n=1904) / 2連単25-29%帯の実績的中率34.0%(n=1276) / 3連単10-14%帯の実績的中率14.8%(n=1942)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "平石 和男"
+          },
+          "actualCombo": "1-2-5"
         },
         {
           "number": 12,
@@ -23984,31 +23987,34 @@
             "reason": "単勝50-59%帯の実績的中率57.2%(n=1905) / 2連単15-19%帯の実績的中率25.9%(n=2466) / 3連単5-9%帯の実績的中率10.6%(n=5150)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "上條 暢嵩"
+          },
+          "actualCombo": "1-5-3"
         },
         {
           "number": 12,
           "close": "2026-11-05 20:45:00",
           "grade": "G1b",
-          "weather": null,
-          "windDirection": null,
+          "weather": "曇り",
+          "windDirection": "17",
           "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "waveHeight": 1.0,
+          "temperature": 20.0,
+          "waterTemperature": 19.0,
           "boats": [
             {
               "lane": 1,
               "name": "馬場 貴也",
               "class": "A1",
-              "pct": 59,
+              "pct": 62,
               "natWin": 7.63,
               "localWin": 7.94,
               "natPlace": 55.74,
               "localPlace": 52.0,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 40.77,
               "flying": 0,
               "late": 0,
@@ -24018,16 +24024,16 @@
               "lane": 2,
               "name": "松井 繁",
               "class": "A1",
-              "pct": 11,
+              "pct": 10,
               "natWin": 6.99,
               "localWin": 7.31,
               "natPlace": 46.23,
               "localPlace": 54.55,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 42.75,
               "flying": 0,
               "late": 0,
-              "mark": "○"
+              "mark": "▲"
             },
             {
               "lane": 3,
@@ -24038,11 +24044,11 @@
               "localWin": 6.63,
               "natPlace": 53.93,
               "localPlace": 48.39,
-              "exh": null,
+              "exh": 6.8,
               "motor2r": 37.1,
               "flying": 0,
               "late": 0,
-              "mark": "▲"
+              "mark": "○"
             },
             {
               "lane": 4,
@@ -24053,7 +24059,7 @@
               "localWin": 7.05,
               "natPlace": 44.66,
               "localPlace": 42.11,
-              "exh": null,
+              "exh": 6.84,
               "motor2r": 33.33,
               "flying": 0,
               "late": 0,
@@ -24063,12 +24069,12 @@
               "lane": 5,
               "name": "佐藤 翼",
               "class": "A1",
-              "pct": 7,
+              "pct": 6,
               "natWin": 6.99,
               "localWin": 6.59,
               "natPlace": 43.9,
               "localPlace": 37.25,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 37.3,
               "flying": 0,
               "late": 0,
@@ -24078,12 +24084,12 @@
               "lane": 6,
               "name": "磯部 誠",
               "class": "A1",
-              "pct": 4,
+              "pct": 3,
               "natWin": 7.6,
               "localWin": 6.59,
               "natPlace": 50.91,
               "localPlace": 34.09,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 40.32,
               "flying": 0,
               "late": 0,
@@ -24095,31 +24101,16 @@
               "lane": 1,
               "name": "馬場 貴也",
               "class": "A1",
-              "pct": 59,
+              "pct": 62,
               "natWin": 7.63,
               "localWin": 7.94,
               "natPlace": 55.74,
               "localPlace": 52.0,
-              "exh": null,
+              "exh": 6.78,
               "motor2r": 40.77,
               "flying": 0,
               "late": 0,
               "mark": "◎"
-            },
-            {
-              "lane": 2,
-              "name": "松井 繁",
-              "class": "A1",
-              "pct": 11,
-              "natWin": 6.99,
-              "localWin": 7.31,
-              "natPlace": 46.23,
-              "localPlace": 54.55,
-              "exh": null,
-              "motor2r": 42.75,
-              "flying": 0,
-              "late": 0,
-              "mark": "○"
             },
             {
               "lane": 3,
@@ -24130,8 +24121,23 @@
               "localWin": 6.63,
               "natPlace": 53.93,
               "localPlace": 48.39,
-              "exh": null,
+              "exh": 6.8,
               "motor2r": 37.1,
+              "flying": 0,
+              "late": 0,
+              "mark": "○"
+            },
+            {
+              "lane": 2,
+              "name": "松井 繁",
+              "class": "A1",
+              "pct": 10,
+              "natWin": 6.99,
+              "localWin": 7.31,
+              "natPlace": 46.23,
+              "localPlace": 54.55,
+              "exh": 6.86,
+              "motor2r": 42.75,
               "flying": 0,
               "late": 0,
               "mark": "▲"
@@ -24145,7 +24151,7 @@
               "localWin": 7.05,
               "natPlace": 44.66,
               "localPlace": 42.11,
-              "exh": null,
+              "exh": 6.84,
               "motor2r": 33.33,
               "flying": 0,
               "late": 0,
@@ -24155,12 +24161,12 @@
               "lane": 5,
               "name": "佐藤 翼",
               "class": "A1",
-              "pct": 7,
+              "pct": 6,
               "natWin": 6.99,
               "localWin": 6.59,
               "natPlace": 43.9,
               "localPlace": 37.25,
-              "exh": null,
+              "exh": 6.83,
               "motor2r": 37.3,
               "flying": 0,
               "late": 0,
@@ -24170,12 +24176,12 @@
               "lane": 6,
               "name": "磯部 誠",
               "class": "A1",
-              "pct": 4,
+              "pct": 3,
               "natWin": 7.6,
               "localWin": 6.59,
               "natPlace": 50.91,
               "localPlace": 34.09,
-              "exh": null,
+              "exh": 6.86,
               "motor2r": 40.32,
               "flying": 0,
               "late": 0,
@@ -24185,25 +24191,25 @@
           "bets": [
             {
               "combo": "1-3-2",
-              "prob": "5.9%"
+              "prob": "6.3%"
             },
             {
               "combo": "1-2-3",
-              "prob": "5.9%"
+              "prob": "6.1%"
             },
             {
               "combo": "1-3-4",
-              "prob": "4.4%"
+              "prob": "5.0%"
             },
             {
-              "combo": "1-2-4",
-              "prob": "4.3%"
+              "combo": "1-4-3",
+              "prob": "4.5%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-3",
-              "prob": "16.1%"
+              "prob": "17.7%"
             },
             {
               "combo": "1-2",
@@ -24211,26 +24217,26 @@
             }
           ],
           "confidence": {
-            "isConfident": false,
-            "hitRate": 0.5721784776902887,
-            "sampleSize": 1905,
-            "bucket": "50-59%"
+            "isConfident": true,
+            "hitRate": 0.6783216783216783,
+            "sampleSize": 2288,
+            "bucket": "60-69%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10563106796116505,
-            "sampleSize": 5150,
+            "hitRate": 0.10561056105610561,
+            "sampleSize": 5151,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.2587185725871857,
-            "sampleSize": 2466,
+            "hitRate": 0.2586137008512363,
+            "sampleSize": 2467,
             "bucket": "15-19%"
           },
           "raceTier": {
-            "tier": "C",
-            "reason": "単勝50-59%帯の実績的中率57.2%(n=1905) / 2連単15-19%帯の実績的中率25.9%(n=2466) / 3連単5-9%帯の実績的中率10.6%(n=5150)",
+            "tier": "B",
+            "reason": "単勝60-69%帯の実績的中率67.8%(n=2288) / 2連単15-19%帯の実績的中率25.9%(n=2467) / 3連単5-9%帯の実績的中率10.6%(n=5151)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -27009,9 +27015,12 @@
             "reason": "単勝60-69%帯の実績的中率67.8%(n=2286) / 2連単25-29%帯の実績的中率34.0%(n=1276) / 3連単10-14%帯の実績的中率14.8%(n=1942) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "竹井 奈美"
+          },
+          "actualCombo": "1-2-3"
         },
         {
           "number": 12,
@@ -36359,100 +36368,36 @@
     }
   ],
   "course_stats_by_stadium": {
-    "1": {
-      "1": {
-        "win_rate": 0.478,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "2": {
-        "win_rate": 0.151,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "3": {
-        "win_rate": 0.148,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "4": {
-        "win_rate": 0.103,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "5": {
-        "win_rate": 0.095,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "6": {
-        "win_rate": 0.025,
-        "is_fallback": false,
-        "sample_size": 354
-      }
-    },
     "12": {
       "1": {
-        "win_rate": 0.564,
+        "win_rate": 0.565,
         "is_fallback": false,
-        "sample_size": 358
+        "sample_size": 359
       },
       "2": {
         "win_rate": 0.148,
         "is_fallback": false,
-        "sample_size": 358
+        "sample_size": 359
       },
       "3": {
         "win_rate": 0.12,
         "is_fallback": false,
-        "sample_size": 358
+        "sample_size": 359
       },
       "4": {
-        "win_rate": 0.087,
+        "win_rate": 0.086,
         "is_fallback": false,
-        "sample_size": 358
+        "sample_size": 359
       },
       "5": {
         "win_rate": 0.067,
         "is_fallback": false,
-        "sample_size": 358
+        "sample_size": 359
       },
       "6": {
         "win_rate": 0.014,
         "is_fallback": false,
-        "sample_size": 357
-      }
-    },
-    "15": {
-      "1": {
-        "win_rate": 0.519,
-        "is_fallback": false,
-        "sample_size": 322
-      },
-      "2": {
-        "win_rate": 0.152,
-        "is_fallback": false,
-        "sample_size": 322
-      },
-      "3": {
-        "win_rate": 0.115,
-        "is_fallback": false,
-        "sample_size": 322
-      },
-      "4": {
-        "win_rate": 0.115,
-        "is_fallback": false,
-        "sample_size": 322
-      },
-      "5": {
-        "win_rate": 0.087,
-        "is_fallback": false,
-        "sample_size": 322
-      },
-      "6": {
-        "win_rate": 0.013,
-        "is_fallback": false,
-        "sample_size": 316
+        "sample_size": 358
       }
     }
   }
