@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "generated_at": "2026-11-08T19:20:38.904179+09:00",
+  "generated_at": "2026-11-08T19:49:52.787886+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -2269,9 +2269,12 @@
             "reason": "単勝50-59%帯の実績的中率59.1%(n=2007) / 2連単15-19%帯の実績的中率25.6%(n=2641) / 3連単5-9%帯の実績的中率10.2%(n=5478)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 3,
+            "name": "鶴本 崇文"
+          },
+          "actualCombo": "3-1-2"
         },
         {
           "number": 10,
@@ -2518,61 +2521,64 @@
             "reason": "単勝50-59%帯の実績的中率59.2%(n=2008) / 2連単10-14%帯の実績的中率19.2%(n=1930) / 3連単0-4%帯の実績的中率5.1%(n=1831)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 4,
+            "name": "泥谷 一毅"
+          },
+          "actualCombo": "4-6-5"
         },
         {
           "number": 11,
           "close": "2026-11-08 19:58:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "4",
+          "windSpeed": 2.0,
+          "waveHeight": 1.0,
+          "temperature": 10.0,
+          "waterTemperature": 15.0,
           "boats": [
             {
               "lane": 1,
               "name": "磯村 匠",
               "class": "B1",
-              "pct": 26,
+              "pct": 32,
               "natWin": 4.12,
               "localWin": 4.6,
               "natPlace": 19.23,
               "localPlace": 24.0,
-              "exh": null,
+              "exh": 6.56,
               "motor2r": 40.44,
-              "flying": 0,
-              "late": 0,
-              "mark": "○"
-            },
-            {
-              "lane": 2,
-              "name": "佐々木 康幸",
-              "class": "A1",
-              "pct": 28,
-              "natWin": 6.89,
-              "localWin": 6.29,
-              "natPlace": 54.08,
-              "localPlace": 44.9,
-              "exh": null,
-              "motor2r": 39.04,
               "flying": 0,
               "late": 0,
               "mark": "◎"
             },
             {
+              "lane": 2,
+              "name": "佐々木 康幸",
+              "class": "A1",
+              "pct": 25,
+              "natWin": 6.89,
+              "localWin": 6.29,
+              "natPlace": 54.08,
+              "localPlace": 44.9,
+              "exh": 6.64,
+              "motor2r": 39.04,
+              "flying": 0,
+              "late": 0,
+              "mark": "○"
+            },
+            {
               "lane": 3,
               "name": "米田 隆弘",
               "class": "B1",
-              "pct": 17,
+              "pct": 18,
               "natWin": 5.09,
               "localWin": 6.18,
               "natPlace": 28.0,
               "localPlace": 35.29,
-              "exh": null,
+              "exh": 6.61,
               "motor2r": 38.99,
               "flying": 0,
               "late": 0,
@@ -2582,12 +2588,12 @@
               "lane": 4,
               "name": "徳増 秀樹",
               "class": "A1",
-              "pct": 17,
+              "pct": 15,
               "natWin": 5.82,
               "localWin": 6.18,
               "natPlace": 40.17,
               "localPlace": 41.18,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 32.07,
               "flying": 0,
               "late": 0,
@@ -2597,12 +2603,12 @@
               "lane": 5,
               "name": "西川 新太郎",
               "class": "B1",
-              "pct": 9,
+              "pct": 7,
               "natWin": 5.01,
               "localWin": 5.0,
               "natPlace": 25.77,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 34.71,
               "flying": 0,
               "late": 0,
@@ -2617,7 +2623,7 @@
               "localWin": 5.59,
               "natPlace": 22.62,
               "localPlace": 34.38,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 34.87,
               "flying": 0,
               "late": 0,
@@ -2626,31 +2632,31 @@
           ],
           "boats_ranked": [
             {
-              "lane": 2,
-              "name": "佐々木 康幸",
-              "class": "A1",
-              "pct": 28,
-              "natWin": 6.89,
-              "localWin": 6.29,
-              "natPlace": 54.08,
-              "localPlace": 44.9,
-              "exh": null,
-              "motor2r": 39.04,
+              "lane": 1,
+              "name": "磯村 匠",
+              "class": "B1",
+              "pct": 32,
+              "natWin": 4.12,
+              "localWin": 4.6,
+              "natPlace": 19.23,
+              "localPlace": 24.0,
+              "exh": 6.56,
+              "motor2r": 40.44,
               "flying": 0,
               "late": 0,
               "mark": "◎"
             },
             {
-              "lane": 1,
-              "name": "磯村 匠",
-              "class": "B1",
-              "pct": 26,
-              "natWin": 4.12,
-              "localWin": 4.6,
-              "natPlace": 19.23,
-              "localPlace": 24.0,
-              "exh": null,
-              "motor2r": 40.44,
+              "lane": 2,
+              "name": "佐々木 康幸",
+              "class": "A1",
+              "pct": 25,
+              "natWin": 6.89,
+              "localWin": 6.29,
+              "natPlace": 54.08,
+              "localPlace": 44.9,
+              "exh": 6.64,
+              "motor2r": 39.04,
               "flying": 0,
               "late": 0,
               "mark": "○"
@@ -2659,12 +2665,12 @@
               "lane": 3,
               "name": "米田 隆弘",
               "class": "B1",
-              "pct": 17,
+              "pct": 18,
               "natWin": 5.09,
               "localWin": 6.18,
               "natPlace": 28.0,
               "localPlace": 35.29,
-              "exh": null,
+              "exh": 6.61,
               "motor2r": 38.99,
               "flying": 0,
               "late": 0,
@@ -2674,12 +2680,12 @@
               "lane": 4,
               "name": "徳増 秀樹",
               "class": "A1",
-              "pct": 17,
+              "pct": 15,
               "natWin": 5.82,
               "localWin": 6.18,
               "natPlace": 40.17,
               "localPlace": 41.18,
-              "exh": null,
+              "exh": 6.75,
               "motor2r": 32.07,
               "flying": 0,
               "late": 0,
@@ -2689,12 +2695,12 @@
               "lane": 5,
               "name": "西川 新太郎",
               "class": "B1",
-              "pct": 9,
+              "pct": 7,
               "natWin": 5.01,
               "localWin": 5.0,
               "natPlace": 25.77,
               "localPlace": 25.0,
-              "exh": null,
+              "exh": 6.76,
               "motor2r": 34.71,
               "flying": 0,
               "late": 0,
@@ -2709,7 +2715,7 @@
               "localWin": 5.59,
               "natPlace": 22.62,
               "localPlace": 34.38,
-              "exh": null,
+              "exh": 6.72,
               "motor2r": 34.87,
               "flying": 0,
               "late": 0,
@@ -2718,53 +2724,53 @@
           ],
           "bets": [
             {
-              "combo": "2-1-4",
-              "prob": "3.9%"
-            },
-            {
-              "combo": "1-2-4",
-              "prob": "3.8%"
+              "combo": "1-2-3",
+              "prob": "4.6%"
             },
             {
               "combo": "2-1-3",
-              "prob": "3.7%"
+              "prob": "4.2%"
             },
             {
-              "combo": "1-2-3",
-              "prob": "3.6%"
+              "combo": "1-3-2",
+              "prob": "4.0%"
+            },
+            {
+              "combo": "1-2-4",
+              "prob": "3.9%"
             }
           ],
           "exactaBets": [
             {
-              "combo": "2-1",
-              "prob": "10.2%"
+              "combo": "1-2",
+              "prob": "11.3%"
             },
             {
-              "combo": "1-2",
-              "prob": "9.9%"
+              "combo": "2-1",
+              "prob": "10.2%"
             }
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.3997093023255814,
-            "sampleSize": 688,
-            "bucket": "20-29%"
+            "hitRate": 0.4851994851994852,
+            "sampleSize": 1554,
+            "bucket": "30-39%"
           },
           "betConfidence": {
             "isConfident": false,
-            "hitRate": 0.05133806663025669,
-            "sampleSize": 1831,
+            "hitRate": 0.05131004366812227,
+            "sampleSize": 1832,
             "bucket": "0-4%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.19170984455958548,
-            "sampleSize": 1930,
+            "hitRate": 0.1916105644743656,
+            "sampleSize": 1931,
             "bucket": "10-14%"
           },
           "raceTier": {
             "tier": "D",
-            "reason": "単勝20-29%帯の実績的中率40.0%(n=688) / 2連単10-14%帯の実績的中率19.2%(n=1930) / 3連単0-4%帯の実績的中率5.1%(n=1831)",
+            "reason": "単勝30-39%帯の実績的中率48.5%(n=1554) / 2連単10-14%帯の実績的中率19.2%(n=1931) / 3連単0-4%帯の実績的中率5.1%(n=1832)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -3001,19 +3007,19 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10220843219565615,
-            "sampleSize": 5479,
+            "hitRate": 0.10217113665389528,
+            "sampleSize": 5481,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.3567438148443735,
-            "sampleSize": 1253,
+            "hitRate": 0.3572567783094099,
+            "sampleSize": 1254,
             "bucket": "25-29%"
           },
           "raceTier": {
             "tier": "B",
-            "reason": "単勝70-79%帯の実績的中率77.2%(n=1257) / 2連単25-29%帯の実績的中率35.7%(n=1253) / 3連単5-9%帯の実績的中率10.2%(n=5479) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
+            "reason": "単勝70-79%帯の実績的中率77.2%(n=1257) / 2連単25-29%帯の実績的中率35.7%(n=1254) / 3連単5-9%帯の実績的中率10.2%(n=5481) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -20443,9 +20449,12 @@
             "reason": "単勝50-59%帯の実績的中率59.1%(n=2007) / 2連単15-19%帯の実績的中率25.6%(n=2641) / 3連単5-9%帯の実績的中率10.2%(n=5478)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "篠崎 仁志"
+          },
+          "actualCombo": "1-2-3"
         },
         {
           "number": 10,
@@ -20920,25 +20929,25 @@
           ],
           "confidence": {
             "isConfident": false,
-            "hitRate": 0.5916334661354582,
-            "sampleSize": 2008,
+            "hitRate": 0.5913389746142359,
+            "sampleSize": 2009,
             "bucket": "50-59%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10220843219565615,
-            "sampleSize": 5479,
+            "hitRate": 0.10217113665389528,
+            "sampleSize": 5481,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.25662376987130964,
-            "sampleSize": 2642,
+            "hitRate": 0.25642965204236007,
+            "sampleSize": 2644,
             "bucket": "15-19%"
           },
           "raceTier": {
-            "tier": "B",
-            "reason": "単勝50-59%帯の実績的中率59.2%(n=2008) / 2連単15-19%帯の実績的中率25.7%(n=2642) / 3連単5-9%帯の実績的中率10.2%(n=5479)",
+            "tier": "C",
+            "reason": "単勝50-59%帯の実績的中率59.1%(n=2009) / 2連単15-19%帯の実績的中率25.6%(n=2644) / 3連単5-9%帯の実績的中率10.2%(n=5481)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -21169,25 +21178,25 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6823428815733219,
-            "sampleSize": 2339,
+            "hitRate": 0.682614267407091,
+            "sampleSize": 2341,
             "bucket": "60-69%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10220843219565615,
-            "sampleSize": 5479,
+            "hitRate": 0.10217113665389528,
+            "sampleSize": 5481,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.25662376987130964,
-            "sampleSize": 2642,
+            "hitRate": 0.25642965204236007,
+            "sampleSize": 2644,
             "bucket": "15-19%"
           },
           "raceTier": {
             "tier": "B",
-            "reason": "単勝60-69%帯の実績的中率68.2%(n=2339) / 2連単15-19%帯の実績的中率25.7%(n=2642) / 3連単5-9%帯の実績的中率10.2%(n=5479)",
+            "reason": "単勝60-69%帯の実績的中率68.3%(n=2341) / 2連単15-19%帯の実績的中率25.6%(n=2644) / 3連単5-9%帯の実績的中率10.2%(n=5481)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -26493,9 +26502,12 @@
             "reason": "単勝60-69%帯の実績的中率68.2%(n=2339) / 2連単30-34%帯の実績的中率40.2%(n=453) / 3連単10-14%帯の実績的中率15.7%(n=1849)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "松尾 充"
+          },
+          "actualCombo": "1-3-2"
         },
         {
           "number": 10,
@@ -26750,12 +26762,12 @@
           "number": 11,
           "close": "2026-11-08 20:07:00",
           "grade": "ippan",
-          "weather": null,
-          "windDirection": null,
-          "windSpeed": null,
-          "waveHeight": null,
-          "temperature": null,
-          "waterTemperature": null,
+          "weather": "曇り",
+          "windDirection": "5",
+          "windSpeed": 1.0,
+          "waveHeight": 1.0,
+          "temperature": 14.0,
+          "waterTemperature": 20.0,
           "boats": [
             {
               "lane": 1,
@@ -26943,29 +26955,29 @@
           "bets": [
             {
               "combo": "1-2-3",
-              "prob": "10.6%"
+              "prob": "10.5%"
             },
             {
               "combo": "1-2-4",
-              "prob": "8.9%"
+              "prob": "9.0%"
             },
             {
               "combo": "1-3-2",
-              "prob": "8.8%"
+              "prob": "8.7%"
             },
             {
               "combo": "1-4-2",
-              "prob": "7.0%"
+              "prob": "7.2%"
             }
           ],
           "exactaBets": [
             {
               "combo": "1-2",
-              "prob": "27.8%"
+              "prob": "28.0%"
             },
             {
               "combo": "1-3",
-              "prob": "18.3%"
+              "prob": "17.9%"
             }
           ],
           "confidence": {
@@ -26976,19 +26988,19 @@
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.15675675675675677,
-            "sampleSize": 1850,
+            "hitRate": 0.15721231766612642,
+            "sampleSize": 1851,
             "bucket": "10-14%"
           },
           "exactaConfidence": {
             "isConfident": true,
-            "hitRate": 0.3567438148443735,
-            "sampleSize": 1253,
+            "hitRate": 0.3572567783094099,
+            "sampleSize": 1254,
             "bucket": "25-29%"
           },
           "raceTier": {
             "tier": "A",
-            "reason": "単勝70-79%帯の実績的中率77.2%(n=1257) / 2連単25-29%帯の実績的中率35.7%(n=1253) / 3連単10-14%帯の実績的中率15.7%(n=1850)",
+            "reason": "単勝70-79%帯の実績的中率77.2%(n=1257) / 2連単25-29%帯の実績的中率35.7%(n=1254) / 3連単10-14%帯の実績的中率15.7%(n=1851)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -27219,25 +27231,25 @@
           ],
           "confidence": {
             "isConfident": true,
-            "hitRate": 0.6823428815733219,
-            "sampleSize": 2339,
+            "hitRate": 0.682614267407091,
+            "sampleSize": 2341,
             "bucket": "60-69%"
           },
           "betConfidence": {
             "isConfident": true,
-            "hitRate": 0.10220843219565615,
-            "sampleSize": 5479,
+            "hitRate": 0.10217113665389528,
+            "sampleSize": 5481,
             "bucket": "5-9%"
           },
           "exactaConfidence": {
             "isConfident": false,
-            "hitRate": 0.25662376987130964,
-            "sampleSize": 2642,
+            "hitRate": 0.25642965204236007,
+            "sampleSize": 2644,
             "bucket": "15-19%"
           },
           "raceTier": {
             "tier": "B",
-            "reason": "単勝60-69%帯の実績的中率68.2%(n=2339) / 2連単15-19%帯の実績的中率25.7%(n=2642) / 3連単5-9%帯の実績的中率10.2%(n=5479)",
+            "reason": "単勝60-69%帯の実績的中率68.3%(n=2341) / 2連単15-19%帯の実績的中率25.6%(n=2644) / 3連単5-9%帯の実績的中率10.2%(n=5481)",
             "basis": "calibration"
           },
           "isFinished": false,
@@ -33312,98 +33324,98 @@
   "course_stats_by_stadium": {
     "1": {
       "1": {
-        "win_rate": 0.477,
+        "win_rate": 0.475,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 394
       },
       "2": {
         "win_rate": 0.145,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 394
       },
       "3": {
-        "win_rate": 0.153,
+        "win_rate": 0.155,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 394
       },
       "4": {
-        "win_rate": 0.107,
+        "win_rate": 0.109,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 394
       },
       "5": {
-        "win_rate": 0.092,
+        "win_rate": 0.091,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 394
       },
       "6": {
         "win_rate": 0.026,
         "is_fallback": false,
-        "sample_size": 387
+        "sample_size": 389
       }
     },
     "12": {
       "1": {
-        "win_rate": 0.564,
+        "win_rate": 0.565,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 393
       },
       "2": {
         "win_rate": 0.148,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 393
       },
       "3": {
         "win_rate": 0.125,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 393
       },
       "4": {
         "win_rate": 0.087,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 393
       },
       "5": {
         "win_rate": 0.064,
         "is_fallback": false,
-        "sample_size": 392
+        "sample_size": 393
       },
       "6": {
         "win_rate": 0.013,
         "is_fallback": false,
-        "sample_size": 391
+        "sample_size": 392
       }
     },
     "19": {
       "1": {
-        "win_rate": 0.609,
+        "win_rate": 0.61,
         "is_fallback": false,
-        "sample_size": 368
+        "sample_size": 369
       },
       "2": {
-        "win_rate": 0.101,
+        "win_rate": 0.1,
         "is_fallback": false,
-        "sample_size": 368
+        "sample_size": 369
       },
       "3": {
         "win_rate": 0.13,
         "is_fallback": false,
-        "sample_size": 368
+        "sample_size": 369
       },
       "4": {
         "win_rate": 0.087,
         "is_fallback": false,
-        "sample_size": 368
+        "sample_size": 369
       },
       "5": {
         "win_rate": 0.041,
         "is_fallback": false,
-        "sample_size": 368
+        "sample_size": 369
       },
       "6": {
         "win_rate": 0.033,
         "is_fallback": false,
-        "sample_size": 366
+        "sample_size": 367
       }
     }
   }
