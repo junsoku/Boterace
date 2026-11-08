@@ -1,6 +1,6 @@
 {
   "date": "2026-11-08",
-  "generated_at": "2026-11-08T20:19:47.374188+09:00",
+  "generated_at": "2026-11-08T20:49:50.962742+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -2773,9 +2773,12 @@
             "reason": "単勝30-39%帯の実績的中率48.5%(n=1554) / 2連単10-14%帯の実績的中率19.2%(n=1931) / 3連単0-4%帯の実績的中率5.1%(n=1832)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "磯村 匠"
+          },
+          "actualCombo": "1-2-3"
         },
         {
           "number": 12,
@@ -20953,9 +20956,12 @@
             "reason": "単勝50-59%帯の実績的中率59.1%(n=2009) / 2連単15-19%帯の実績的中率25.6%(n=2644) / 3連単5-9%帯の実績的中率10.2%(n=5481)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "篠崎 元志"
+          },
+          "actualCombo": "1-2-4"
         },
         {
           "number": 12,
@@ -27009,9 +27015,12 @@
             "reason": "単勝70-79%帯の実績的中率77.2%(n=1257) / 2連単25-29%帯の実績的中率35.7%(n=1254) / 3連単10-14%帯の実績的中率15.7%(n=1851)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "大場 恒季"
+          },
+          "actualCombo": "1-2-5"
         },
         {
           "number": 12,
@@ -33327,102 +33336,5 @@
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "1": {
-      "1": {
-        "win_rate": 0.475,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "2": {
-        "win_rate": 0.145,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "3": {
-        "win_rate": 0.155,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "4": {
-        "win_rate": 0.109,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "5": {
-        "win_rate": 0.091,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "6": {
-        "win_rate": 0.026,
-        "is_fallback": false,
-        "sample_size": 389
-      }
-    },
-    "12": {
-      "1": {
-        "win_rate": 0.566,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "2": {
-        "win_rate": 0.147,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "3": {
-        "win_rate": 0.124,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "4": {
-        "win_rate": 0.086,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "5": {
-        "win_rate": 0.063,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "6": {
-        "win_rate": 0.013,
-        "is_fallback": false,
-        "sample_size": 393
-      }
-    },
-    "19": {
-      "1": {
-        "win_rate": 0.608,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "2": {
-        "win_rate": 0.1,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "3": {
-        "win_rate": 0.13,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "4": {
-        "win_rate": 0.086,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "5": {
-        "win_rate": 0.041,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "6": {
-        "win_rate": 0.035,
-        "is_fallback": false,
-        "sample_size": 368
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
