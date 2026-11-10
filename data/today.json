@@ -1,6 +1,6 @@
 {
   "date": "2026-11-10",
-  "generated_at": "2026-11-10T20:33:39.895587+09:00",
+  "generated_at": "2026-11-10T21:03:46.797461+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -9087,9 +9087,12 @@
             "reason": "単勝60-69%帯の実績的中率70.3%(n=2260) / 2連単15-19%帯の実績的中率26.3%(n=3149) / 3連単5-9%帯の実績的中率10.9%(n=5985)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "原田 篤志"
+          },
+          "actualCombo": "1-2-3"
         }
       ]
     },
@@ -23987,9 +23990,12 @@
             "reason": "単勝50-59%帯の実績的中率60.5%(n=2716) / 2連単10-14%帯の実績的中率20.3%(n=2369) / 3連単5-9%帯の実績的中率10.9%(n=5985)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "佐藤 翼"
+          },
+          "actualCombo": "1-2-4"
         },
         {
           "number": 12,
@@ -33326,9 +33332,12 @@
             "reason": "単勝70-79%帯の実績的中率79.6%(n=770) / 2連単20-24%帯の実績的中率31.4%(n=2185) / 3連単5-9%帯の実績的中率10.9%(n=5988) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "中村 桃佳"
+          },
+          "actualCombo": "1-4-3"
         }
       ]
     },
@@ -39395,70 +39404,5 @@
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "12": {
-      "1": {
-        "win_rate": 0.569,
-        "is_fallback": false,
-        "sample_size": 418
-      },
-      "2": {
-        "win_rate": 0.144,
-        "is_fallback": false,
-        "sample_size": 418
-      },
-      "3": {
-        "win_rate": 0.124,
-        "is_fallback": false,
-        "sample_size": 418
-      },
-      "4": {
-        "win_rate": 0.086,
-        "is_fallback": false,
-        "sample_size": 418
-      },
-      "5": {
-        "win_rate": 0.065,
-        "is_fallback": false,
-        "sample_size": 418
-      },
-      "6": {
-        "win_rate": 0.012,
-        "is_fallback": false,
-        "sample_size": 417
-      }
-    },
-    "19": {
-      "1": {
-        "win_rate": 0.603,
-        "is_fallback": false,
-        "sample_size": 395
-      },
-      "2": {
-        "win_rate": 0.104,
-        "is_fallback": false,
-        "sample_size": 395
-      },
-      "3": {
-        "win_rate": 0.132,
-        "is_fallback": false,
-        "sample_size": 395
-      },
-      "4": {
-        "win_rate": 0.086,
-        "is_fallback": false,
-        "sample_size": 395
-      },
-      "5": {
-        "win_rate": 0.038,
-        "is_fallback": false,
-        "sample_size": 395
-      },
-      "6": {
-        "win_rate": 0.038,
-        "is_fallback": false,
-        "sample_size": 393
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
