@@ -1,6 +1,6 @@
 {
   "date": "2026-11-14",
-  "generated_at": "2026-11-14T20:38:09.376577+09:00",
+  "generated_at": "2026-11-14T21:08:20.329147+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -12118,9 +12118,12 @@
             "reason": "単勝60-69%帯の実績的中率68.2%(n=2508) / 2連単20-24%帯の実績的中率30.7%(n=2525) / 3連単10-14%帯の実績的中率15.6%(n=2380) / 相対評価ではAだが絶対水準を満たさないためB止まり(Aの下支え条件)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "前田 篤哉"
+          },
+          "actualCombo": "1-2-4"
         }
       ]
     },
@@ -33332,9 +33335,12 @@
             "reason": "単勝60-69%帯の実績的中率68.2%(n=2508) / 2連単25-29%帯の実績的中率33.5%(n=1527) / 3連単10-14%帯の実績的中率15.6%(n=2380) / 荒れ水面のため1段階格下げ",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 4,
+            "name": "向井 美鈴"
+          },
+          "actualCombo": "4-3-2"
         }
       ]
     },
@@ -42422,45 +42428,15 @@
             "reason": "単勝80-89%帯の実績的中率80.1%(n=272) / 2連単15-19%帯の実績的中率25.6%(n=2805) / 3連単5-9%帯の実績的中率10.3%(n=5871)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 4,
+            "name": "堀越 雄貴"
+          },
+          "actualCombo": "4-1-5"
         }
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "24": {
-      "1": {
-        "win_rate": 0.651,
-        "is_fallback": false,
-        "sample_size": 467
-      },
-      "2": {
-        "win_rate": 0.124,
-        "is_fallback": false,
-        "sample_size": 467
-      },
-      "3": {
-        "win_rate": 0.113,
-        "is_fallback": false,
-        "sample_size": 467
-      },
-      "4": {
-        "win_rate": 0.073,
-        "is_fallback": false,
-        "sample_size": 467
-      },
-      "5": {
-        "win_rate": 0.032,
-        "is_fallback": false,
-        "sample_size": 467
-      },
-      "6": {
-        "win_rate": 0.006,
-        "is_fallback": false,
-        "sample_size": 466
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
