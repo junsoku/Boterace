@@ -1,6 +1,6 @@
 {
   "date": "2026-11-16",
-  "generated_at": "2026-11-16T20:28:33.317100+09:00",
+  "generated_at": "2026-11-16T20:58:48.356659+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -14897,9 +14897,12 @@
             "reason": "単勝50-59%帯の実績的中率58.5%(n=2329) / 2連単15-19%帯の実績的中率24.8%(n=3073) / 3連単5-9%帯の実績的中率10.0%(n=6228) / 荒れ水面のため1段階格下げ",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "平本 真之"
+          },
+          "actualCombo": "1-4-6"
         },
         {
           "number": 12,
@@ -24236,9 +24239,12 @@
             "reason": "単勝70-79%帯の実績的中率76.6%(n=1514) / 2連単25-29%帯の実績的中率35.8%(n=1442) / 3連単10-14%帯の実績的中率15.1%(n=2168) / 荒れ水面のため1段階格下げ",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "平高 奈菜"
+          },
+          "actualCombo": "1-2-3"
         }
       ]
     },
@@ -30295,109 +30301,15 @@
             "reason": "単勝60-69%帯の実績的中率67.3%(n=2677) / 2連単15-19%帯の実績的中率24.8%(n=3074) / 3連単5-9%帯の実績的中率10.0%(n=6230)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "白神 優"
+          },
+          "actualCombo": "1-2-6"
         }
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "15": {
-      "1": {
-        "win_rate": 0.531,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "2": {
-        "win_rate": 0.142,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "3": {
-        "win_rate": 0.117,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "4": {
-        "win_rate": 0.109,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "5": {
-        "win_rate": 0.084,
-        "is_fallback": false,
-        "sample_size": 358
-      },
-      "6": {
-        "win_rate": 0.017,
-        "is_fallback": false,
-        "sample_size": 352
-      }
-    },
-    "20": {
-      "1": {
-        "win_rate": 0.581,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "2": {
-        "win_rate": 0.165,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "3": {
-        "win_rate": 0.102,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "4": {
-        "win_rate": 0.091,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "5": {
-        "win_rate": 0.041,
-        "is_fallback": false,
-        "sample_size": 394
-      },
-      "6": {
-        "win_rate": 0.021,
-        "is_fallback": false,
-        "sample_size": 389
-      }
-    },
-    "24": {
-      "1": {
-        "win_rate": 0.65,
-        "is_fallback": false,
-        "sample_size": 491
-      },
-      "2": {
-        "win_rate": 0.124,
-        "is_fallback": false,
-        "sample_size": 491
-      },
-      "3": {
-        "win_rate": 0.112,
-        "is_fallback": false,
-        "sample_size": 491
-      },
-      "4": {
-        "win_rate": 0.071,
-        "is_fallback": false,
-        "sample_size": 491
-      },
-      "5": {
-        "win_rate": 0.037,
-        "is_fallback": false,
-        "sample_size": 491
-      },
-      "6": {
-        "win_rate": 0.006,
-        "is_fallback": false,
-        "sample_size": 490
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
