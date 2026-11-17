@@ -1,6 +1,6 @@
 {
   "date": "2026-11-17",
-  "generated_at": "2026-11-17T20:33:31.634549+09:00",
+  "generated_at": "2026-11-17T21:03:47.527067+09:00",
   "using_ml_model": true,
   "stadiums": [
     {
@@ -2773,9 +2773,12 @@
             "reason": "単勝60-69%帯の実績的中率67.4%(n=2696) / 2連単15-19%帯の実績的中率24.6%(n=2955) / 3連単0-4%帯の実績的中率6.4%(n=1795)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 6,
+            "name": "野中 一平"
+          },
+          "actualCombo": "6-1-4"
         },
         {
           "number": 12,
@@ -3022,9 +3025,12 @@
             "reason": "単勝60-69%帯の実績的中率67.5%(n=2698) / 2連単15-19%帯の実績的中率24.6%(n=2957) / 3連単5-9%帯の実績的中率10.2%(n=6141)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 2,
+            "name": "若林 将"
+          },
+          "actualCombo": "2-3-1"
         }
       ]
     },
@@ -20953,9 +20959,12 @@
             "reason": "単勝50-59%帯の実績的中率57.5%(n=2226) / 2連単15-19%帯の実績的中率24.6%(n=2955) / 3連単5-9%帯の実績的中率10.2%(n=6139)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 1,
+            "name": "瓜生 正義"
+          },
+          "actualCombo": "1-4-6"
         },
         {
           "number": 12,
@@ -30292,9 +30301,12 @@
             "reason": "単勝70-79%帯の実績的中率76.8%(n=1588) / 2連単15-19%帯の実績的中率24.6%(n=2955) / 3連単5-9%帯の実績的中率10.2%(n=6139)",
             "basis": "calibration"
           },
-          "isFinished": false,
-          "actualWinner": null,
-          "actualCombo": null
+          "isFinished": true,
+          "actualWinner": {
+            "lane": 2,
+            "name": "伏島 祐介"
+          },
+          "actualCombo": "2-1-5"
         }
       ]
     },
@@ -33330,70 +33342,5 @@
       ]
     }
   ],
-  "course_stats_by_stadium": {
-    "1": {
-      "1": {
-        "win_rate": 0.473,
-        "is_fallback": false,
-        "sample_size": 406
-      },
-      "2": {
-        "win_rate": 0.145,
-        "is_fallback": false,
-        "sample_size": 406
-      },
-      "3": {
-        "win_rate": 0.153,
-        "is_fallback": false,
-        "sample_size": 406
-      },
-      "4": {
-        "win_rate": 0.106,
-        "is_fallback": false,
-        "sample_size": 406
-      },
-      "5": {
-        "win_rate": 0.096,
-        "is_fallback": false,
-        "sample_size": 406
-      },
-      "6": {
-        "win_rate": 0.027,
-        "is_fallback": false,
-        "sample_size": 401
-      }
-    },
-    "15": {
-      "1": {
-        "win_rate": 0.53,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "2": {
-        "win_rate": 0.149,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "3": {
-        "win_rate": 0.116,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "4": {
-        "win_rate": 0.108,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "5": {
-        "win_rate": 0.081,
-        "is_fallback": false,
-        "sample_size": 370
-      },
-      "6": {
-        "win_rate": 0.016,
-        "is_fallback": false,
-        "sample_size": 364
-      }
-    }
-  }
+  "course_stats_by_stadium": {}
 }
